@@ -15,12 +15,12 @@ namespace ModePuzzle.Engine
     {
         public static class Phases
         {
-            public const string Heuristic = "heuristic", Exact = "exact", Done = "done", Timeout = "timeout", Infeasible = "infeasible";
+            public const string Heuristic = "heuristic", Exact = "exact", Done = "done", Timeout = "timeout", Stopped = "stopped", Infeasible = "infeasible";
         }
 
         // Discovery budget only: the reference uses an 1800 ms cap. A shorter seed pass leaves
         // more time for exact proof; none of these settings changes scores or admissible bounds.
-        const double HeuristicShare = 0.18, HeuristicMinMs = 30, HeuristicMaxMs = 200, ProgressIntervalMs = 250;
+        const double HeuristicShare = 0.18, HeuristicMinMs = 30, ProgressIntervalMs = 125;
         const int ClockCheckMask = 255, RestartEvery = 3;
         const double RepairDropRate = 0.35, SkipWorseRate = 0.8, PlacementJitter = 0.5, RankWeight = 0.3;
         const double ViolationWeight = 1000, SecondaryWeight = 0.001;
@@ -70,6 +70,13 @@ namespace ModePuzzle.Engine
         readonly Func<double> random;
         readonly Action<SearchResult> onProgress;
         readonly double limitMs;
+        readonly Func<bool> cancelled;
+        bool stopped;
+        string phase = Phases.Heuristic;
+        double lastImprovement;
+        readonly List<Placed> fixedLayout = new List<Placed>();
+        Bits fixedMask;
+        int fixedArea;
         readonly bool custom;
         readonly int primary, secondary;
         readonly AxisRange[] ranges;
@@ -91,9 +98,10 @@ namespace ModePuzzle.Engine
         int bestRisk = int.MaxValue;
         BoundPair? rootBounds;
 
-        public Search(SearchConfig config, double limitMs, Func<double> now, Func<double> random, Action<SearchResult> onProgress = null)
+        public Search(SearchConfig config, double limitMs, Func<double> now, Func<double> random, Action<SearchResult> onProgress = null, Func<bool> cancelled = null)
         {
             this.config = config;
+            this.cancelled = cancelled ?? (() => false);
             rules = config.Rules;
             this.limitMs = limitMs;
             this.now = now;
@@ -106,7 +114,7 @@ namespace ModePuzzle.Engine
             capacity = config.Board.Capacity;
         }
 
-        public static int SearchQuantity(SearchConfig config) => config.Items.Where(i => !i.Locked).Sum(i => i.Qty);
+        public static int SearchQuantity(SearchConfig config) => config.Items.Where(i => !i.Locked).Sum(i => i.Qty) + config.Fixed.Count;
 
         public SearchResult Solve()
         {
@@ -117,22 +125,29 @@ namespace ModePuzzle.Engine
             Prepare();
 
             var all = Enumerable.Range(0, n).Where(i => pieces[i].Type.Placements.Count > 0).ToList();
-            var root = Bounds(all, capacity, new int[Axis.Count]);
+            var initial = Totals(fixedLayout);
+            var root = Bounds(all, capacity - fixedArea, initial);
             rootBounds = new BoundPair { Hi = (double[])root.Hi.Clone(), Lo = (double[])root.Lo.Clone() };
-            if (config.Optional) Save(new List<Placed>(), new int[Axis.Count]);
-            if (pieces.Where(p => p.Required).Sum(p => p.Area) > capacity || pieces.Any(p => p.Required && p.Type.Placements.Count == 0))
+            if (config.Optional) Save(fixedLayout, initial);
+            if (pieces.Where(p => p.Required).Sum(p => p.Area) + fixedArea > capacity || pieces.Any(p => p.Required && p.Type.Placements.Count == 0))
                 return Result(true, Phases.Infeasible);
             if (!Viable(rootBounds.Value)) return Result(true, Phases.Done);
 
             Heuristic();
+            phase = Phases.Exact;
             onProgress(Result(false, Phases.Exact));
-            if (!expired) Dfs(0, default, 0, new int[Axis.Count]);
-            return Result(true, expired ? Phases.Timeout : Phases.Done);
+            selected.AddRange(fixedLayout.Select(a => a.Clone()));
+            selectedRisk = RiskOf(selected);
+            if (!expired) Dfs(0, fixedMask, fixedArea, initial);
+            return Result(true, stopped ? Phases.Stopped : expired ? Phases.Timeout : bestLayout == null ? Phases.Infeasible : Phases.Done);
         }
 
         void Prepare()
         {
-            types = config.Items.Where(i => !i.Locked).Select(item =>
+            if (config.Fixed.Any(f => f.Item == null || f.Placement == null || f.Item.Qty != 1) ||
+                config.Items.Concat(config.Fixed.Select(f => f.Item)).GroupBy(i => i.Id).Any(g => g.Count() != 1))
+                throw new ArgumentException("Fixed pieces must be separate, unique single instances.");
+            types = config.Items.Where(i => !i.Locked).Concat(config.Fixed.Select(f => f.Item)).Select(item =>
             {
                 var placements = Geometry.GeneratePlacements(config.Board, item);
                 foreach (var p in placements) p.U = Scoring.Unary(item, p, rules);
@@ -153,6 +168,22 @@ namespace ModePuzzle.Engine
                         Area = types[t].Item.Shape.Length,
                     });
 
+            foreach (var f in config.Fixed)
+            {
+                var a = pieces.Single(p => p.Item == f.Item);
+                var p = a.Type.Placements.FirstOrDefault(q => q.Cells.OrderBy(c => c).SequenceEqual(f.Placement.Cells.OrderBy(c => c)));
+                if (p == null || (fixedMask & p.Mask).Any) throw new ArgumentException("Illegal or overlapping fixed placement.");
+                fixedMask |= p.Mask;
+                fixedArea += a.Area;
+                a.Required = false;
+                // Geometry is canonical and recomputed; retain the supplied pose for symmetric pieces.
+                var pose = new Placement { Cells = (int[])p.Cells.Clone(), Mask = p.Mask, Halo = p.Halo,
+                    Left = p.Left, Top = p.Top, U = p.U, Index = p.Index,
+                    X = f.Placement.X, Y = f.Placement.Y, Rotation = f.Placement.Rotation, Flipped = f.Placement.Flipped };
+                fixedLayout.Add(new Placed { Piece = a, P = pose });
+                pieces.Remove(a);
+            }
+            InitializeAccumulators(fixedLayout);
             var typeLimits = new Limits[types.Count, types.Count];
             for (int x = 0; x < types.Count; x++)
                 for (int y = 0; y < types.Count; y++) typeLimits[x, y] = PairLimits(x, y);
@@ -181,9 +212,9 @@ namespace ModePuzzle.Engine
             });
             n = pieces.Count;
             frames = new Frame[n];
-            for (int i = 0; i < n; i++) frames[i] = new Frame(pieces[i].Type.Placements.Count, n);
+            for (int i = 0; i < n; i++) frames[i] = new Frame(pieces[i].Type.Placements.Count, n + fixedLayout.Count);
             boundValues.Capacity = n;
-            selected.Capacity = n;
+            selected.Capacity = n + fixedLayout.Count;
             lastByType = new int[types.Count];
             for (int t = 0; t < types.Count; t++) lastByType[t] = -1;
             requiredCount = pieces.Count(p => p.Required);
@@ -199,6 +230,11 @@ namespace ModePuzzle.Engine
                 {
                     potentialHi[i, k] = pieces[i].MaxUnary[k];
                     potentialLo[i, k] = pieces[i].MinUnary[k];
+                    foreach (var f in fixedLayout)
+                    {
+                        potentialHi[i, k] += Pair(pieces[i], f.Piece).Hi[k];
+                        potentialLo[i, k] += Pair(pieces[i], f.Piece).Lo[k];
+                    }
                     for (int j = 0; j < n; j++)
                     {
                         if (i == j || pieces[j].Type.Placements.Count == 0) continue;
@@ -271,6 +307,7 @@ namespace ModePuzzle.Engine
             int risk = RiskOf(layout);
             if (order > 0 || (order == 0 && risk < bestRisk))
             {
+                lastImprovement = now() - start;
                 bestTotals = (int[])totals.Clone();
                 bestLayout = layout.Select(a => a.Clone()).ToList();
                 bestRisk = risk;
@@ -383,22 +420,22 @@ namespace ModePuzzle.Engine
         /// <summary>Randomized greedy passes with repair; guides discovery only, never decides the result alone.</summary>
         void Heuristic()
         {
-            double heuristicEnd = start + Math.Min(HeuristicMaxMs, Math.Max(HeuristicMinMs, limitMs * HeuristicShare));
+            double heuristicEnd = start + Math.Min(config.HeuristicBudgetMs, Math.Max(HeuristicMinMs, limitMs * HeuristicShare));
             int iteration = 0;
             List<Placed> repairLayout = null;
             double repairFitness = double.NegativeInfinity;
             var delta = new int[Axis.Count];
             var trial = new int[Axis.Count];
             var candidateD = new int[Axis.Count];
-            while (n > 0 && now() < heuristicEnd)
+            while (n > 0 && now() < heuristicEnd && !ShouldStop())
             {
-                var layout = new List<Placed>();
-                Bits mask = default;
-                var totals = new int[Axis.Count];
+                var layout = fixedLayout.Select(a => a.Clone()).ToList();
+                Bits mask = fixedMask;
+                var totals = Totals(layout);
                 var seed = bestLayout ?? repairLayout;
                 if (seed != null && iteration % RestartEvery != 0)
                 {
-                    layout = seed.Where(_ => random() > RepairDropRate).Select(a => a.Clone()).ToList();
+                    layout = seed.Where(a => fixedLayout.Any(f => f.Piece == a.Piece) || random() > RepairDropRate).Select(a => a.Clone()).ToList();
                     InitializeAccumulators(layout);
                     foreach (var a in layout) mask |= a.P.Mask;
                     totals = Totals(layout);
@@ -412,12 +449,13 @@ namespace ModePuzzle.Engine
                 bool failed = false;
                 foreach (var a in order)
                 {
-                    if (now() - start >= limitMs) { expired = true; break; }
+                    if (ShouldStop()) break;
                     Placed candidate = null;
                     double quality = double.NegativeInfinity;
                     double currentFitness = Fitness(totals);
                     foreach (var p in a.Type.Placements)
                     {
+                        if (ShouldStop()) break;
                         if ((mask & p.Mask).Any) continue;
                         var acc = Delta(a, p, layout, delta);
                         for (int k = 0; k < Axis.Count; k++) trial[k] = totals[k] + delta[k];
@@ -581,12 +619,25 @@ namespace ModePuzzle.Engine
             }
         }
 
+        bool ShouldStop()
+        {
+            if (cancelled()) { stopped = true; expired = true; }
+            double time = now();
+            if (time - start >= limitMs) expired = true;
+            if (!expired && time - lastReport >= ProgressIntervalMs)
+            {
+                onProgress(Result(false, phase));
+                lastReport = time;
+            }
+            return expired;
+        }
+
         void CheckClock()
         {
             visits++;
             if ((ticks++ & ClockCheckMask) != 0) return;
             double time = now();
-            if (time - start >= limitMs) { expired = true; return; }
+            if (ShouldStop()) return;
             if (time - lastReport > ProgressIntervalMs) { onProgress(Result(false, Phases.Exact)); lastReport = time; }
         }
 
@@ -645,6 +696,7 @@ namespace ModePuzzle.Engine
             {
                 Done = done, Phase = phase, Feasible = bestLayout != null, Proven = done && !expired,
                 Totals = bestTotals == null ? null : (int[])bestTotals.Clone(),
+                LastImprovementMs = lastImprovement,
                 RiskPieces = bestLayout == null ? 0 : RiskOf(bestLayout), Visits = visits, ElapsedMs = now() - start,
             };
             if (bestLayout != null)

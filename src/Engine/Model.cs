@@ -80,12 +80,16 @@ namespace ModePuzzle.Engine
     {
         public Board Board;
         public List<Item> Items = new List<Item>();
+        /// <summary>Pre-placed instances, separate from Items; quantity must be one and IDs unique.</summary>
+        public List<PlacedPiece> Fixed = new List<PlacedPiece>();
         public Rules Rules = new Rules();
         /// <summary>Pieces may be left out (unless Required).</summary>
         public bool Optional = true;
         /// <summary>Maximise this axis; ignored when Custom is set.</summary>
         public int Target = Axis.Performance;
         public CustomTarget Custom;
+        /// <summary>Discovery cap only; never changes feasibility, scoring or proof.</summary>
+        public double HeuristicBudgetMs = 200;
     }
 
     /// <summary>Ranges on every axis, then maximise Primary, then Secondary on ties.</summary>
@@ -113,7 +117,7 @@ namespace ModePuzzle.Engine
         public List<PlacedPiece> Layout = new List<PlacedPiece>();
         public int RiskPieces;
         public long Visits;
-        public double ElapsedMs;
+        public double ElapsedMs, LastImprovementMs;
         /// <summary>Upper bound on the primary axis from the root relaxation (null: unbounded).</summary>
         public double? UpperBound;
     }

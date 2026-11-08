@@ -182,3 +182,7 @@ filter_empty,No module matches the filters.
 card_used,Used by the result
 filter_special,Machine-specific only
 filter_special_hint,Only modules made for a particular machine (hydroponics, DNA editor, 3D printer, furnace, alarm, evaporator and so on); no universal modules or nodes.
+card_required,Required
+card_required_hint,Required: the search must use this module. The exclusion switches and 'installed modules only' do not drop it. If it cannot fit, the search reports no feasible layout.
+filter_state_required,Required
+filter_count_required, · {0} required

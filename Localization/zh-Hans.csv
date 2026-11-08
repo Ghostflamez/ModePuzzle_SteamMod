@@ -181,3 +181,7 @@ filter_empty,没有符合筛选条件的模组。
 card_used,本次布局已用
 filter_special,仅显示专用模组
 filter_special_hint,只显示某台机器专用的模组（水培、DNA编辑器、3D打印机、熔炉、警报器、蒸发器等），不显示通用模组和节点。
+card_required,必选
+card_required_hint,必选：优化时一定要用到这件模组。不受“排除所有退化 / 易损模组”影响，勾选“只用已插入本机的模组”时也会加入。放不下时搜索会报告没有可行布局。
+filter_state_required,必选
+filter_count_required, · 必选 {0} 件

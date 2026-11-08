@@ -25,6 +25,7 @@ namespace ModePuzzle
             public string Status;         // optional status strip text
             public Color StatusColor;
             public bool Locks;            // show 不锁 / 保留 / 固定
+            public bool CanRequire;       // show the 必选 switch (free and lent modules)
         }
 
         static readonly Dictionary<int, Sprite> chipIcons = new Dictionary<int, Sprite>();
@@ -98,6 +99,15 @@ namespace ModePuzzle
                 EndRow(b, false);
             }
             if (info.Locks) LockButtons(b, m, inner);
+            if (info.CanRequire)
+            {
+                var module = m;
+                string label = Loc.T("card_required");
+                CompactToggle(b, label, Loc.T("card_required_hint"), requiredFree.Contains(m.UniqueId), v => SetRequired(module, v),
+                    Mathf.Min(inner, ToggleWidth(label)), !Busy);
+                var text = b.Last.text;
+                if (text != null) text.color = PanelStyle.PaperInk;
+            }
             b.End();
         }
 

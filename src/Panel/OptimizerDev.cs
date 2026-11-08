@@ -1,3 +1,4 @@
+using System;
 using System.Globalization;
 using System.Linq;
 using ModePuzzle.Engine;
@@ -113,6 +114,16 @@ namespace ModePuzzle
                     else return "usage: filterset trait|kind|state|sort|clear <value>";
                     FiltersChanged();
                     return $"ok kind={filterKind} trait={filterTrait} state={filterState} sort={sortAxis}";
+                }
+                case "require":
+                {
+                    // require <n>: mark the last n free candidates 必选 (as ticking their switches); require 0 clears.
+                    if (!int.TryParse(arg, out int n)) return "usage: require <n>";
+                    requiredFree.Clear();
+                    var list = Candidates().Select(c => c.module).ToList();
+                    foreach (var m in list.Skip(Math.Max(0, list.Count - n))) requiredFree.Add(m.UniqueId);
+                    Invalidate(); Refresh();
+                    return "ok required=" + string.Join(",", requiredFree);
                 }
                 case "dropopen":
                     if (!int.TryParse(arg, out int d) || d < 0 || d >= drops.Count) return "usage: dropopen <0-" + (drops.Count - 1) + ">";

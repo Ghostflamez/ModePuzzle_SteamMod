@@ -17,7 +17,7 @@ namespace ModePuzzle
     static partial class OptimizerPanel
     {
         const string NodeKind = "node", NodeEffect = "NODE_EFFECT_SUPPORT";
-        enum FreeState { All, Risk, Learning, Borrowed, Used, Unused }
+        enum FreeState { All, Required, Risk, Learning, Borrowed, Used, Unused }
         static string filterText = "", filterKind = "", filterTrait = "";
         static bool filterSpecial;   // only modules made for a particular machine (not universal, not nodes)
         static FreeState filterState;
@@ -53,6 +53,7 @@ namespace ModePuzzle
             if (filterTrait == "none" ? effects.Count > 0 : filterTrait != "" && !effects.Contains(filterTrait)) return false;
             switch (filterState)
             {
+                case FreeState.Required: if (!requiredFree.Contains(m.UniqueId)) return false; break;
                 case FreeState.Risk: if (!effects.Contains(DegradingEffect) && !effects.Contains(OvervoltedEffect)) return false; break;
                 case FreeState.Learning: if (!effects.Contains(LearningEffect)) return false; break;
                 case FreeState.Borrowed: if (lender == null) return false; break;
@@ -85,7 +86,7 @@ namespace ModePuzzle
             var kindLabels = new List<string> { Loc.T("filter_kind_all") }; kindLabels.AddRange(kinds.Select(KindName));
             var traits = all.SelectMany(c => EffectsOf(c.module)).Distinct().OrderBy(GameText.Effect).ToList();
             var traitLabels = new List<string> { Loc.T("filter_trait_all") }; traitLabels.AddRange(traits.Select(GameText.Effect)); traitLabels.Add(Loc.T("filter_trait_none"));
-            var stateLabels = new List<string> { Loc.T("filter_state_all"), Loc.T("filter_state_risk"), Loc.T("filter_state_learning"),
+            var stateLabels = new List<string> { Loc.T("filter_state_all"), Loc.T("filter_state_required"), Loc.T("filter_state_risk"), Loc.T("filter_state_learning"),
                 Loc.T("filter_state_borrowed"), Loc.T("filter_state_used"), Loc.T("filter_state_unused") };
             var sortLabels = new List<string> { Loc.T("sort_default") }; sortLabels.AddRange(Axes().Select(a => Loc.T("sort_axis", a)));
             int kindIndex = filterKind == "" ? 0 : kinds.IndexOf(filterKind) + 1;
@@ -116,10 +117,14 @@ namespace ModePuzzle
             var shown = all.Where(c => Matches(c.module, c.lender, used)).ToList();
             if (sortAxis >= 0)
                 shown = shown.OrderByDescending(c => sortAxis == 0 ? c.module.Efficiency : sortAxis == 1 ? c.module.Quality : c.module.Performance).ToList();
+            // 必选 modules stay at the top, as in the web tool.
+            shown = shown.OrderByDescending(c => requiredFree.Contains(c.module.UniqueId)).ToList();
+            int required = all.Count(c => requiredFree.Contains(c.module.UniqueId));
 
             // Count, the 仅显示专用模组 switch, and 清除筛选 while a filter is on.
             bool active = FilterActive;
             string count = active ? Loc.T("filter_count_some", shown.Count, all.Count) : Loc.T("filter_count_all", all.Count);
+            if (required > 0) count += Loc.T("filter_count_required", required);
             float gap = OptimizerTuning.RowGap, clear = active ? TextWidth(Loc.T("filter_clear"), true) : 0;
             string special = Loc.T("filter_special");
             float toggle = ToggleWidth(special);
@@ -133,7 +138,7 @@ namespace ModePuzzle
             var list = shown.Take(freeShown).ToList();
             CardGrid(b, list.Select(c => c.module).ToList(), (m, i) =>
             {
-                var info = new CardInfo { Values = new[] { m.Efficiency, m.Quality, m.Performance } };
+                var info = new CardInfo { Values = new[] { m.Efficiency, m.Quality, m.Performance }, CanRequire = true };
                 var lender = list[i].lender;
                 if (lender != null) { info.Status = Loc.T("card_borrowed", lender); info.StatusColor = PanelStyle.StatusBorrowed; }
                 else if (used.Contains(m.UniqueId)) { info.Status = Loc.T("card_used"); info.StatusColor = PanelStyle.StatusAdded; }

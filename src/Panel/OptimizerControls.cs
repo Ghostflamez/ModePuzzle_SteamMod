@@ -48,9 +48,23 @@ namespace ModePuzzle
             return string.Join(";", snap.Free.Select(m => m.UniqueId + ":" + m.Identifier + ":" + m.Stuck).OrderBy(s => s, StringComparer.Ordinal));
         }
 
+        /// <summary>
+        /// 必选 free (or lent) modules, as in the web tool: the search must use them. They are never excluded
+        /// automatically and come in even with 只用已插入本机的模组. Kept for the game session.
+        /// </summary>
+        static readonly HashSet<int> requiredFree = new HashSet<int>();
+
+        static void SetRequired(ModuleInfo m, bool on)
+        {
+            if (on) requiredFree.Add(m.UniqueId); else requiredFree.Remove(m.UniqueId);
+            bool hadResult = result != null || session != null;
+            Invalidate();
+            if (hadResult) Refresh(); else RefreshCards();
+        }
+
         static bool Excluded(ModuleInfo m)
         {
-            if (Pinned(m) || m.Effects == null) return false;
+            if (Pinned(m) || m.Effects == null || requiredFree.Contains(m.UniqueId)) return false;
             if (locks.TryGetValue(m.UniqueId, out var kind) && kind != EngineBridge.LockKind.None) return false;
             return excludeDegrading && m.Effects.Contains(DegradingEffect) || excludeOvervolted && m.Effects.Contains(OvervoltedEffect);
         }
@@ -180,9 +194,11 @@ namespace ModePuzzle
             {
                 // Capture at click time, not the potentially stale model used to draw the controls.
                 var snap=LiveReader.Read(); var machine=snap.Machines.Single(m => m.UniqueId == selectedMachineId);
-                var free=onlyInstalled ? new List<ModuleInfo>() : snap.Free.Where(machine.CanHold).Concat(Borrowable(snap,machine)).ToList();
-                free=free.Where(m => !Excluded(m) && !IsBroken(m)).ToList();
+                var free=snap.Free.Where(machine.CanHold).Concat(Borrowable(snap,machine))
+                    .Where(m => !IsBroken(m) && (requiredFree.Contains(m.UniqueId) || !onlyInstalled && !Excluded(m))).ToList();
                 var config=EngineBridge.Config(machine,free,EffectiveLocks(machine));
+                foreach (var item in config.Items)
+                    if (int.TryParse(item.Id.Substring(1), out int uid) && requiredFree.Contains(uid)) item.Required = true;
                 var dropped=new HashSet<string>(machine.Installed.Select(p => p.Module).Where(Excluded).Select(m => "u"+m.UniqueId));
                 config.Items.RemoveAll(i => dropped.Contains(i.Id));
                 if (target == 3)

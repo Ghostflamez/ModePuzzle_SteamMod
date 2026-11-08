@@ -17,3 +17,5 @@ cfg_dev_smuggler,开发测试：可疑的走私犯每天必来
 cfg_dev_smuggler_tip,仅用于测试。忽略天数、冷却和是否已拥有。
 cfg_dev_crate,开发测试：工程铸造厂物资箱和治安部物证柜必出超科技模组优化器
 cfg_dev_crate_tip,仅用于测试。只影响打开设置之后新生成的箱子。
+cfg_dev_crates_on_load,开发测试：读档后在柜台放一个已开锁的工程铸造厂物资箱和治安部物证柜
+cfg_dev_crates_on_load_tip,仅用于测试。每次读档都会生成；搭配「必出」开关可确认箱内有超科技模组优化器。

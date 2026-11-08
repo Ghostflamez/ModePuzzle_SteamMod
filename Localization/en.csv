@@ -17,3 +17,5 @@ cfg_dev_smuggler,Dev test: the Suspicious Smuggler comes every day
 cfg_dev_smuggler_tip,For testing only. Ignores the day, cooldown and whether you already own one.
 cfg_dev_crate,Dev test: engineering and evidence crates always contain a Hypertech Module Optimizer
 cfg_dev_crate_tip,For testing only. Applies to crates generated after you turn it on.
+cfg_dev_crates_on_load,Dev test: put an unlocked engineering crate and evidence crate on the counter after loading
+cfg_dev_crates_on_load_tip,For testing only. Spawns on every load; combine with the always-contains toggle to check for the optimizer.

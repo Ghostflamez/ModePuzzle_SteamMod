@@ -13,6 +13,7 @@ namespace ModePuzzle
         static ConfigEntry<bool> devSpawnOnLoad;
         internal static ConfigEntry<bool> DevSmugglerDaily;
         internal static ConfigEntry<bool> DevCrateAlways;
+        static ConfigEntry<bool> devCratesOnLoad;
         static bool registered;
         static bool debugFunctionsAdded;
 
@@ -38,6 +39,8 @@ namespace ModePuzzle
                 () => Loc.T("cfg_dev_smuggler"), () => Loc.T("cfg_dev_smuggler_tip"));
             DevCrateAlways = config.Define("dev_crate_always", false, "dev",
                 () => Loc.T("cfg_dev_crate"), () => Loc.T("cfg_dev_crate_tip"));
+            devCratesOnLoad = config.Define("dev_crates_on_load", false, "dev",
+                () => Loc.T("cfg_dev_crates_on_load"), () => Loc.T("cfg_dev_crates_on_load_tip"));
 
             JacksonStock.Enable();
             Smuggler.Enable();
@@ -72,6 +75,19 @@ namespace ModePuzzle
                 debugFunctionsAdded = true;
             }
             if (devSpawnOnLoad != null && devSpawnOnLoad.Value) SpawnToCounter();
+            if (devCratesOnLoad != null && devCratesOnLoad.Value) SpawnUnlockedCrates();
+        }
+
+        /// <summary>Dev test: one engineering and one evidence crate, filled by the game (and our patch)
+        /// and unlocked, on the front counter.</summary>
+        static void SpawnUnlockedCrates()
+        {
+            foreach (var crate in new[] { PreBuiltItemHelper.LootCrateEngineering(), PreBuiltItemHelper.LootCrateEvidence() })
+            {
+                if (crate == null) continue;
+                LockHelper.UnlockContainer(crate, true);
+                ModHelper.MoveItemToFrontCounter(crate);
+            }
         }
 
         static void SpawnToCounter()

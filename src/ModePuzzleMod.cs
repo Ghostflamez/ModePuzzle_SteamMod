@@ -78,6 +78,7 @@ namespace ModePuzzle
 
         static void OnGameLoaded()
         {
+            LogOwnedOptimizers("after load");
             // The mod's localization is loaded after OnEnable, so the labels are added here.
             if (!debugFunctionsAdded)
             {
@@ -118,6 +119,16 @@ namespace ModePuzzle
                 if (machine.parentInventory == null) ModHelper.MoveItemToInventory(machine);
                 Log.Log($"Dev machine {id} spawned, placed={machine.parentInventory != null}");
             }
+        }
+
+        /// <summary>Diagnostics: where every owned optimizer is.</summary>
+        internal static void LogOwnedOptimizers(string when)
+        {
+            var owned = EmporiumEntry.Instance?.GetAllOwnedItems();
+            if (owned == null) { Log.Log($"Optimizers {when}: owned list unavailable"); return; }
+            var found = owned.Where(i => i != null && i.identifier == OptimizerItem.Id)
+                .Select(i => i.parentInventory?.GetParentItem()?.identifier ?? i.parentInventory?.identifier ?? "?").ToList();
+            Log.Log($"Optimizers {when}: {found.Count} owned [{string.Join(", ", found)}]; created {OptimizerItem.CreatedCount}, restored from saves {OptimizerItem.LoadedCount} this session");
         }
 
         static void SpawnToCounter()

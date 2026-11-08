@@ -7,8 +7,14 @@ namespace ModePuzzle
         public const long Value = 500;
         const int ContrabandLevelHigh = 3;   // ContrabandHelper: 1 low, 2 mid, 3 high, 4 critical
 
+        /// <summary>Diagnostics: factory calls since the game started (spawns and items decoded from a save).</summary>
+        public static int CreatedCount;
+        /// <summary>Diagnostics: items restored from a save (their onLoaded ran).</summary>
+        public static int LoadedCount;
+
         public static GameItem Create()
         {
+            CreatedCount++;
             var item = ItemDirectory.CreateEmptyItem(Id);
             if (IconSprite.Ensure()) item.SetSpriteAndShapeFromMod(ModePuzzleMod.ModId, IconSprite.Key);
             else item.SetSpriteAndShape(IconSprite.ScannerAtlas, IconSprite.ScannerSprite);
@@ -16,7 +22,7 @@ namespace ModePuzzle
             ApplyTexts(item);
             // A save stores the item's name and texts and restores them over the factory's; onLoaded runs
             // after that, so saved copies pick up the current name and language.
-            item.onLoaded += ApplyTexts;
+            item.onLoaded += loaded => { LoadedCount++; ApplyTexts(loaded); };
             item.SetGameItemType("TOOL");
             ContrabandHelper.InitContrabandItem(item, ContrabandLevelHigh);
             item.SetValue(Value);

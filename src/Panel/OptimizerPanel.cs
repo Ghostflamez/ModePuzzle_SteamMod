@@ -125,12 +125,22 @@ namespace ModePuzzle
             EndRow(b);
             if (tab == Tab.Free)
             {
-                ModuleTable(b, shown, fits, null, inner);
+                var lenders = new Dictionary<int, string>();
+                foreach (var other in snap.Machines)
+                    foreach (var p in other.Installed) lenders[p.Module.UniqueId] = other.Name;
+                var list = fits.Take(PanelStyle.FreeListMax).ToList();
+                CardGrid(b, list, (m, i) => new CardInfo { Values = new[] { m.Efficiency, m.Quality, m.Performance } }, inner);
+                if (fits.Count > PanelStyle.FreeListMax) Caption(b, Loc.T("panel_more", fits.Count - PanelStyle.FreeListMax), inner);
+                if (fits.Count == 0) Caption(b, Loc.T("panel_none"), inner);
                 if (borrowed.Count > 0)
                 {
-                    Separator(b, inner);
                     Label(b, Loc.T("tab_borrowed", borrowed.Count), inner);
-                    ModuleTable(b, shown, borrowed, null, inner);
+                    CardGrid(b, borrowed, (m, i) => new CardInfo
+                    {
+                        Values = new[] { m.Efficiency, m.Quality, m.Performance },
+                        Status = Loc.T("card_borrowed", lenders.TryGetValue(m.UniqueId, out var from) ? from : "?"),
+                        StatusColor = PanelStyle.StatusBorrowed,
+                    }, inner);
                 }
             }
             else
@@ -138,7 +148,26 @@ namespace ModePuzzle
                 var evaluation = bayShows == BayShows.Result && result?.Feasible == true
                     ? Engine.Scoring.Evaluate(result.Layout, new Engine.Rules()) : EngineBridge.EvaluateCurrent(shown, new Engine.Rules());
                 if (tab == Tab.Details) Details(b, shown, evaluation, inner);
-                else ModuleTable(b, shown, null, evaluation, inner);
+                else
+                {
+                    var rows = evaluation.Rows.ToDictionary(r => r.Item.Id);
+                    var modules = shown.Installed.Select(p => p.Module).ToList();
+                    bool resultView = bayShows == BayShows.Result && original != null && shown != machine;
+                    CardGrid(b, modules, (m, i) =>
+                    {
+                        var info = new CardInfo { Number = i + 1, Values = rows["u" + m.UniqueId].Total, Locks = bayShows == BayShows.Current };
+                        if (resultView)
+                        {
+                            var was = original.Installed.FirstOrDefault(o => o.Module.UniqueId == m.UniqueId);
+                            var now = shown.Installed[i];
+                            if (was == null) { info.Status = Loc.T("card_added"); info.StatusColor = PanelStyle.StatusAdded; }
+                            else if (was.OriginX != now.OriginX || was.OriginY != now.OriginY || was.Orientation != now.Orientation || was.Flipped != now.Flipped)
+                            { info.Status = Loc.T("card_moved"); info.StatusColor = PanelStyle.StatusMoved; }
+                        }
+                        return info;
+                    }, inner);
+                    if (modules.Count == 0) Caption(b, Loc.T("panel_none"), inner);
+                }
             }
 
             if (snap.Skipped.Count > 0)

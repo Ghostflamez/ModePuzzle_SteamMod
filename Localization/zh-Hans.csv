@@ -101,8 +101,8 @@ panel_accepts,可装：{0}
 panel_module,模组
 panel_traits,词条
 opt_invalid_tag,结果已作废
-detail_base,基础
-detail_self,自身（含挂载）
+detail_base,初始
+detail_self,自身小计
 detail_absorbed,吸收
 detail_receiver,接收器
 detail_total,合计
@@ -147,3 +147,7 @@ opt_custom_hint,按主目标、次目标的顺序比较；下限、上限留空�
 metric_tried,已尝试 {0} 种布局
 metric_best_at,最优解在第 {0} 秒
 metric_none,还没有找到可行布局
+card_added,新加入本机
+card_moved,位置已调整
+card_borrowed,来自「{0}」· 已解锁
+detail_self_hint,初始属性加上挂载、优质 / 劣质等自身加成，取整后的值。

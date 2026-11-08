@@ -98,10 +98,21 @@ namespace ModePuzzle
             Row(b, width);
             Choice.Buttons(b, Axes(), detailAxis, i => { detailAxis = i; Refresh(); });
             EndRow(b);
-            float available = width - PanelStyle.NumberWidth - PanelStyle.IconSlot - 7 * OptimizerTuning.RowGap;
-            float name = width * PanelStyle.NameShare, value = Mathf.Max(0, (available - name) / 5);
-            var c = Columns(width, OptimizerTuning.RowGap, PanelStyle.NumberWidth, PanelStyle.IconSlot, name, value, value, value, value, value);
-            Header(b, width, c, 8, Loc.T("table_number"), Loc.T("table_icon"), Loc.T("panel_module"), Loc.T("detail_base"), Loc.T("detail_self"), Loc.T("detail_absorbed"), Loc.T("detail_receiver"), Loc.T("detail_total"));
+            // Icon, "#n name" (plain ink: the card colour is in the icon), five numbers; striped rows, a bold total.
+            float value = PanelStyle.DetailColumn, gap = OptimizerTuning.RowGap;
+            float name = Mathf.Max(0, width - PanelStyle.IconSlot - 5 * value - 6 * gap);
+            var c = Columns(width, gap, PanelStyle.IconSlot, name, value, value, value, value, value);
+            string[] heads = { "", Loc.T("panel_module"), Loc.T("detail_base"), Loc.T("detail_self"), Loc.T("detail_absorbed"), Loc.T("detail_receiver"), Loc.T("detail_total") };
+            Row(b, width);
+            var band = b.CurrentContainer.gameObject.AddComponent<Image>(); band.color = PanelStyle.PanelColor; band.raycastTarget = false;
+            for (int i = 0; i < heads.Length; i++)
+            {
+                var h = Caption(b, heads[i], c[i], i >= 2);
+                h.text.enableWordWrapping = false;
+                if (i >= 2) NumberMargin(h);
+                if (i == 3) h.SetTooltip(Loc.T("detail_self_hint"));
+            }
+            EndRow(b, false);
             var rows = evaluation.Rows.ToDictionary(r => r.Item.Id);
             var totals = new int[5];
             for (int i = 0; i < machine.Installed.Count; i++)
@@ -110,12 +121,22 @@ namespace ModePuzzle
                 var r = rows["u" + m.UniqueId];
                 int[] values = { r.Item.Base[detailAxis], r.Self[detailAxis], r.Absorbed[detailAxis], r.Receiver[detailAxis], r.Total[detailAxis] };
                 Row(b, width); b.CurrentContainer.GetComponent<LayoutElement>().minHeight = PanelStyle.RowHeight;
-                Label(b, (i + 1).ToString(), c[0], true); ModuleIcon(b, m, c[1]); Name(b, m, c[2]);
-                for (int k = 0; k < values.Length; k++) { totals[k] += values[k]; Label(b, GameText.ColoredValue(values[k]), c[k + 3], true); }
+                if (i % 2 == 1) { var stripe = b.CurrentContainer.gameObject.AddComponent<Image>(); stripe.color = PanelStyle.RowStripe; stripe.raycastTarget = false; }
+                ModuleIcon(b, m, c[0]);
+                var label = Label(b, $"<color=#{PanelStyle.MutedHex}>#{i + 1}</color> {m.Name}", c[1]);
+                label.text.enableWordWrapping = false; label.text.overflowMode = TMPro.TextOverflowModes.Ellipsis;
+                label.SetTooltip(GameText.Describe(m));
+                for (int k = 0; k < values.Length; k++) { totals[k] += values[k]; NumberMargin(Label(b, GameText.ColoredValue(values[k]), c[k + 2], true)); }
                 CompactRow(b); EndRow(b, false);
             }
-            Row(b, width); Label(b, "", c[0]); Label(b, "", c[1]); Label(b, Loc.T("detail_total"), c[2]);
-            foreach (var pair in totals.Select((v, i) => new { v, i })) Label(b, GameText.ColoredValue(pair.v), c[pair.i + 3], true);
+            Separator(b, width);
+            Row(b, width); Label(b, "", c[0]);
+            Label(b, Loc.T("detail_total"), c[1]).text.fontStyle = TMPro.FontStyles.Bold;
+            foreach (var pair in totals.Select((v, i) => new { v, i }))
+            {
+                var t = Label(b, GameText.ColoredValue(pair.v), c[pair.i + 2], true);
+                t.text.fontStyle = TMPro.FontStyles.Bold; NumberMargin(t);
+            }
             EndRow(b, false);
             int expected = bayShows == BayShows.Result && result?.Feasible == true ? result.Totals[detailAxis] : evaluation.Total[detailAxis];
             if (totals[4] != expected) ModePuzzleMod.Log?.Warning($"Detail total assertion failed: axis={detailAxis}, rows={totals[4]}, dashboard={expected}");

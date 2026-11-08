@@ -103,7 +103,7 @@ panel_module,Module
 panel_traits,Traits
 opt_invalid_tag,Invalidated
 detail_base,Base
-detail_self,Self (incl. mounts)
+detail_self,Self
 detail_absorbed,Absorption
 detail_receiver,Receiver
 detail_total,Total
@@ -148,3 +148,7 @@ opt_custom_hint,Compared by primary, then secondary. Leave a bound empty for non
 metric_tried,{0} layouts tried
 metric_best_at,best found at {0} s
 metric_none,no feasible layout yet
+card_added,Newly installed
+card_moved,Moved
+card_borrowed,From {0} · unlocked
+detail_self_hint,Base stats with the module's own bonuses (mounts, premium / inferior and so on), rounded.

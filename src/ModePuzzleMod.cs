@@ -81,6 +81,9 @@ namespace ModePuzzle
 
             JacksonStock.Enable();
             Smuggler.Enable();
+#if DEV
+            Dev.HotPanel.Begin();
+#endif
         }
 
         public void OnDisable()
@@ -93,7 +96,10 @@ namespace ModePuzzle
             debugFunctionsAdded = false;
             JacksonStock.Disable();
             Smuggler.Disable();
-            OptimizerPanel.Close();
+            PanelHost.Close();
+#if DEV
+            Dev.HotPanel.End();
+#endif
         }
 
         /// <summary>
@@ -112,7 +118,7 @@ namespace ModePuzzle
 
         static void OnGameLoaded()
         {
-            OptimizerPanel.ResetSession();
+            PanelHost.ResetSession();
             LogOwnedOptimizers("after load");
             // The mod's localization is loaded after OnEnable, so the labels are added here.
             if (!debugFunctionsAdded)

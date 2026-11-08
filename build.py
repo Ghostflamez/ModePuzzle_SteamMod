@@ -23,7 +23,7 @@ DLL = 'ModePuzzle.dll'
 GAME_EXE = 'Probably Stolen.exe'
 REFERENCES = [
     'mscorlib.dll', 'System.dll', 'System.Core.dll', 'netstandard.dll',
-    'UnityEngine.dll', 'UnityEngine.CoreModule.dll', 'UnityEngine.TextRenderingModule.dll', 'UnityEngine.UI.dll', 'UnityEngine.UIModule.dll',
+    'UnityEngine.dll', 'UnityEngine.CoreModule.dll', 'UnityEngine.TextRenderingModule.dll', 'UnityEngine.UI.dll', 'UnityEngine.UIModule.dll', 'UnityEngine.ScreenCaptureModule.dll',
     'Unity.TextMeshPro.dll',
     'Assembly-CSharp.dll', '0Harmony.dll',
 ]
@@ -77,22 +77,78 @@ def game_dir():
     sys.exit('Game not found: set PROBABLY_STOLEN_DIR to the folder that holds Probably Stolen.exe.')
 
 
-def compile_dll(data, managed):
+PANEL_DIR = os.path.join(ROOT, 'src', 'Panel')
+DEV_DIR = os.path.join(ROOT, 'build', 'dev')
+PANEL_DLL = 'ModePuzzle.Panel.dll'
+# Panel files that exist only for the development host.
+DEV_ONLY_PANEL = ('PanelEntry.cs', 'OptimizerDev.cs')
+
+
+def all_sources(folder):
+    return sorted(os.path.join(d, f) for d, _, files in os.walk(folder) for f in files if f.endswith('.cs'))
+
+
+def run_csc(data, managed, out, sources, extra=()):
     dotnet = os.path.join(data, 'NetCoreRuntime', 'dotnet.exe')
     csc = os.path.join(data, 'DotNetSdkRoslyn', 'csc.dll')
-    sources = sorted(os.path.join(d, f) for d, _, files in os.walk(os.path.join(ROOT, 'src')) for f in files if f.endswith('.cs'))
     refs = [f'-r:{os.path.join(managed, r)}' for r in REFERENCES]
     cmd = [dotnet, csc, '-nologo', '-utf8output', '-noconfig', '-nostdlib', '-target:library', '-optimize+', '-deterministic',
-           '-langversion:9.0', '-warnaserror+', f'-out:{os.path.join(OUT, DLL)}', *refs, *sources]
+           '-langversion:9.0', '-warnaserror+', f'-out:{out}', *refs, *extra, *sources]
     result = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8', errors='replace')
-    out = result.stdout + result.stderr
-    sys.stdout.write(out.encode(sys.stdout.encoding or 'utf-8', errors='replace').decode(sys.stdout.encoding or 'utf-8'))
+    text = result.stdout + result.stderr
+    sys.stdout.write(text.encode(sys.stdout.encoding or 'utf-8', errors='replace').decode(sys.stdout.encoding or 'utf-8'))
     if result.returncode != 0:
         sys.exit('Compilation failed.')
 
 
-def stage():
+def compile_dll(data, managed, dev=False):
+    sources = all_sources(os.path.join(ROOT, 'src'))
+    if dev:
+        # The panel is loaded at run time from build/dev (src/Dev/HotPanel.cs); the main assembly knows the repo path.
+        os.makedirs(DEV_DIR, exist_ok=True)
+        paths = os.path.join(DEV_DIR, 'DevPaths.cs')
+        with open(paths, 'w', encoding='utf-8') as f:
+            f.write('namespace ModePuzzle.Dev { static class DevPaths { public const string Root = @"%s"; } }\n' % ROOT.replace('"', '""'))
+        sources = [s for s in sources if not s.startswith(PANEL_DIR + os.sep)] + [paths]
+        run_csc(data, managed, os.path.join(OUT, DLL), sources, ['-define:DEV'])
+        shutil.copy2(os.path.join(OUT, DLL), os.path.join(DEV_DIR, DLL))   # what the panel compiles against
+        compile_panel(data, managed)
+    else:
+        sources = [s for s in sources if os.path.basename(s) not in DEV_ONLY_PANEL]
+        run_csc(data, managed, os.path.join(OUT, DLL), sources)
+
+
+def compile_panel(data, managed):
+    """The hot-reloadable panel: a new assembly version each time, written atomically for the running game."""
+    main = os.path.join(DEV_DIR, DLL)
+    if not os.path.exists(main):
+        sys.exit('No development build yet: run build.py --dev first.')
+    counter = os.path.join(DEV_DIR, 'panel_version.txt')
+    n = int(open(counter).read().strip()) + 1 if os.path.exists(counter) else 1
+    with open(counter, 'w') as f:
+        f.write(str(n))
+    version = os.path.join(DEV_DIR, 'PanelVersion.cs')
+    with open(version, 'w', encoding='utf-8') as f:
+        f.write('[assembly: System.Reflection.AssemblyVersion("1.0.%d.%d")]\n' % (n // 60000, n % 60000))
+    # The file name sets the assembly name, which must stay ModePuzzle.Panel (InternalsVisibleTo in the main assembly).
+    os.makedirs(os.path.join(DEV_DIR, 'tmp'), exist_ok=True)
+    temp = os.path.join(DEV_DIR, 'tmp', PANEL_DLL)
+    run_csc(data, managed, temp, all_sources(PANEL_DIR) + [version], [f'-r:{main}', '-define:DEV'])
+    os.replace(temp, os.path.join(DEV_DIR, PANEL_DLL))
+    print(f'Panel {n} -> {os.path.join(DEV_DIR, PANEL_DLL)}')
+
+
+def stage(dev=False):
     shutil.copy2(os.path.join(ROOT, 'manifest.xml'), OUT)
+    if dev:
+        # The development host reads the panel and commands from the repository, writes screenshots there and
+        # calls the loaded panel through reflection.
+        path = os.path.join(OUT, 'manifest.xml')
+        text = open(path, encoding='utf-8').read()
+        for capability in ('files', 'reflection-external'):
+            if f'<Capability>{capability}</Capability>' not in text:
+                text = text.replace('</Capabilities>', f'  <Capability>{capability}</Capability>\n  </Capabilities>')
+        open(path, 'w', encoding='utf-8').write(text)
     loc_src = os.path.join(ROOT, 'Localization')
     loc_out = os.path.join(OUT, 'Localization')
     os.makedirs(loc_out, exist_ok=True)
@@ -125,14 +181,20 @@ def install(game):
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--install', action='store_true', help="copy the build into the game's Mods folder")
+    parser.add_argument('--dev', action='store_true', help='development build: hot-reloadable panel from build/dev')
+    parser.add_argument('--panel', action='store_true', help='rebuild only the hot-reloadable panel (game may be running)')
     args = parser.parse_args()
     data, game = unity_data_dir(), game_dir()
+    managed = os.path.join(game, 'Probably Stolen_Data', 'Managed')
+    if args.panel:
+        compile_panel(data, managed)
+        return
     if os.path.exists(OUT):
         shutil.rmtree(OUT)
     os.makedirs(OUT)
-    compile_dll(data, os.path.join(game, 'Probably Stolen_Data', 'Managed'))
-    stage()
-    print(f'Built {OUT}')
+    compile_dll(data, managed, args.dev)
+    stage(args.dev)
+    print(f'Built {OUT}' + (' (development)' if args.dev else ''))
     if args.install:
         install(game)
 

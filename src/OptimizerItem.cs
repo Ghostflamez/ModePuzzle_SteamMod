@@ -31,7 +31,7 @@ namespace ModePuzzle
             // Double-click, the context menu's 激活 and the default activate key all end in ActivateSlotItem.
             item.mayActivateSlotItemFunc = (self, inventory, slot) => true;
             item.canActivateSlotItemFunc = (self, inventory, slot) => true;
-            item.onActivateSlotItemFunc = (self, inventory, slot) => OptimizerPanel.Open();
+            item.onActivateSlotItemFunc = (self, inventory, slot) => PanelHost.Open();
             return item;
         }
 

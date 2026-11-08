@@ -16,8 +16,8 @@ def main():
     managed = Path(build.game_dir()) / 'Probably Stolen_Data/Managed'
     env = dict(os.environ, TEMP=str(out), TMP=str(out), DOTNET_CLI_HOME=str(out))
     exe = out / 'BayPreview.exe'
-    sources = ['tools/BayPreview.cs', 'src/UI/ModuleArt.cs', 'src/UI/BayNumbers.cs',
-               'src/UI/PanelStyle.cs', 'src/UI/TraitIcons.cs', 'src/IconForge.cs', 'src/Model/Snapshot.cs']
+    sources = ['tools/BayPreview.cs', 'src/Panel/ModuleArt.cs', 'src/Panel/BayNumbers.cs',
+               'src/Panel/PanelStyle.cs', 'src/UI/TraitIcons.cs', 'src/IconForge.cs', 'src/Model/Snapshot.cs']
     subprocess.run([str(data / 'NetCoreRuntime/dotnet.exe'), str(data / 'DotNetSdkRoslyn/csc.dll'),
                     '-nologo', '-noconfig', '-nostdlib', '-langversion:9.0', '-warnaserror+', f'-out:{exe}',
                     *[f'-r:{managed / r}' for r in ['mscorlib.dll', 'System.dll', 'System.Core.dll']],

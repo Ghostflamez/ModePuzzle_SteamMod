@@ -80,3 +80,19 @@ python tools/scan/scan_mod.py
   开始搜索前自动剔除被其他模组完全压过、不可能进入最优解的候选（三项属性都不更好、形状不更小、
   也没有有用的词条），剔除后仍超过上限才报错。
 - 词条图标：拖动模组时原位置的半透明虚影上没有图标（目前有意不做）。
+
+## 热重载开发版（界面调试）
+
+- `python build.py --dev --install`（游戏关闭时）：安装开发版。面板代码（`src/Panel/`）不再编进主 DLL，
+  而是在运行时从仓库的 `build/dev/ModePuzzle.Panel.dll` 加载。开发版额外声明 `files`、`reflection-external`
+  两项权限；正式版（不带 `--dev`）只有 `dynamic-code`，也不含任何开发代码。
+- `python build.py --panel`（游戏可以开着）：只重编面板。游戏内约 1 秒后自动换上新版本，原本打开的窗口会
+  重新打开（搜索状态、锁定等面板状态会清空）。新增的界面文字也从仓库的 `Localization/*.csv` 现读。
+- 指令：写 `build/dev/cmd.txt`，第一行是批次号（每次换一个新值），之后每行一条指令；结果写到
+  `build/dev/out.txt`，最后一行为 `done`。
+  - `open` / `close` / `refresh` / `reload`
+  - `machine next|prev|<序号>`、`tab modules|details|free`、`bay current|result`、`axis e|q|p`
+  - `target 0-3`、`time 0-3`、`search`、`stop`、`scroll <0-1>`（1 为顶部）、`state`
+  - `wait <秒>`、`screenshot <名称>` → `build/shots/<名称>.png`（整个游戏画面）
+- 指令只操作优化器窗口，不应用布局、不移动物品，也不写游戏目录。
+- 回到正式版：游戏关闭时 `python build.py --install`。

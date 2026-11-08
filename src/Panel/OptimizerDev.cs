@@ -85,6 +85,16 @@ namespace ModePuzzle
                     }
                     return "ok " + count;
                 }
+                case "inputtest":
+                {
+                    var manager = CustomUIManager.Instance;
+                    if (manager.IsOpen("modepuzzle.dev.input")) { manager.CloseWindow("modepuzzle.dev.input"); return "closed"; }
+                    var w = manager.CreateWindow("modepuzzle.dev.input", "dev", CustomUIManager.LAYER_OVERLAY, null, CustomUIManager.Style.Machinery).SetSize(400, 220);
+                    w.AddInput("placeholder", "123", null);
+                    var el = w.Last;
+                    w.Center(); w.Show();
+                    return $"input={(el.input != null)} root={el.root?.name} children={el.root?.transform.childCount}";
+                }
                 case "dumptoggle":
                 {
                     // Hierarchy of a fresh game toggle: names, sizes, anchors and components.

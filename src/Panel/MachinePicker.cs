@@ -114,7 +114,7 @@ namespace ModePuzzle
         /// badge over the picture's top-left corner. The badge is a separate button of a fixed size, so it looks the
         /// same on every machine, and clicking it locks or unlocks the machine.
         /// </summary>
-        static void MachineArt(CustomUIBuilder b, MachineInfo m, float box, Action click)
+        static void MachineArt(CustomUIBuilder b, MachineInfo m, float box, Action click, bool badged = true)
         {
             var sprite = LiveSprite(m);
             if (sprite == null) { Label(b, "", box); return; }
@@ -125,6 +125,7 @@ namespace ModePuzzle
             var art = b.Last;
             if (art.image != null) art.image.preserveAspect = true;
             art.root.AddComponent<ItemHoverTooltip>().Item = LiveReader.MachineItem(m.UniqueId);
+            if (!badged) return;
 
             bool unlocked = MachineLocks.IsUnlocked(m.UniqueId);
             float badge = (LockedArt.Length + 2) * PanelStyle.LockScale;

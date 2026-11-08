@@ -143,7 +143,7 @@ namespace ModePuzzle
             Row(b, width);
             // The focused machine's own sprite first, in the window's top-left corner.
             float art = PanelStyle.MachineArtSize;
-            MachineArt(b, machine, art, null);
+            MachineArt(b, machine, art, null, false);
             var name = Label(b, $"{machine.Name} ({index + 1}/{snap.Machines.Count})", width * PanelStyle.MachineNameShare);
             name.text.enableWordWrapping = false; name.text.overflowMode = TextOverflowModes.Ellipsis;
             float nameWidth = Mathf.Min(Mathf.Ceil(name.text.GetPreferredValues(name.text.text, float.PositiveInfinity, float.PositiveInfinity).x) + 2, width * PanelStyle.MachineNameShare);
@@ -282,8 +282,6 @@ namespace ModePuzzle
                 EndRow(b, false);
             }
             UpdateMetrics();
-            TargetAndTime(b, c[1]);
-            Row(b, c[1]);
             string counts = "";
             if (preview != null)
             {
@@ -293,13 +291,40 @@ namespace ModePuzzle
                     o.OriginX == p.OriginX && o.OriginY == p.OriginY && o.Orientation == p.Orientation && o.Flipped == p.Flipped));
                 counts = Loc.T("opt_counts", moved, oldIds.Except(newIds).Count(), newIds.Except(oldIds).Count());
             }
+            float gap = OptimizerTuning.RowGap;
             float restoreWidth = TextWidth(Loc.T("opt_restore"), true), applyWidth = preview == null ? 0 : TextWidth(Loc.T("opt_apply"), true);
-            var actions = preview == null ? Columns(c[1], OptimizerTuning.RowGap, Mathf.Max(0, c[1] - restoreWidth - OptimizerTuning.RowGap), restoreWidth) :
-                Columns(c[1], OptimizerTuning.RowGap, Mathf.Max(0, c[1] - restoreWidth - applyWidth - 2 * OptimizerTuning.RowGap), applyWidth, restoreWidth);
-            Caption(b, counts, actions[0]);
-            if (preview != null) { Button(b, Loc.T("opt_apply"), actions[1], ApplyResult, !Busy && !invalid); applyElement = b.Last; }
-            Button(b, Loc.T("opt_restore"), actions[actions.Length - 1], RestorePrevious, RestoreAvailable);
+            float actionsWidth = restoreWidth + (preview == null ? 0 : applyWidth + gap);
+            var targets = new List<string> { GameText.Performance, GameText.Efficiency, GameText.Quality, Loc.T("opt_custom") };
+            var times = OptimizerTuning.TimeLimitsSeconds.Select(s => Loc.T("opt_seconds", s)).ToList();
+            string targetLabel = Loc.T("opt_target"), timeLabel = Loc.T("opt_time_limit");
+            float targetWidth = TextWidth(targetLabel) + gap + ChoiceWidth(targets), timeWidth = TextWidth(timeLabel) + gap + ChoiceWidth(times);
+            void Actions()
+            {
+                if (preview != null) { Button(b, Loc.T("opt_apply"), applyWidth, ApplyResult, !Busy && !invalid); applyElement = b.Last; }
+                Button(b, Loc.T("opt_restore"), restoreWidth, RestorePrevious, RestoreAvailable);
+            }
+            // 目标, with the move counts at the right when they fit. Left and right are blocks of fixed width, so the
+            // right one ends exactly at the column's edge.
+            float countsWidth = TextWidth(counts);
+            bool countsHere = counts.Length > 0 && targetWidth + gap + countsWidth <= c[1];
+            Row(b, c[1]);
+            Row(b, countsHere ? c[1] - countsWidth - gap : c[1]);
+            Label(b, targetLabel, TextWidth(targetLabel));
+            Choice.Buttons(b, targets, target, i => { target = i; detailAxis = i == 3 ? primary : Targets[i]; Invalidate(); Refresh(); }, !Busy);
+            EndRow(b);
+            if (countsHere) Caption(b, counts, countsWidth, true);
             EndRow(b, false);
+            // 时长, with 应用布局 / 恢复上一布局 at the right when they fit.
+            bool actionsHere = timeWidth + gap + actionsWidth <= c[1];
+            Row(b, c[1]);
+            Row(b, actionsHere ? c[1] - actionsWidth - gap : c[1]);
+            Label(b, timeLabel, TextWidth(timeLabel));
+            Choice.Buttons(b, times, timeIndex, i => { timeIndex = i; Refresh(); }, !Busy);
+            EndRow(b);
+            if (actionsHere) { Row(b, actionsWidth); Actions(); EndRow(b, false); }
+            EndRow(b, false);
+            if (!countsHere && counts.Length > 0) Caption(b, counts, c[1]);
+            if (!actionsHere) { Row(b, c[1]); Label(b, "", Mathf.Max(0, c[1] - actionsWidth - gap)); Actions(); EndRow(b, false); }
             messageElement = Label(b, string.Join("\n", new[] { machine.Guessed ? Loc.T("panel_guessed") : null, message }.Where(t => !string.IsNullOrEmpty(t))), c[1]);
             b.End(); EndRow(b, false);
             return shown;

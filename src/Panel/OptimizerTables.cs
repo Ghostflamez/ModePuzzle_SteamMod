@@ -145,14 +145,6 @@ namespace ModePuzzle
             var root = e.root.GetComponent<LayoutElement>();
             if (root != null) root.minHeight = root.preferredHeight = small;
         }
-        /// <summary>目标 and 时长, one row each, left-aligned with the progress bar above them.</summary>
-        static void TargetAndTime(CustomUIBuilder b, float width)
-        {
-            var targets = new List<string> { GameText.Performance, GameText.Efficiency, GameText.Quality, Loc.T("opt_custom") };
-            var times = OptimizerTuning.TimeLimitsSeconds.Select(s => Loc.T("opt_seconds", s)).ToList();
-            ChoiceSetting(b, Loc.T("opt_target"), targets, target, i => { target = i; detailAxis = i == 3 ? primary : Targets[i]; Invalidate(); Refresh(); }, width);
-            ChoiceSetting(b, Loc.T("opt_time_limit"), times, timeIndex, i => { timeIndex = i; Refresh(); }, width);
-        }
         static void ChoiceSetting(CustomUIBuilder b, string label, IList<string> labels, int selected, Action<int> set, float width)
         {
             Row(b, width); Label(b, label, TextWidth(label)); Choice.Buttons(b, labels, selected, set, !Busy); EndRow(b);
@@ -169,38 +161,105 @@ namespace ModePuzzle
             SmallToggle(b, only, null, onlyInstalled, v => onlyInstalled = v, Mathf.Min(wi, width));
             EndRow(b, false);
             if (target != 3) return;
+            CustomTarget(b, width);
+        }
+
+        /// <summary>
+        /// 自定义目标: primary and secondary axis, then one row per axis with its lower and upper bound. A bound is a
+        /// number box (empty = no bound) with small up / down arrows beside it (Shift: ±10).
+        /// </summary>
+        static void CustomTarget(CustomUIBuilder b, float width)
+        {
+            Separator(b, width);
+            Row(b, width);
+            Label(b, Loc.T("opt_custom_title"), TextWidth(Loc.T("opt_custom_title")));
+            Caption(b, Loc.T("opt_custom_hint"), Mathf.Max(0, width - TextWidth(Loc.T("opt_custom_title")) - OptimizerTuning.RowGap));
+            EndRow(b, false);
             ChoiceSetting(b, Loc.T("opt_primary"), Axes(), primary, i => { primary = i; detailAxis = i; if (secondary == i) secondary = -1; Invalidate(); Refresh(); }, width);
             var secondaryOptions = Axes(); secondaryOptions.Insert(0, Loc.T("opt_none"));
             ChoiceSetting(b, Loc.T("opt_secondary"), secondaryOptions, secondary + 1, i => { if (i - 1 != primary) { secondary = i - 1; Invalidate(); Refresh(); } }, width);
+
+            float label = Mathf.Max(TextWidth(Loc.T("opt_primary")), Axes().Max(a => TextWidth(a)));
+            float bound = PanelStyle.BoundInput + PanelStyle.BoundArrow + OptimizerTuning.RowGap;
+            float table = Mathf.Min(width, label + 2 * bound + 2 * OptimizerTuning.RowGap);
+            Header(b, table, new[] { label, bound, bound }.Select(Mathf.RoundToInt).ToArray(), 0, "", Loc.T("opt_min"), Loc.T("opt_max"));
             for (int k = 0; k < Axis.Count; k++)
             {
                 int axis = k;
-                string minLabel = Axes()[k] + " " + Loc.T("opt_min"), maxLabel = Loc.T("opt_max");
-                float minWidth = BoundWidth(minLabel), maxWidth = BoundWidth(maxLabel);
-                if (minWidth + OptimizerTuning.RowGap + maxWidth <= width)
-                {
-                    var c = Columns(minWidth + OptimizerTuning.RowGap + maxWidth, OptimizerTuning.RowGap, minWidth, maxWidth);
-                    Row(b, width);
-                    Bound(b, minLabel, minimum[k], v => { minimum[axis] = v; Invalidate(); Refresh(); }, c[0]);
-                    Bound(b, maxLabel, maximum[k], v => { maximum[axis] = v; Invalidate(); Refresh(); }, c[1]);
-                    EndRow(b, false);
-                }
-                else
-                {
-                    Bound(b, minLabel, minimum[k], v => { minimum[axis] = v; Invalidate(); Refresh(); }, width);
-                    Bound(b, Axes()[k] + " " + maxLabel, maximum[k], v => { maximum[axis] = v; Invalidate(); Refresh(); }, width);
-                }
+                Row(b, table);
+                var name = Label(b, Axes()[k], label);
+                if (k == primary) name.SetTextColor(PanelStyle.Selected);
+                BoundInput(b, minimum[k], v => minimum[axis] = v);
+                BoundInput(b, maximum[k], v => maximum[axis] = v);
+                EndRow(b, false);
             }
         }
-        static float BoundWidth(string label) => TextWidth(label) + OptimizerTuning.RangeWidth +
-            new[] { "-" + OptimizerTuning.RangeStep, "-1", "+1", "+" + OptimizerTuning.RangeStep, Loc.T("opt_clear") }.Sum(s => TextWidth(s, true)) + 6 * OptimizerTuning.RowGap;
-        static void Bound(CustomUIBuilder b, string label, string value, Action<string> set, float width)
+
+        static void BoundInput(CustomUIBuilder b, string value, Action<string> set)
         {
-            Row(b, width); Label(b, label, TextWidth(label));
-            Choice.Stepper(b, value, OptimizerTuning.RangeStep, 0, set, Loc.T("opt_unbounded"), Loc.T("opt_clear"), !Busy);
-            // Stepper's numeric label uses the same typography as the rest of the panel.
-            foreach (var text in b.CurrentContainer.GetComponentsInChildren<TMPro.TMP_Text>()) { text.fontSize = PanelStyle.BodyFont; text.enableAutoSizing = false; }
-            EndRow(b);
+            void Commit(string text)
+            {
+                text = (text ?? "").Trim();
+                if (text == value) return;
+                set(text); Invalidate(); Refresh();
+            }
+            Row(b, PanelStyle.BoundInput + PanelStyle.BoundArrow + OptimizerTuning.RowGap);
+            b.AddInput(Loc.T("opt_unbounded"), value, Commit);
+            var input = b.Last;
+            input.SetFixedWidth(PanelStyle.BoundInput);
+            input.SetInteractable(!Busy);
+            if (input.input != null)
+            {
+                input.input.contentType = TMPro.TMP_InputField.ContentType.IntegerNumber;
+                input.input.characterLimit = PanelStyle.BoundDigits;
+                if (input.input.textComponent != null) { input.input.textComponent.fontSize = PanelStyle.BodyFont; input.input.textComponent.enableAutoSizing = false; }
+                if (input.input.placeholder is TMPro.TMP_Text hint) { hint.fontSize = PanelStyle.BodyFont; hint.enableAutoSizing = false; hint.color = PanelStyle.Muted; }
+            }
+            var layout = input.root.GetComponent<LayoutElement>() ?? input.root.AddComponent<LayoutElement>();
+            layout.minHeight = layout.preferredHeight = PanelStyle.BoundHeight;
+            // The game's input box is as dark as the panel: a lighter fill and an outline make it visible.
+            var fill = input.root.GetComponent<Image>();
+            if (fill != null)
+            {
+                fill.color = PanelStyle.InputFill;
+                var outline = fill.GetComponent<Outline>() ?? fill.gameObject.AddComponent<Outline>();
+                outline.effectColor = PanelStyle.InputEdge; outline.effectDistance = new Vector2(1, -1);
+            }
+            b.BeginColumn(0, TextAnchor.MiddleLeft);
+            Arrow(b, true, value, Commit);
+            Arrow(b, false, value, Commit);
+            b.End();
+            EndRow(b, false);
+        }
+
+        static void Arrow(CustomUIBuilder b, bool up, string value, Action<string> commit)
+        {
+            b.AddIconButton(ArrowSprite(up), PanelStyle.BoundArrow, () =>
+            {
+                int step = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift) ? OptimizerTuning.RangeStep : 1;
+                int n = int.TryParse(value, out var v) ? v + (up ? step : -step) : 0;
+                commit(n.ToString());
+            });
+            b.Last.SetInteractable(!Busy);
+            var layout = b.Last.root.GetComponent<LayoutElement>() ?? b.Last.root.AddComponent<LayoutElement>();
+            layout.minHeight = layout.preferredHeight = PanelStyle.BoundHeight / 2;
+            layout.minWidth = layout.preferredWidth = PanelStyle.BoundArrow;
+            if (b.Last.image != null) b.Last.image.preserveAspect = true;
+        }
+
+        static Sprite upArrow, downArrow;
+        static Sprite ArrowSprite(bool up)
+        {
+            ref Sprite slot = ref up ? ref upArrow : ref downArrow;
+            if (slot != null) return slot;
+            string[] rows = { "...#...", "..###..", ".#####.", "#######" };
+            int w = rows[0].Length, h = rows.Length;
+            var px = new Px[w * h];
+            for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++)
+                    if (rows[up ? y : h - 1 - y][x] == '#') px[y * w + x] = PanelStyle.ArrowInk;
+            slot = Pixels.ToSprite(px, w, h, up ? "modepuzzle_up" : "modepuzzle_down");
+            return slot;
         }
     }
 }

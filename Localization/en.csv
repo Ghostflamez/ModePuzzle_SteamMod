@@ -94,7 +94,6 @@ cfg_dev_full_storage,Dev test: a Hypertech storage bay full of random modules an
 cfg_dev_full_storage_tip,"For testing long searches. Falls back to a large storage bay; at most 80 pieces, leaving room under the 100-piece search limit for installed modules."
 opt_time_limit,Time
 opt_unbounded,none
-opt_clear,Clear
 opt_restore_unavailable,"Cannot restore: only this machine's last applied layout, and only if nothing changed since."
 cfg_trait_badges,Show trait icons on all modules
 cfg_trait_badges_tip,"Marks every module with a special trait, in inventories, storage and machine bays. The icons stay upright and move with the cells when the module is rotated or flipped."
@@ -150,3 +149,5 @@ opt_exclude_degrading_hint,Modules with Degrading take no part, installed ones a
 opt_exclude_overvolted_hint,Modules with Overvolted (may break for good when used) take no part, installed ones are taken out too. Modules locked as Keep or Fixed stay.
 machine_unlock_title,Unlock {0}
 machine_unlock_skip,Don't ask again (until the game closes)
+opt_custom_title,Custom target
+opt_custom_hint,Compared by primary, then secondary. Leave a bound empty for none; arrows step by 1, with Shift by 10.

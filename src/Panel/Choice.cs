@@ -21,27 +21,5 @@ namespace ModePuzzle.UI
                 if (on && enabled) b.Last.SetTextColor(PanelStyle.Selected);
             }
         }
-
-        /// <summary>
-        /// A bound as text ("" = none): −step / −1 / value / +1 / +step and a clear button. An empty bound starts
-        /// from <paramref name="start"/> on the first step.
-        /// </summary>
-        public static void Stepper(CustomUIBuilder b, string value, int step, int start, Action<string> set, string noneText, string clearText, bool enabled)
-        {
-            int? current = int.TryParse(value, out int n) ? n : (int?)null;
-            void Add(string text, int delta)
-            {
-                b.AddButton(text, () => set(((current ?? start) + (current == null ? 0 : delta)).ToString()));
-                b.Last.SetInteractable(enabled);
-            }
-            Add("-" + step, -step);
-            Add("-1", -1);
-            b.AddLabel(current?.ToString() ?? noneText);
-            b.Last.SetFixedWidth(OptimizerTuning.RangeWidth);
-            Add("+1", 1);
-            Add("+" + step, step);
-            b.AddButton(clearText, () => set(""));
-            b.Last.SetInteractable(enabled && current != null);
-        }
     }
 }

@@ -93,7 +93,6 @@ cfg_dev_full_storage,开发测试：每天开门时送一个装满随机模组�
 cfg_dev_full_storage_tip,仅用于测试长时间搜索。放不下超科技储藏区时改送大型储藏区；最多装 80 件，给机器已装模组留出搜索上限（100 件）的余量。
 opt_time_limit,时长
 opt_unbounded,不限
-opt_clear,清除
 opt_restore_unavailable,无法恢复：只能恢复本台机器最近一次应用的布局，而且应用之后不能再改动过。
 cfg_trait_badges,在所有模组上显示特殊词条图标
 cfg_trait_badges_tip,给背包、仓库、机器模组舱里所有带特殊词条的模组标上小图标；图标始终朝上，并随模组的旋转、翻转自动换到对应的格子。
@@ -149,3 +148,5 @@ opt_exclude_degrading_hint,带「退化」词条的模组都不参与优化，�
 opt_exclude_overvolted_hint,带「过载」词条（使用时可能永久损坏）的模组都不参与优化，已插入本机的也会被移出。锁成「保留」或「固定」的除外。
 machine_unlock_title,解锁「{0}」
 machine_unlock_skip,不再提示（直到关闭游戏）
+opt_custom_title,自定义目标
+opt_custom_hint,按主目标、次目标的顺序比较；下限、上限留空表示不限，箭头每次 ±1，按住 Shift ±10。

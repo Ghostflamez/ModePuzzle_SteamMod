@@ -15,6 +15,8 @@ namespace ModePuzzle.UI
         public const float MachineArtSize = 56, PickerCell = 104, PickerIcon = 80, PickerName = 22, PickerGap = 8;
         public const float PickerChrome = 72, PickerChromeHeight = 130, PickerMinWidth = 520, LockScale = 2, LockOutset = 2;
         public const float ConfirmWidth = 520, ConfirmHeight = 330;
+        public const float BoundInput = 96, BoundArrow = 16, BoundHeight = 30;
+        public const int BoundDigits = 6;
         public const int PickerColumns = 4;
         public const float IconSlot = 28, IconSize = 24, NumberWidth = 28, StatWidth = 64, RowHeight = 28;
         public const float NameShare = .22f, TraitShare = .18f, StatCaptionShare = .28f, StatShare = .24f;
@@ -26,6 +28,8 @@ namespace ModePuzzle.UI
         public static readonly Px BayBackground = Px.Hex("39352f"), BayCell = Px.Hex("2b2523"), BayFrame = Px.Hex("2b2721");
         public static readonly Px LockPlate = Px.Hex("1c1820"), LockedInk = Px.Hex("ffb0a0"), LockedBody = Px.Hex("d9483b"),
             UnlockedInk = Px.Hex("c8f5a8"), UnlockedBody = Px.Hex("5fb83a");
+        public static readonly Color InputFill = new Color32(74, 65, 85, 255), InputEdge = new Color32(156, 150, 140, 255);
+        public static readonly Px ArrowInk = Px.Hex("e8e0d0");
         public static readonly Px NumberPlate = Px.Hex("211e1b"), NumberInk = Px.Hex("fff3d6");
     }
 }

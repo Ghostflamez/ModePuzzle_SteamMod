@@ -9,7 +9,7 @@ namespace ModePuzzle.Engine
     /// layouts quickly, then a depth-first branch and bound proves the optimum. Absorption is not pairwise
     /// additive, so each placed piece keeps its exact per-channel sums and a new neighbour changes its score by
     /// the difference of truncated sums. Bounds use signed per-edge envelopes valid for every partial sum.
-    /// Priority is lexicographic (primary, then secondary on ties, then fewer 过载 / 退化 modules).
+    /// Priority is lexicographic (primary, then secondary on ties, then fewer overvolted / degrading modules).
     /// </summary>
     public sealed class Search
     {
@@ -18,8 +18,9 @@ namespace ModePuzzle.Engine
             public const string Heuristic = "heuristic", Exact = "exact", Done = "done", Timeout = "timeout", Infeasible = "infeasible";
         }
 
-        // Tuning (src/config/search.js of the external tool): none of it changes scores or the proof.
-        const double HeuristicShare = 0.18, HeuristicMinMs = 30, HeuristicMaxMs = 1800, ProgressIntervalMs = 250;
+        // Discovery budget only: the reference uses an 1800 ms cap. A shorter seed pass leaves
+        // more time for exact proof; none of these settings changes scores or admissible bounds.
+        const double HeuristicShare = 0.18, HeuristicMinMs = 30, HeuristicMaxMs = 200, ProgressIntervalMs = 250;
         const int ClockCheckMask = 255, RestartEvery = 3;
         const double RepairDropRate = 0.35, SkipWorseRate = 0.8, PlacementJitter = 0.5, RankWeight = 0.3;
         const double ViolationWeight = 1000, SecondaryWeight = 0.001;
@@ -49,7 +50,7 @@ namespace ModePuzzle.Engine
         {
             public Piece Piece;
             public Placement P;
-            public long[][] Acc;
+            public Accumulator Acc;
             public Placed Clone() => new Placed { Piece = Piece, P = P, Acc = Acc };
         }
 
@@ -75,9 +76,10 @@ namespace ModePuzzle.Engine
         readonly int capacity;
 
         List<TypeEntry> types;
-        long[][][][] termTable;
+        Accumulator[,] termTable;
         List<Piece> pieces;
         Limits[,] pm;
+        double[,] potentialHi, potentialLo;
         int n, requiredCount;
         int[] boundAxes;
         double[] scales;
@@ -115,7 +117,8 @@ namespace ModePuzzle.Engine
             Prepare();
 
             var all = Enumerable.Range(0, n).Where(i => pieces[i].Type.Placements.Count > 0).ToList();
-            rootBounds = Bounds(all, new List<int>(), capacity, new int[Axis.Count]);
+            var root = Bounds(all, capacity, new int[Axis.Count]);
+            rootBounds = new BoundPair { Hi = (double[])root.Hi.Clone(), Lo = (double[])root.Lo.Clone() };
             if (config.Optional) Save(new List<Placed>(), new int[Axis.Count]);
             if (pieces.Where(p => p.Required).Sum(p => p.Area) > capacity || pieces.Any(p => p.Required && p.Type.Placements.Count == 0))
                 return Result(true, Phases.Infeasible);
@@ -135,12 +138,10 @@ namespace ModePuzzle.Engine
                 foreach (var p in placements) p.U = Scoring.Unary(item, p, rules);
                 return new TypeEntry { Item = item, Placements = placements };
             }).ToList();
-            termTable = new long[types.Count][][][];
+            termTable = new Accumulator[types.Count, types.Count];
             for (int x = 0; x < types.Count; x++)
-            {
-                termTable[x] = new long[types.Count][][];
-                for (int y = 0; y < types.Count; y++) termTable[x][y] = Scoring.Terms(types[x].Item, types[y].Item, rules);
-            }
+                for (int y = 0; y < types.Count; y++)
+                    termTable[x, y] = new Accumulator(Scoring.Terms(types[x].Item, types[y].Item, rules));
 
             pieces = new List<Piece>();
             for (int t = 0; t < types.Count; t++)
@@ -179,10 +180,32 @@ namespace ModePuzzle.Engine
                 return c != 0 ? c : a.Copy.CompareTo(b.Copy);
             });
             n = pieces.Count;
+            frames = new Frame[n];
+            for (int i = 0; i < n; i++) frames[i] = new Frame(pieces[i].Type.Placements.Count, n);
+            boundValues.Capacity = n;
+            selected.Capacity = n;
+            lastByType = new int[types.Count];
+            for (int t = 0; t < types.Count; t++) lastByType[t] = -1;
             requiredCount = pieces.Count(p => p.Required);
             pm = new Limits[n, n];
             for (int i = 0; i < n; i++)
                 for (int j = 0; j < n; j++) pm[i, j] = Pair(pieces[i], pieces[j]);
+            // Each future piece owns half of every future edge, and all edges to selected pieces.
+            // Numerators here are integers or halves, so reversible updates are exact in double.
+            potentialHi = new double[n, Axis.Count];
+            potentialLo = new double[n, Axis.Count];
+            for (int i = 0; i < n; i++)
+                for (int k = 0; k < Axis.Count; k++)
+                {
+                    potentialHi[i, k] = pieces[i].MaxUnary[k];
+                    potentialLo[i, k] = pieces[i].MinUnary[k];
+                    for (int j = 0; j < n; j++)
+                    {
+                        if (i == j || pieces[j].Type.Placements.Count == 0) continue;
+                        potentialHi[i, k] += pm[i, j].Hi[k] / 2.0;
+                        potentialLo[i, k] += pm[i, j].Lo[k] / 2.0;
+                    }
+                }
             boundAxes = custom ? new[] { 0, 1, 2 } : new[] { primary };
             scales = new double[Axis.Count];
             for (int k = 0; k < Axis.Count; k++)
@@ -195,20 +218,31 @@ namespace ModePuzzle.Engine
         {
             var l = new Limits { Hi = new int[Axis.Count], Lo = new int[Axis.Count] };
             foreach (var (x, y) in new[] { (a, b), (b, a) })
-                foreach (var channel in termTable[x][y])
+                for (int c = 0; c < Scoring.Channels; c++)
                     for (int k = 0; k < Axis.Count; k++)
                     {
-                        long num = channel[k];
+                        long num = termTable[x, y].Get(c, k);
                         int ceil = (int)((Math.Abs(num) + Scoring.Denominator - 1) / Scoring.Denominator);
                         if (num < 0) l.Lo[k] -= ceil; else l.Hi[k] += ceil;
                     }
             return l;
         }
 
-        long[][] Terms(Piece x, Piece y) => termTable[x.TypeIndex][y.TypeIndex];
+        Accumulator Terms(Piece x, Piece y) => termTable[x.TypeIndex, y.TypeIndex];
 
-        bool Complete(List<Placed> layout) => layout.Count(a => a.Piece.Required) == requiredCount;
-        static int RiskOf(List<Placed> layout) => layout.Count(a => a.Piece.Risk);
+        bool Complete(List<Placed> layout)
+        {
+            int count = 0;
+            for (int i = 0; i < layout.Count; i++) if (layout[i].Piece.Required) count++;
+            return count == requiredCount;
+        }
+
+        static int RiskOf(List<Placed> layout)
+        {
+            int count = 0;
+            for (int i = 0; i < layout.Count; i++) if (layout[i].Piece.Risk) count++;
+            return count;
+        }
 
         bool WithinBounds(int[] totals)
         {
@@ -232,8 +266,8 @@ namespace ModePuzzle.Engine
 
         void Save(List<Placed> layout, int[] totals)
         {
-            if (!Complete(layout) || !WithinBounds(totals)) return;
             int order = ComparePriority(totals, bestTotals);
+            if (order < 0 || !Complete(layout) || !WithinBounds(totals)) return;
             int risk = RiskOf(layout);
             if (order > 0 || (order == 0 && risk < bestRisk))
             {
@@ -243,18 +277,21 @@ namespace ModePuzzle.Engine
             }
         }
 
-        double ScalarBound(List<int> remaining, List<int> selected, int free, int current, int k, int sign)
+        double ScalarBound(List<int> remaining, int free, int current, int k, int sign)
         {
-            int Limit(int i, int j) => sign == 1 ? pm[i, j].Hi[k] : pm[i, j].Lo[k];
-            var vals = new List<(int area, double value)>(remaining.Count);
+            var vals = boundValues;
+            vals.Clear();
             foreach (int i in remaining)
             {
-                double v = sign * (sign == 1 ? pieces[i].MaxUnary[k] : pieces[i].MinUnary[k]);
-                foreach (int j in selected) v += sign * Limit(i, j);
-                foreach (int j in remaining) if (i != j) v += sign * Limit(i, j) / 2.0;
+                double v = sign * (sign == 1 ? potentialHi[i, k] : potentialLo[i, k]);
                 vals.Add((pieces[i].Area, v));
             }
-            if (!config.Optional) return sign * (sign * current + vals.Sum(a => a.value));
+            if (!config.Optional)
+            {
+                double sum = current;
+                for (int i = 0; i < vals.Count; i++) sum += sign * vals[i].value;
+                return sum;
+            }
             // Relaxing mandatory inclusion gives a safe (looser) bound; inclusion is enforced elsewhere.
             vals.Sort((a, b) => (b.value / b.area).CompareTo(a.value / a.area));
             double upper = sign * current;
@@ -269,14 +306,14 @@ namespace ModePuzzle.Engine
             return sign * upper;
         }
 
-        BoundPair Bounds(List<int> remaining, List<int> selected, int free, int[] totals)
+        BoundPair Bounds(List<int> remaining, int free, int[] totals)
         {
-            var b = new BoundPair { Hi = new double[Axis.Count], Lo = new double[Axis.Count] };
+            var b = boundScratch;
             for (int k = 0; k < Axis.Count; k++) { b.Hi[k] = double.PositiveInfinity; b.Lo[k] = double.NegativeInfinity; }
             foreach (int k in boundAxes)
             {
-                b.Hi[k] = ScalarBound(remaining, selected, free, totals[k], k, 1);
-                if (custom) b.Lo[k] = ScalarBound(remaining, selected, free, totals[k], k, -1);
+                b.Hi[k] = ScalarBound(remaining, free, totals[k], k, 1);
+                if (custom) b.Lo[k] = ScalarBound(remaining, free, totals[k], k, -1);
             }
             return b;
         }
@@ -297,58 +334,38 @@ namespace ModePuzzle.Engine
             return second >= bestTotals[secondary] - Epsilon && fewerRisk;
         }
 
-        (int[] d, long[][] acc) Delta(Piece a, Placement p, List<Placed> layout)
+        Accumulator Delta(Piece a, Placement p, List<Placed> layout, int[] d)
         {
-            var d = (int[])p.U.Clone();
-            var acc = Scoring.NewAcc();
+            for (int k = 0; k < Axis.Count; k++) d[k] = p.U[k];
+            var acc = default(Accumulator);
             foreach (var b in layout)
             {
                 if (!Geometry.Adjacent(p, b.P)) continue;
-                acc = Scoring.Add(acc, Terms(a, b.Piece));
-                var next = Scoring.Add(b.Acc, Terms(b.Piece, a));
-                for (int k = 0; k < Axis.Count; k++)
-                    for (int c = 0; c < Scoring.Channels; c++)
-                        d[k] += Scoring.Trunc(next[c][k]) - Scoring.Trunc(b.Acc[c][k]);
+                acc.Add(Terms(a, b.Piece));
+                b.Acc.AddDifference(Terms(b.Piece, a), d);
             }
-            var own = Scoring.TruncChannels(acc);
-            for (int k = 0; k < Axis.Count; k++) d[k] += own[k];
-            return (d, acc);
+            for (int k = 0; k < Axis.Count; k++) d[k] += acc.Total(k);
+            return acc;
         }
 
-        List<(Placed b, long[][] acc)> Append(List<Placed> layout, Placed a)
+        void Append(List<Placed> layout, Placed a)
         {
-            var previous = new List<(Placed, long[][])>();
             foreach (var b in layout)
             {
                 if (!Geometry.Adjacent(a.P, b.P)) continue;
-                previous.Add((b, b.Acc));
-                b.Acc = Scoring.Add(b.Acc, Terms(b.Piece, a.Piece));
+                b.Acc.Add(Terms(b.Piece, a.Piece));
             }
             layout.Add(a);
-            return previous;
-        }
-
-        static void Restore(List<Placed> layout, List<(Placed b, long[][] acc)> previous)
-        {
-            layout.RemoveAt(layout.Count - 1);
-            foreach (var (b, acc) in previous) b.Acc = acc;
         }
 
         void InitializeAccumulators(List<Placed> layout)
         {
             foreach (var a in layout)
             {
-                a.Acc = Scoring.NewAcc();
+                a.Acc = default(Accumulator);
                 foreach (var b in layout)
-                    if (a != b && Geometry.Adjacent(a.P, b.P)) a.Acc = Scoring.Add(a.Acc, Terms(a.Piece, b.Piece));
+                    if (a != b && Geometry.Adjacent(a.P, b.P)) a.Acc.Add(Terms(a.Piece, b.Piece));
             }
-        }
-
-        static int[] Plus(int[] a, int[] b)
-        {
-            var r = new int[Axis.Count];
-            for (int k = 0; k < Axis.Count; k++) r[k] = a[k] + b[k];
-            return r;
         }
 
         double Fitness(int[] total)
@@ -370,6 +387,9 @@ namespace ModePuzzle.Engine
             int iteration = 0;
             List<Placed> repairLayout = null;
             double repairFitness = double.NegativeInfinity;
+            var delta = new int[Axis.Count];
+            var trial = new int[Axis.Count];
+            var candidateD = new int[Axis.Count];
             while (n > 0 && now() < heuristicEnd)
             {
                 var layout = new List<Placed>();
@@ -394,29 +414,38 @@ namespace ModePuzzle.Engine
                 {
                     if (now() - start >= limitMs) { expired = true; break; }
                     Placed candidate = null;
-                    int[] candidateD = null;
                     double quality = double.NegativeInfinity;
                     double currentFitness = Fitness(totals);
                     foreach (var p in a.Type.Placements)
                     {
                         if ((mask & p.Mask).Any) continue;
-                        var (d, acc) = Delta(a, p, layout);
-                        double q = Fitness(Plus(totals, d)) + random() * PlacementJitter;
-                        if (q > quality) { quality = q; candidate = new Placed { Piece = a, P = p, Acc = acc }; candidateD = d; }
+                        var acc = Delta(a, p, layout, delta);
+                        for (int k = 0; k < Axis.Count; k++) trial[k] = totals[k] + delta[k];
+                        double q = Fitness(trial) + random() * PlacementJitter;
+                        if (q > quality)
+                        {
+                            quality = q;
+                            if (candidate == null) candidate = new Placed { Piece = a };
+                            candidate.P = p;
+                            candidate.Acc = acc;
+                            Array.Copy(delta, candidateD, Axis.Count);
+                        }
                     }
                     if (candidate == null)
                     {
                         if (a.Required) { failed = true; break; }
                         continue;
                     }
-                    if (!a.Required && Fitness(Plus(totals, candidateD)) < currentFitness && random() < SkipWorseRate) continue;
+                    for (int k = 0; k < Axis.Count; k++) trial[k] = totals[k] + candidateD[k];
+                    if (!a.Required && Fitness(trial) < currentFitness && random() < SkipWorseRate) continue;
                     Append(layout, candidate);
                     mask |= candidate.P.Mask;
-                    totals = Plus(totals, candidateD);
+                    Array.Copy(trial, totals, Axis.Count);
                 }
                 if (!failed && Complete(layout))
                 {
                     Save(layout, totals);
+                    if (!Viable(rootBounds.Value)) break;
                     double f = Fitness(totals);
                     if (f > repairFitness) { repairFitness = f; repairLayout = layout.Select(x => x.Clone()).ToList(); }
                 }
@@ -432,51 +461,111 @@ namespace ModePuzzle.Engine
         }
 
         readonly List<Placed> selected = new List<Placed>();
-        readonly List<int> selectedIndices = new List<int>();
-        readonly Dictionary<int, int> lastByType = new Dictionary<int, int>();
+        int[] lastByType;
+        int selectedRisk, selectedRequired;
+        readonly List<(int area, double value)> boundValues = new List<(int, double)>();
+        readonly BoundPair boundScratch = new BoundPair { Hi = new double[Axis.Count], Lo = new double[Axis.Count] };
+        Frame[] frames;
         long ticks;
+
+        struct Candidate
+        {
+            public Placement P;
+            public Accumulator Acc;
+            public int D0, D1, D2;
+            public double Fitness;
+        }
+
+        sealed class CandidateComparer : IComparer<Candidate>
+        {
+            public static readonly CandidateComparer Instance = new CandidateComparer();
+            public int Compare(Candidate a, Candidate b)
+            {
+                int c = b.Fitness.CompareTo(a.Fitness);
+                return c != 0 ? c : a.P.Index.CompareTo(b.P.Index);
+            }
+        }
+
+        sealed class Frame
+        {
+            public readonly List<int> Remaining;
+            public readonly Candidate[] Candidates;
+            public readonly Accumulator[] Previous;
+            public readonly int[] Delta = new int[Axis.Count], Totals = new int[Axis.Count];
+            public readonly Placed Placed = new Placed();
+            public Frame(int placements, int pieces)
+            {
+                Remaining = new List<int>(pieces);
+                Candidates = new Candidate[placements];
+                Previous = new Accumulator[pieces];
+            }
+        }
 
         void Dfs(int index, Bits mask, int used, int[] totals)
         {
-            visits++;
-            if ((ticks++ & ClockCheckMask) == 0)
-            {
-                double time = now();
-                if (time - start >= limitMs) { expired = true; return; }
-                if (time - lastReport > ProgressIntervalMs) { onProgress(Result(false, Phases.Exact)); lastReport = time; }
-            }
+            CheckClock();
             if (expired) return;
-            if (config.Optional) Save(selected, totals);
+            if (config.Optional && selectedRequired == requiredCount) Save(selected, totals);
             if (index == n) { Save(selected, totals); return; }
 
-            var remaining = new List<int>();
+            var frame = frames[index];
+            var remaining = frame.Remaining;
+            remaining.Clear();
             for (int j = index; j < n; j++)
-                if ((!lastByType.TryGetValue(pieces[j].TypeIndex, out int last) || last != Skipped) && pieces[j].Type.Placements.Count > 0)
+                if (lastByType[pieces[j].TypeIndex] != Skipped && pieces[j].Type.Placements.Count > 0)
                     remaining.Add(j);
-            if (remaining.Sum(i => pieces[i].Required ? pieces[i].Area : 0) > capacity - used) return;
-            if (!Viable(Bounds(remaining, selectedIndices, capacity - used, totals), RiskOf(selected))) return;
+            int requiredArea = 0;
+            for (int j = 0; j < remaining.Count; j++)
+                if (pieces[remaining[j]].Required) requiredArea += pieces[remaining[j]].Area;
+            if (requiredArea > capacity - used) return;
+            if (!Viable(Bounds(remaining, capacity - used, totals), selectedRisk)) return;
+            // Keep the cheap bound before terminal enumeration: most terminal branches cannot improve.
+            if (index == n - 1) { FinishLast(index, mask, used, totals, frame); return; }
 
             var a = pieces[index];
-            bool hadPrev = lastByType.TryGetValue(a.TypeIndex, out int prev);
+            int prev = lastByType[a.TypeIndex];
+            bool hadPrev = prev != -1;
             if (!(hadPrev && prev == Skipped) && used + a.Area <= capacity)
             {
-                var candidates = new List<(Placement p, int[] d, long[][] acc, double f)>();
+                var candidates = frame.Candidates;
+                int count = 0;
                 foreach (var p in a.Type.Placements)
                 {
                     if ((mask & p.Mask).Any || (hadPrev && p.Index <= prev)) continue;
-                    var (d, acc) = Delta(a, p, selected);
-                    candidates.Add((p, d, acc, Fitness(Plus(totals, d))));
+                    var acc = Delta(a, p, selected, frame.Delta);
+                    for (int k = 0; k < Axis.Count; k++) frame.Totals[k] = totals[k] + frame.Delta[k];
+                    candidates[count++] = new Candidate { P = p, Acc = acc, D0 = frame.Delta[0],
+                        D1 = frame.Delta[1], D2 = frame.Delta[2], Fitness = Fitness(frame.Totals) };
                 }
-                // Stable sort by fitness, best first (JS Array.prototype.sort is stable).
-                candidates = candidates.Select((c, i) => (c, i)).OrderByDescending(x => x.c.f).ThenBy(x => x.i).Select(x => x.c).ToList();
-                foreach (var (p, d, acc, _) in candidates)
+                // Placement indices preserve the original stable fitness ordering on ties.
+                Array.Sort(candidates, 0, count, CandidateComparer.Instance);
+                for (int c = 0; c < count; c++)
                 {
-                    var previous = Append(selected, new Placed { Piece = a, P = p, Acc = acc });
-                    selectedIndices.Add(index);
+                    var candidate = candidates[c];
+                    var p = candidate.P;
+                    for (int j = 0; j < selected.Count; j++)
+                    {
+                        var other = selected[j];
+                        frame.Previous[j] = other.Acc;
+                        if (Geometry.Adjacent(p, other.P)) other.Acc.Add(Terms(other.Piece, a));
+                    }
+                    frame.Placed.Piece = a;
+                    frame.Placed.P = p;
+                    frame.Placed.Acc = candidate.Acc;
+                    selected.Add(frame.Placed);
+                    if (a.Risk) selectedRisk++;
+                    if (a.Required) selectedRequired++;
                     lastByType[a.TypeIndex] = p.Index;
-                    Dfs(index + 1, mask | p.Mask, used + a.Area, Plus(totals, d));
-                    Restore(selected, previous);
-                    selectedIndices.RemoveAt(selectedIndices.Count - 1);
+                    frame.Totals[0] = totals[0] + candidate.D0;
+                    frame.Totals[1] = totals[1] + candidate.D1;
+                    frame.Totals[2] = totals[2] + candidate.D2;
+                    UpdatePotential(index, false, 1);
+                    Dfs(index + 1, mask | p.Mask, used + a.Area, frame.Totals);
+                    UpdatePotential(index, false, -1);
+                    selected.RemoveAt(selected.Count - 1);
+                    if (a.Risk) selectedRisk--;
+                    if (a.Required) selectedRequired--;
+                    for (int j = 0; j < selected.Count; j++) selected[j].Acc = frame.Previous[j];
                     if (expired) break;
                 }
             }
@@ -484,14 +573,70 @@ namespace ModePuzzle.Engine
             if (!a.Required && !expired)
             {
                 lastByType[a.TypeIndex] = Skipped;
+                bool remove = !(hadPrev && prev == Skipped);
+                if (remove) UpdatePotential(index, true, -1);
                 Dfs(index + 1, mask, used, totals);
+                if (remove) UpdatePotential(index, true, 1);
                 RestoreLast(a.TypeIndex, hadPrev, prev);
+            }
+        }
+
+        void CheckClock()
+        {
+            visits++;
+            if ((ticks++ & ClockCheckMask) != 0) return;
+            double time = now();
+            if (time - start >= limitMs) { expired = true; return; }
+            if (time - lastReport > ProgressIntervalMs) { onProgress(Result(false, Phases.Exact)); lastReport = time; }
+        }
+
+        void FinishLast(int index, Bits mask, int used, int[] totals, Frame frame)
+        {
+            var a = pieces[index];
+            int prev = lastByType[a.TypeIndex];
+            bool hadPrev = prev != -1;
+            if ((hadPrev && prev == Skipped) || used + a.Area > capacity) return;
+            foreach (var p in a.Type.Placements)
+            {
+                if ((mask & p.Mask).Any || (hadPrev && p.Index <= prev)) continue;
+                CheckClock();
+                if (expired) return;
+                var acc = Delta(a, p, selected, frame.Delta);
+                for (int k = 0; k < Axis.Count; k++) frame.Totals[k] = totals[k] + frame.Delta[k];
+                if (ComparePriority(frame.Totals, bestTotals) < 0) continue;
+                frame.Placed.Piece = a;
+                frame.Placed.P = p;
+                frame.Placed.Acc = acc;
+                selected.Add(frame.Placed);
+                // Saved layouts are output geometry; scoring uses the exact delta above. No later
+                // DFS branch reads their accumulators (heuristic repair has already finished).
+                Save(selected, frame.Totals);
+                selected.RemoveAt(selected.Count - 1);
+            }
+        }
+
+        void UpdatePotential(int index, bool skipType, int sign)
+        {
+            for (int removed = index; removed < n; removed++)
+            {
+                if (removed != index && (!skipType || pieces[removed].TypeIndex != pieces[index].TypeIndex)) continue;
+                if (pieces[removed].Type.Placements.Count == 0) continue;
+                for (int i = index + 1; i < n; i++)
+                {
+                    if (i == removed) continue;
+                    foreach (int k in boundAxes)
+                    {
+                        potentialHi[i, k] += sign * pm[i, removed].Hi[k] / 2.0;
+                        if (custom) potentialLo[i, k] += sign * pm[i, removed].Lo[k] / 2.0;
+                    }
+                }
+                if (!skipType) break;
             }
         }
 
         void RestoreLast(int type, bool had, int value)
         {
-            if (had) lastByType[type] = value; else lastByType.Remove(type);
+            lastByType[type] = had ? value : -1;
         }
 
         SearchResult Result(bool done, string phase)

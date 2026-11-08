@@ -11,6 +11,8 @@ using ModePuzzle.Engine;
 static class Parity
 {
     static int failures;
+    static bool exactOnly;
+    static readonly List<(int ci, double ms, long visits, int gcs, int pieces, int cells)> Stats = new List<(int, double, long, int, int, int)>();
 
     static void Fail(string msg)
     {
@@ -20,6 +22,7 @@ static class Parity
 
     static int Main(string[] args)
     {
+        exactOnly = args.Contains("--exact-only");
         var root = (Dictionary<string, object>)MiniJson.Parse(File.ReadAllText(args[0]));
         var evals = (List<object>)root["evalCases"];
         var solves = (List<object>)root["solveCases"];
@@ -30,6 +33,9 @@ static class Parity
         var watch = Stopwatch.StartNew();
         foreach (Dictionary<string, object> c in solves) CheckSolve(c, ci++);
         Console.WriteLine($"solve: {solves.Count} cases in {watch.ElapsedMilliseconds} ms, failures total {failures}");
+        foreach (var x in Stats.OrderByDescending(x => x.ms).Take(6))
+            Console.WriteLine($"  case {x.ci}: {x.ms:0} ms, {x.visits} visits ({x.ms * 1000 / System.Math.Max(1, x.visits):0.0} µs/visit), gen0 GCs {x.gcs}, pieces {x.pieces}, cells {x.cells}");
+        Console.WriteLine($"  total visits {Stats.Sum(x => x.visits)}, total gen0 GCs {Stats.Sum(x => x.gcs)}");
         Console.WriteLine(failures == 0 ? "PARITY OK" : "PARITY FAILED");
         return failures == 0 ? 0 : 1;
     }
@@ -143,11 +149,21 @@ static class Parity
 
         var clock = Stopwatch.StartNew();
         var rng = new Random(ci);
-        var r = new Search(config, 60000, () => clock.Elapsed.TotalMilliseconds, () => rng.NextDouble()).Solve();
+        int gc0 = GC.CollectionCount(0);
+        int clockReads = 0;
+        // Advance past the heuristic budget after Search records its start, to exercise DFS independently.
+        var r = new Search(config, 60000,
+            () => clock.Elapsed.TotalMilliseconds + (exactOnly && clockReads++ > 0 ? 2000 : 0),
+            () => rng.NextDouble()).Solve();
+        Stats.Add((ci, clock.Elapsed.TotalMilliseconds, r.Visits, GC.CollectionCount(0) - gc0,
+            config.Items.Where(i => !i.Locked).Sum(i => i.Qty), config.Board.Capacity));
+        Console.WriteLine($"case {ci}: {clock.Elapsed.TotalMilliseconds:0} ms, {r.Visits} visits, gen0 GCs {GC.CollectionCount(0) - gc0}");
         bool feasible = (bool)c["feasible"];
         if (!r.Proven) { Fail($"solve#{ci} not proven ({r.Phase})"); return; }
         if (r.Feasible != feasible) { Fail($"solve#{ci} feasible {r.Feasible} vs {feasible}"); return; }
         if (!feasible) return;
+        if (c.ContainsKey("riskPieces") && r.RiskPieces != I(c["riskPieces"]))
+            Fail($"solve#{ci} risk {r.RiskPieces} vs {I(c["riskPieces"])}");
         var objective = L(c["objective"]).Select(I).ToArray();
         int primary = config.Custom?.Primary ?? config.Target;
         var mine = new List<int> { r.Totals[primary] };

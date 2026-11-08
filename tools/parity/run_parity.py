@@ -1,6 +1,6 @@
 """Engine parity check: the C# engine (src/Engine) against the external tool's JavaScript engine.
 
-    python tools/parity/run_parity.py [--seed N] [--keep-cases]
+    python tools/parity/run_parity.py [--seed N] [--keep-cases] [--cases PATH] [--exact-only]
 
 1. gen_cases.mjs (Node) runs the reference engine and writes build/parity_cases.json.
 2. Parity.cs is compiled together with src/Engine/*.cs (no game or Unity code) and run under the Mono
@@ -24,9 +24,11 @@ OUT = os.path.join(ROOT, 'build')
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--seed', default='20261108')
-    parser.add_argument('--keep-cases', action='store_true', help='reuse build/parity_cases.json')
+    parser.add_argument('--keep-cases', action='store_true', help='reuse the case JSON if it already exists')
+    parser.add_argument('--cases', help='case JSON path (default: build/parity_cases.json)')
+    parser.add_argument('--exact-only', action='store_true', help='skip heuristic discovery to exercise exact search')
     args = parser.parse_args()
-    cases = os.path.join(OUT, 'parity_cases.json')
+    cases = os.path.abspath(args.cases) if args.cases else os.path.join(OUT, 'parity_cases.json')
     if not (args.keep_cases and os.path.exists(cases)):
         subprocess.run(['node', os.path.join(HERE, 'gen_cases.mjs'), cases, args.seed], check=True)
 
@@ -39,7 +41,8 @@ def main():
                     *[f'-r:{os.path.join(managed, r)}' for r in ('mscorlib.dll', 'System.dll', 'System.Core.dll', 'netstandard.dll')],
                     *sources], check=True)
     mono = os.path.join(data, 'MonoBleedingEdge', 'bin', 'mono.exe')
-    sys.exit(subprocess.run([mono, exe, cases]).returncode)
+    extra = ['--exact-only'] if args.exact_only else []
+    sys.exit(subprocess.run([mono, exe, cases, *extra]).returncode)
 
 
 if __name__ == '__main__':

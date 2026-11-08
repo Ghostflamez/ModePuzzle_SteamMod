@@ -54,8 +54,9 @@ function item(id, small) {
 
 const config = (b, items, extra = {}) => ({version: 1, board: b, items, rules: {...DEFAULT_RULES}, optional: true, target: 2, ...extra});
 
+const regressionsOnly = process.argv.includes('--regressions-only');
 const evalCases = [];
-for (let c = 0; c < 300; c++) {
+for (let c = 0; c < (regressionsOnly ? 0 : 300); c++) {
   const b = board(c % 2 ? 'standard' : 'random');
   const items = Array.from({length: int(2, 9)}, (_, i) => item(`i${i}`, false));
   const cfg = config(b, items);
@@ -82,7 +83,7 @@ for (let c = 0; c < 300; c++) {
 }
 
 const solveCases = [];
-for (let c = 0; c < 60; c++) {
+for (let c = 0; c < (regressionsOnly ? 0 : 60); c++) {
   const b = c % 3 === 0 ? board('standard') : board('random');
   const items = Array.from({length: int(2, 5)}, (_, i) => item(`s${i}`, true));
   for (const it of items) if (rand() < 0.3) it.qty = int(2, 3);
@@ -98,7 +99,49 @@ for (let c = 0; c < 60; c++) {
   const cfg = config(b, items, extra);
   const r = engine.solve(cfg, {limitMs: 60000, now: () => performance.now()});
   if (!r.proven) continue;
-  solveCases.push({config: cfg, feasible: r.feasible, objective: r.objectiveValues, totals: r.layout?.total ?? null});
+  solveCases.push({config: cfg, feasible: r.feasible, objective: r.objectiveValues, riskPieces: r.riskPieces, totals: r.layout?.total ?? null});
+}
+
+// Focused regressions for reversible bounds, repeated optional types, signed rounding and leaf scoring.
+// The original random cases above are unchanged; this flag also allows a fast independent regression run.
+const regressionConfigs = [];
+for (let c = 0; c < 16; c++) {
+  const b = {w: 3, h: 2, cells: Array(6).fill(true)};
+  if (c % 4 === 3) b.cells[4] = false;
+  const items = [
+    {id: 'a', name: 'a', type: 'module', shape: [[0, 0], [1, 0]], base: [7, -11, 3],
+      traits: ['negative', 'receiver', ...(c % 2 ? ['overvolted'] : [])], qty: 2, required: c % 5 === 0},
+    {id: 'b', name: 'b', type: 'module', shape: [[0, 0]], base: [-3, 5, -7],
+      traits: ['left', 'top'], qty: 1},
+    {id: 'n', name: 'n', type: 'node', shape: [[0, 0]], base: [0, 0, 0], traits: [], qty: 2},
+  ];
+  const extra = c % 2 ? {target: c % 3, optional: c % 4 !== 1} : {
+    target: 'custom', custom: {primary: c % 3, secondary: (c + 1) % 3,
+      bounds: [{min: -8, max: 14}, {min: -15, max: 9}, {min: -9, max: 8}]},
+  };
+  regressionConfigs.push(config(b, items, extra));
+}
+// Full-size bays exercise larger quantities and required placement completeness with known easy optima.
+for (const qty of [5, 15]) regressionConfigs.push(config({w: 7, h: 5, cells: Array(35).fill(true)}, [
+  {id: 'm', name: 'm', type: 'module', shape: [[0, 0]], base: [7, -3, 11], traits: [], qty: qty - 1},
+  {id: 'n', name: 'n', type: 'node', shape: [[0, 0]], base: [0, 0, 0], traits: [], qty: 1},
+], {optional: false, target: 1}));
+regressionConfigs.push(config({w: 1, h: 1, cells: [true]}, [
+  {id: 'a-risk', name: 'risk', type: 'module', shape: [[0, 0]], base: [10, 4, -1], traits: ['overvolted'], qty: 1},
+  {id: 'b-safe', name: 'safe', type: 'module', shape: [[0, 0]], base: [10, 4, -1], traits: [], qty: 1},
+], {target: 'custom', custom: {primary: 0, secondary: 1, bounds: [0, 1, 2].map(() => ({min: null, max: null}))}}));
+regressionConfigs.push(config({w: 2, h: 2, cells: Array(4).fill(true)}, [
+  {id: 'absent', name: 'absent', type: 'module', shape: [[0, 0], [1, 0], [2, 0], [3, 0], [4, 0]],
+    base: [100, 100, 100], traits: ['receiver'], qty: 3},
+  {id: 'm', name: 'm', type: 'module', shape: [[0, 0]], base: [7, -11, 3], traits: ['negative'], qty: 2},
+  {id: 'n', name: 'n', type: 'node', shape: [[0, 0]], base: [0, 0, 0], traits: [], qty: 1},
+], {target: 0}));
+for (let i = 0; i < regressionConfigs.length; i++) {
+  const cfg = regressionConfigs[i];
+  const r = engine.solve(cfg, {limitMs: 60000, now: () => performance.now()});
+  if (!r.proven) throw new Error(`Regression ${i} did not reach a proven reference result`);
+  solveCases.push({name: `search-regression-${i}`, config: cfg, feasible: r.feasible,
+    objective: r.objectiveValues, riskPieces: r.riskPieces, totals: r.layout?.total ?? null});
 }
 
 fs.mkdirSync(path.dirname(out), {recursive: true});

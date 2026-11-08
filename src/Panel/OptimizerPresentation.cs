@@ -144,7 +144,7 @@ namespace ModePuzzle
             // Create name first for font measurements, then retain the requested sibling order.
             var name = Label(b, $"{machine.Name} ({index + 1}/{snap.Machines.Count})", width * PanelStyle.MachineNameShare);
             name.text.enableWordWrapping = false; name.text.overflowMode = TextOverflowModes.Ellipsis;
-            float nameWidth = Mathf.Min(name.text.preferredWidth, width * PanelStyle.MachineNameShare);
+            float nameWidth = Mathf.Min(Mathf.Ceil(name.text.GetPreferredValues(name.text.text, float.PositiveInfinity, float.PositiveInfinity).x) + 2, width * PanelStyle.MachineNameShare);
             string prev = Loc.T("panel_prev_machine"), next = Loc.T("panel_next_machine"), refresh = Loc.T("panel_refresh");
             float status = Mathf.Floor(width * PanelStyle.StatusShare), gap = OptimizerTuning.RowGap;
             var c = Columns(width - status - gap, gap, TextWidth(prev, true), nameWidth, TextWidth(next, true), TextWidth(refresh, true),
@@ -243,7 +243,7 @@ namespace ModePuzzle
             BayImage(b, shown, c[0]);
             int used = shown.Installed.SelectMany(p => p.Cells).Count(cell => shown.IsUsable(cell.X, cell.Y));
             Caption(b, Loc.T("panel_capacity", shown.Width, shown.Height, used, shown.UsableCount), c[0]);
-            Caption(b, Loc.T("panel_accepts", string.Join(Loc.T("panel_list_sep"), shown.Accepts.Select(TypeName))), c[0]);
+            Caption(b, Loc.T("panel_accepts", string.Join(Loc.T("panel_list_sep"), machine.Accepts.Select(TypeName))), c[0]);
             b.End();
             Column(b, c[1]);
             int axis = target == 3 ? primary : Targets[target];

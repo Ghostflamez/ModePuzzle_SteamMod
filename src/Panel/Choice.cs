@@ -9,14 +9,16 @@ namespace ModePuzzle.UI
     /// </summary>
     static class Choice
     {
-        /// <summary>One button per option; the selected one is bracketed and not clickable.</summary>
+        /// <summary>One button per option; the selected one is bracketed and highlighted, and clicking it does nothing.</summary>
         public static void Buttons(CustomUIBuilder b, IList<string> labels, int selected, Action<int> pick, bool enabled = true)
         {
             for (int i = 0; i < labels.Count; i++)
             {
                 int index = i;
-                b.AddButton(i == selected ? $"[ {labels[i]} ]" : labels[i], () => pick(index));
-                b.Last.SetInteractable(enabled && i != selected);
+                bool on = i == selected;
+                b.AddButton(on ? $"[ {labels[i]} ]" : labels[i], () => { if (!on) pick(index); });
+                b.Last.SetInteractable(enabled);
+                if (on && enabled) b.Last.SetTextColor(PanelStyle.Selected);
             }
         }
 

@@ -26,8 +26,17 @@ namespace ModePuzzle
         {
             Row(b, width);
             var image = b.CurrentContainer.gameObject.AddComponent<Image>(); image.color = PanelStyle.PanelColor; image.raycastTarget = false;
-            for (int i = 0; i < labels.Length; i++) Caption(b, labels[i], columns[i], i >= (labels.Length == 6 ? 2 : 3) && i < numericEnd);
+            for (int i = 0; i < labels.Length; i++)
+            {
+                bool numeric = i >= (labels.Length == 6 ? 2 : 3) && i < numericEnd;
+                var e = Caption(b, labels[i], columns[i], numeric);
+                if (numeric) NumberMargin(e);
+            }
             EndRow(b, false);
+        }
+        static void NumberMargin(CustomUIElement e)
+        {
+            if (e.text != null) e.text.margin = new Vector4(0, 0, PanelStyle.NumberMargin, 0);
         }
         static void CompactRow(CustomUIBuilder b)
         {
@@ -51,7 +60,7 @@ namespace ModePuzzle
             bool reserveLocks = bayShows == BayShows.Current && fixedWidth + nameMin + traitsMin + lockWidth + 7 * gap <= width;
             // Free rows reuse the shown layout's name/stat/trait widths, omitting number and lock slots.
             float remaining = width - fixedWidth - (reserveLocks ? lockWidth + 7 * gap : 6 * gap);
-            float name = Mathf.Max(nameMin, remaining - traitsMin), traits = Mathf.Max(traitsMin, remaining - name);
+            float name = Mathf.Clamp(remaining * PanelStyle.NameFlexShare, nameMin, Mathf.Max(nameMin, remaining - traitsMin)), traits = Mathf.Max(traitsMin, remaining - name);
             var shares = new List<float> { PanelStyle.NumberWidth, PanelStyle.IconSlot, name, PanelStyle.StatWidth, PanelStyle.StatWidth, PanelStyle.StatWidth, traits };
             if (reserveLocks) shares.Add(lockWidth);
             bool inlineLocks = editable && reserveLocks;
@@ -70,7 +79,7 @@ namespace ModePuzzle
                 b.CurrentContainer.GetComponent<LayoutElement>().minHeight = PanelStyle.RowHeight;
                 if (!isFree) Label(b, (i + 1).ToString(), c[0], true);
                 ModuleIcon(b, m, c[1]); Name(b, m, c[2]);
-                for (int k = 0; k < Axis.Count; k++) Label(b, GameText.ColoredValue(values[k]), c[k + 3], true);
+                for (int k = 0; k < Axis.Count; k++) NumberMargin(Label(b, GameText.ColoredValue(values[k]), c[k + 3], true));
                 Chips(b, m, c[6]);
                 if (inlineLocks) LockButtons(b, m, c[7]);
                 CompactRow(b); EndRow(b, false);

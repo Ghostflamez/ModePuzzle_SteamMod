@@ -87,7 +87,8 @@ namespace ModePuzzle.Game
         public MachineInfo Preview(SearchResult result)
         {
             var preview = new MachineInfo { UniqueId = baseline.UniqueId, Width = baseline.Width, Height = baseline.Height,
-                Usable = baseline.Usable, Name = baseline.Name };
+                Usable = baseline.Usable, Name = baseline.Name, Identifier = baseline.Identifier, Guessed = baseline.Guessed };
+            preview.Accepts.AddRange(baseline.Accepts);
             foreach (var p in result.Layout)
             {
                 int id = int.Parse(p.Item.Id.Substring(1));

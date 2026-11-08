@@ -52,9 +52,16 @@ namespace ModePuzzle
                 case "scroll":
                     // 1 = top, 0 = bottom (ScrollRect.verticalNormalizedPosition).
                     if (scroll == null) return "no scroll";
-                    if (float.TryParse(arg, NumberStyles.Float, CultureInfo.InvariantCulture, out float v))
-                        scroll.verticalNormalizedPosition = UnityEngine.Mathf.Clamp01(v);
-                    return "ok";
+                    if (!float.TryParse(arg, NumberStyles.Float, CultureInfo.InvariantCulture, out float v)) return "error: scroll 0-1";
+                    {
+                        // Moves the content directly (the window keeps its own offset in anchoredPosition.y).
+                        float view = scroll.viewport != null ? scroll.viewport.rect.height : ((UnityEngine.RectTransform)scroll.transform).rect.height;
+                        float range = UnityEngine.Mathf.Max(0, scroll.content.rect.height - view);
+                        var offset = scroll.content.anchoredPosition;
+                        offset.y = (1 - UnityEngine.Mathf.Clamp01(v)) * range;
+                        scroll.content.anchoredPosition = offset; scroll.StopMovement();
+                        return $"ok range={range:0}";
+                    }
                 case "state":
                     return $"open={IsOpen} machine={selectedMachineId} tab={tab} bay={bayShows} axis={detailAxis} target={target} " +
                            $"time={timeIndex} busy={Busy} result={(result == null ? "none" : result.Phase.ToString())} message={message}";

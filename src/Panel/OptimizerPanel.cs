@@ -184,6 +184,7 @@ namespace ModePuzzle
                 scroll.content.anchoredPosition = offset;
                 scroll.StopMovement();
             }
+            AlignBayToTarget(b.Handle.Rect);
             PlaceCustomBackdrop();
         }
     }

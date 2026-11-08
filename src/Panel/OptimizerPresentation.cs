@@ -197,6 +197,7 @@ namespace ModePuzzle
             Row(b, width, 0);
             // The integer minimum is one; clip unusually large modded bays rather than overrun the column.
             var frame = b.CurrentContainer;
+            bayFrame = frame;
             frame.gameObject.AddComponent<RectMask2D>();
             var layout = frame.GetComponent<LayoutElement>(); layout.minHeight = layout.preferredHeight = Mathf.Min(h * scale, PanelStyle.MaxBayHeight);
             b.AddImage(baySprite, w * scale, h * scale);
@@ -244,9 +245,15 @@ namespace ModePuzzle
             float left = Mathf.Min(Mathf.Max(bayW * bayScale, restoreNeed), width * PanelStyle.MaxBayShare);
             var c = Columns(width, PanelStyle.ColumnGap, left, width - PanelStyle.ColumnGap - left);
             Row(b, width, PanelStyle.ColumnGap);
-            // The custom target makes the data column much taller: the bay column then sits at its middle.
-            b.CurrentContainer.GetComponent<HorizontalLayoutGroup>().childAlignment = target == 3 ? TextAnchor.MiddleLeft : TextAnchor.UpperLeft;
+            b.CurrentContainer.GetComponent<HorizontalLayoutGroup>().childAlignment = TextAnchor.UpperLeft;
             Column(b, c[0]);
+            if (target == 3)
+            {
+                // The custom target makes the data column much taller: the bay column then starts level with the
+                // 目标 row. The spacer's height is set after layout (AlignBayToTarget).
+                bayTopSpacer = new GameObject("bay spacer", typeof(RectTransform), typeof(LayoutElement)).GetComponent<LayoutElement>();
+                bayTopSpacer.transform.SetParent(b.CurrentContainer, false);
+            }
             // Reserve the switch slot before feasibility so the bay's top never changes.
             Row(b, c[0]);
             var switchLayout = b.CurrentContainer.GetComponent<LayoutElement>();

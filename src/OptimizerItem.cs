@@ -16,8 +16,15 @@ namespace ModePuzzle
         {
             CreatedCount++;
             var item = ItemDirectory.CreateEmptyItem(Id);
-            if (IconSprite.Ensure()) item.SetSpriteAndShapeFromMod(ModePuzzleMod.ModId, IconSprite.Key);
-            else item.SetSpriteAndShape(IconSprite.ScannerAtlas, IconSprite.ScannerSprite);
+            // The shape comes from the base sprite as the game reads it (3x2, like the Deal Maker itself):
+            // SetSpriteAndShapeFromMod derives a transposed 2x3 shape from the same 48x32 sprite.
+            item.SetSpriteAndShape(IconSprite.ScannerAtlas, IconSprite.ScannerSprite);
+            var shape = item.shape;
+            if (IconSprite.Ensure())
+            {
+                item.SetSpriteAndShapeFromMod(ModePuzzleMod.ModId, IconSprite.Key);
+                if (shape != null) item.SetShape(shape);
+            }
 
             ApplyTexts(item);
             // A save stores the item's name and texts and restores them over the factory's; onLoaded runs

@@ -14,7 +14,25 @@ namespace ModePuzzle
         static RectTransform customButton, customBlock, dataColumn;
         static Sprite backdropSprite;
 
-        static void ResetCustomBackdrop() { customButton = customBlock = dataColumn = null; }
+        static LayoutElement bayTopSpacer;
+        static RectTransform bayFrame;
+
+        static void ResetCustomBackdrop() { customButton = customBlock = dataColumn = bayFrame = null; bayTopSpacer = null; }
+
+        /// <summary>With the custom target open, moves the bay down so its top edge is level with the 目标 row's.</summary>
+        static void AlignBayToTarget(RectTransform window)
+        {
+            if (bayTopSpacer == null || customButton == null || dataColumn == null || bayFrame == null) return;
+            var row = customButton.parent as RectTransform;
+            if (row == null) return;
+            var w = new Vector3[4];
+            row.GetWorldCorners(w);
+            float rowTop = dataColumn.InverseTransformPoint(w[1]).y;
+            bayFrame.GetWorldCorners(w);
+            float bayTop = dataColumn.InverseTransformPoint(w[1]).y;
+            bayTopSpacer.minHeight = bayTopSpacer.preferredHeight = Mathf.Max(0, bayTopSpacer.preferredHeight + bayTop - rowTop);
+            CustomUIBuilder.RebuildLayout(window);
+        }
 
         static void PlaceCustomBackdrop()
         {

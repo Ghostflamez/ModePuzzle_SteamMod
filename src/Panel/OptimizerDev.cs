@@ -101,6 +101,23 @@ namespace ModePuzzle
                 case "closewin":
                     CustomUIManager.Instance?.CloseWindow(arg);
                     return "ok";
+                case "iteminfo":
+                {
+                    // The optimizer item's base sprite as packed in the atlas, our generated sprite, and the shapes.
+                    var sb = new System.Text.StringBuilder();
+                    var baseSprite = RenderHandler.TryLoadFromAtlas(IconSprite.ScannerAtlas, IconSprite.ScannerSprite);
+                    if (baseSprite != null)
+                        sb.Append($"base rect={baseSprite.rect} texRect={baseSprite.textureRect} packed={baseSprite.packed} rot={(baseSprite.packed ? baseSprite.packingRotation.ToString() : "-")} ");
+                    var owned = EmporiumEntry.Instance?.GetAllOwnedItems();
+                    if (owned != null)
+                        foreach (var it in owned)
+                            if (it != null && (it.identifier == OptimizerItem.Id || it.identifier == "deal_maker"))
+                            {
+                                var sh = it.shape; var ms = it.modifiedShape;
+                                sb.Append($"| {it.identifier} shape={sh?.width}x{sh?.height} placed={ms?.width}x{ms?.height} orient={ms?.orientation} flip={ms?.flipped} sprite={it.spriteAtlasPath}/{it.spritePath} mod={it.useSpriteFromMod} ");
+                            }
+                    return sb.ToString();
+                }
                 case "dumptoggle":
                 {
                     // Hierarchy of a fresh game toggle: names, sizes, anchors and components.

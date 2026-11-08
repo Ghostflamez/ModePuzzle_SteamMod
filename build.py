@@ -29,6 +29,8 @@ REFERENCES = [
 ]
 # Locale files the game may ask for; the first one is the source copied to the others.
 LOCALE_ALIASES = {'zh-Hans.csv': ['zh.csv']}
+# Keys used only by development builds (dev switches, debug functions).
+DEV_ONLY_STRINGS = ('cfg_dev_', 'debug_')
 
 
 def unity_data_dir():
@@ -154,9 +156,15 @@ def stage(dev=False):
     os.makedirs(loc_out, exist_ok=True)
     for name in os.listdir(loc_src):
         if name.endswith('.csv'):
-            shutil.copy2(os.path.join(loc_src, name), loc_out)
-            for alias in LOCALE_ALIASES.get(name, []):
-                shutil.copy2(os.path.join(loc_src, name), os.path.join(loc_out, alias))
+            with open(os.path.join(loc_src, name), encoding='utf-8-sig') as f:
+                lines = f.read().split('\n')
+            if not dev:
+                # Strings of the development-only switches and debug functions stay out of release packages.
+                lines = [l for l in lines if not l.startswith(DEV_ONLY_STRINGS)]
+            text = '\n'.join(lines)
+            for target in [name] + LOCALE_ALIASES.get(name, []):
+                with open(os.path.join(loc_out, target), 'w', encoding='utf-8') as f:
+                    f.write(text)
 
 
 def game_running():

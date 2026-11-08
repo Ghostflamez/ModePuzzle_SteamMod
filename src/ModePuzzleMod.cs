@@ -12,6 +12,8 @@ namespace ModePuzzle
 
         internal static ModManifest Manifest;
         internal static ModLog Log;
+        internal static ConfigEntry<bool> TraitBadges;
+#if DEV
         static ConfigEntry<bool> devSpawnOnLoad;
         internal static ConfigEntry<bool> DevSmugglerDaily;
         internal static ConfigEntry<bool> DevCrateAlways;
@@ -23,7 +25,6 @@ namespace ModePuzzle
         static ConfigEntry<string> devBayKitsPerDay;
         static ConfigEntry<string> devModulesPerDay;
         static ConfigEntry<bool> devFullStorage;
-        internal static ConfigEntry<bool> TraitBadges;
         const string FullStorageId = "hypertech_bay", FullStorageFallbackId = "storage_bay_large";
         /// <summary>Stop filling after this many modules in a row did not fit.</summary>
         const int FullStorageMisses = 12, FullStorageMax = 80;   // leaves room under the 100-piece search limit for installed modules
@@ -37,6 +38,13 @@ namespace ModePuzzle
             "random_overclock_module", "random_eco_module", "random_fineness_module", "random_node",
         };
         static bool debugFunctionsAdded;
+#else
+        // Release builds have no test switches: these read as off everywhere.
+        internal static ConfigEntry<bool> DevSmugglerDaily => null;
+        internal static ConfigEntry<bool> DevCrateAlways => null;
+        internal static ConfigEntry<bool> DevJacksonAlways => null;
+        internal static ConfigEntry<bool> DevApplyFailure => null;
+#endif
 
         public void Init(ModManifest manifest)
         {
@@ -48,7 +56,9 @@ namespace ModePuzzle
         {
             ModHook.OnModItemDirectoryInit += RegisterItems;
             ModHook.OnGameLoadedLate += OnGameLoaded;
+#if DEV
             ModHook.OnShutterOpenedLate += OnShutterOpened;
+#endif
 
             // The item directory may already exist when the mod is enabled from the mods menu.
             var directory = Object.FindObjectOfType<ModItemDirectory>();
@@ -58,6 +68,8 @@ namespace ModePuzzle
             TraitBadges = config.Define("trait_badges", true, "display",
                 () => Loc.T("cfg_trait_badges"), () => Loc.T("cfg_trait_badges_tip"));
             TraitBadges.OnChanged += _ => UI.TraitOverlay.SettingChanged();
+#if DEV
+            // Test switches exist in development builds only; release builds leave these entries null (= off).
             devSpawnOnLoad = config.Define("dev_spawn_on_load", false, "dev",
                 () => Loc.T("cfg_dev_spawn"), () => Loc.T("cfg_dev_spawn_tip"));
             DevSmugglerDaily = config.Define("dev_smuggler_daily", false, "dev",
@@ -78,6 +90,7 @@ namespace ModePuzzle
                 () => Loc.T("cfg_dev_modules"), ModuleCounts, () => Loc.T("cfg_dev_open_tip"));
             devCratesOnLoad = config.Define("dev_crates_on_load", false, "dev",
                 () => Loc.T("cfg_dev_crates_on_load"), () => Loc.T("cfg_dev_crates_on_load_tip"));
+#endif
 
             JacksonStock.Enable();
             Smuggler.Enable();
@@ -90,10 +103,14 @@ namespace ModePuzzle
         {
             ModHook.OnModItemDirectoryInit -= RegisterItems;
             ModHook.OnGameLoadedLate -= OnGameLoaded;
+#if DEV
             ModHook.OnShutterOpenedLate -= OnShutterOpened;
+#endif
             ModHelper.RemoveDebugFunctions(ModId);
             UI.TraitOverlay.Clear();
+#if DEV
             debugFunctionsAdded = false;
+#endif
             JacksonStock.Disable();
             Smuggler.Disable();
             PanelHost.Close();
@@ -120,6 +137,7 @@ namespace ModePuzzle
         {
             PanelHost.ResetSession();
             LogOwnedOptimizers("after load");
+#if DEV
             // The mod's localization is loaded after OnEnable, so the labels are added here.
             if (!debugFunctionsAdded)
             {
@@ -129,8 +147,10 @@ namespace ModePuzzle
             }
             if (devSpawnOnLoad != null && devSpawnOnLoad.Value) SpawnToCounter();
             if (devCratesOnLoad != null && devCratesOnLoad.Value) SpawnUnlockedCrates();
+#endif
         }
 
+#if DEV
         /// <summary>Dev test: one engineering and one evidence crate, filled by the game (and our patch)
         /// and unlocked, on the front counter.</summary>
         static void SpawnUnlockedCrates()
@@ -194,6 +214,7 @@ namespace ModePuzzle
             }
             Log.Log($"Dev storage {storage.identifier}: {added} modules / nodes added");
         }
+#endif
 
         /// <summary>Diagnostics: where every owned optimizer is.</summary>
         internal static void LogOwnedOptimizers(string when)
@@ -205,11 +226,13 @@ namespace ModePuzzle
             Log.Log($"Optimizers {when}: {found.Count} owned [{string.Join(", ", found)}]; created {OptimizerItem.CreatedCount}, restored from saves {OptimizerItem.LoadedCount} this session");
         }
 
+#if DEV
         static void SpawnToCounter()
         {
             var item = ModHelper.SpawnItem(OptimizerItem.Id);
             if (item == null) { Log.Warning("Could not spawn " + OptimizerItem.Id); return; }
             ModHelper.MoveItemToFrontCounter(item);
         }
+#endif
     }
 }

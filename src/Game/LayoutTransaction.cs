@@ -41,6 +41,18 @@ namespace ModePuzzle.Game
         List<Record> after;
         string afterSignature;
         public bool CanRestore => undo != null;
+        public int MachineId => baseline.UniqueId;
+
+        /// <summary>A restore can run: there is a record and nothing changed since the apply.</summary>
+        public bool RestoreReady()
+        {
+            try
+            {
+                return undo != null && scene == EmporiumEntry.Instance && afterSignature == LiveReader.Signature(baseline.UniqueId) &&
+                       after.All(r => r.Unchanged());
+            }
+            catch (Exception) { return false; }
+        }
 
         public LayoutTransaction(MachineInfo baseline, SearchConfig config, IEnumerable<ModuleInfo> candidates)
         {

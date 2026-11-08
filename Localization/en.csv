@@ -82,7 +82,7 @@ opt_timeout,Time limit reached (not proven)
 opt_infeasible,Infeasible (proven)
 opt_optimal,Proven optimal
 opt_status,{0} | {1} s | Nodes {2} | Best {3} | Root bound {4} | Last improvement {5} s ago
-opt_stale,"Machine, modules or settings changed. Search stopped; the old preview is retained but cannot be applied. Start a new search."
+opt_stale,"The machine, modules or settings changed: this search was stopped and discarded. Start a new one."
 opt_search_failed,Search or preview failed; see Player.log.
 opt_bad_range,Enter valid numbers with minimum <= maximum; leave blank for no limit.
 opt_too_many,More than {0} candidates; select installed modules only.
@@ -120,3 +120,4 @@ opt_unbounded,none
 opt_clear,Clear
 panel_prev_machine,Previous
 panel_next_machine,Next
+opt_restore_unavailable,"Cannot restore: only this machine's last applied layout, and only if nothing changed since."

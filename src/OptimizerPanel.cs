@@ -96,7 +96,7 @@ namespace ModePuzzle
             {
                 b.AddHeader(Loc.T("panel_header")).AddLabel(Loc.T("panel_no_machines"));
                 b.Last.SetFixedWidth(inner);
-                b.AddButton(Loc.T("panel_refresh"), Refresh);
+                b.AddButton(Loc.T("panel_refresh"), UserRefresh);
                 b.End();
                 Finish(b, position);
                 PanelWatcher.Stop();
@@ -114,7 +114,7 @@ namespace ModePuzzle
                 .AddButton(Loc.T("panel_prev_machine"), () => SelectMachine(snap, index - 1))
                 .AddLabel($"{machine.Name}  ({index + 1}/{snap.Machines.Count})")
                 .AddButton(Loc.T("panel_next_machine"), () => SelectMachine(snap, index + 1))
-                .AddButton(Loc.T("panel_refresh"), Refresh)
+                .AddButton(Loc.T("panel_refresh"), UserRefresh)
                 .End();
             b.AddLabel(Summary(machine));
             b.Last.SetFixedWidth(inner);

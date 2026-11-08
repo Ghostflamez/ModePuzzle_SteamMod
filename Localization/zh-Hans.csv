@@ -82,7 +82,7 @@ opt_timeout,达到时限（未证明最优）
 opt_infeasible,目标不可满足（已证明）
 opt_optimal,已证明最优
 opt_status,{0} | {1} 秒 | 节点 {2} | 最佳 {3} | 初始上界 {4} | 距上次改进 {5} 秒
-opt_stale,机器、模块或设置已变化，搜索已停止；原预览保留但不可应用，请重新搜索。
+opt_stale,检测到机器、模组或设置有变化，本次搜索已停止并作废，请重新开始优化。
 opt_search_failed,搜索或预览失败；详情见 Player.log。
 opt_bad_range,范围必须是有效数字，下限不能大于上限；留空表示不限。
 opt_too_many,候选模块超过 {0} 件；请选择只使用本机器模块。
@@ -119,3 +119,4 @@ opt_unbounded,不限
 opt_clear,清除
 panel_prev_machine,上一台
 panel_next_machine,下一台
+opt_restore_unavailable,无法恢复：只能恢复本台机器最近一次应用的布局，而且应用之后不能再改动过。

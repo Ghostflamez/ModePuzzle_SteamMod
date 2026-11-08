@@ -64,6 +64,7 @@ namespace ModePuzzle
             Vector2? position = open != null && open.IsAlive ? open.Rect.anchoredPosition : (Vector2?)null;
             rebuilding = true;
             try { CustomUIManager.Instance?.CloseWindow(WindowId); Build(position); }
+            catch (System.Exception e) { ModePuzzleMod.Log?.Warning("Panel rebuild failed: " + e); }
             finally { rebuilding = false; }
         }
 

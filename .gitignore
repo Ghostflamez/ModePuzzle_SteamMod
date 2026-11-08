@@ -14,3 +14,6 @@ extracted/
 dist/
 build/
 __pycache__/
+
+# Screenshots of the game for UI reference (game art): never commit
+sample/

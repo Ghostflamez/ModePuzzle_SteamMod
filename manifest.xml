@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Manifest>
+  <ID>modepuzzle.optimizer</ID>
+  <Name>模组优化器 Module Optimizer</Name>
+  <Author>Ghostflamez</Author>
+  <ModVersion>0.1.0</ModVersion>
+  <Description>新增工具「模组优化器」：在游戏内计算机器模组舱的最优布局。开发中。 Adds the Module Optimizer tool, which finds the best module-bay layout for your machines. Work in progress.</Description>
+  <GameVersions>
+    <Version>0.46D</Version>
+  </GameVersions>
+  <Prerequisites />
+  <Assemblies>
+    <Assembly>ModePuzzle.dll</Assembly>
+  </Assemblies>
+  <Capabilities />
+</Manifest>

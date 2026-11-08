@@ -1,0 +1,16 @@
+# Build output
+bin/
+obj/
+*.user
+.vs/
+
+# Game assemblies are referenced from the local install at build time; never commit them
+lib/
+*.dll
+*.pdb
+
+# Anything read from a local game install (sprites, text, audio): never commit
+extracted/
+dist/
+build/
+__pycache__/

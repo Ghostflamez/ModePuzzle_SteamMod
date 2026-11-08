@@ -1,0 +1,11 @@
+# Module Optimizer — English.
+item_name,Module Optimizer
+item_desc,"A modified scanner that works out the best module-bay layout for a machine. Double-click it, or right-click and choose Activate."
+item_flavor,"The chip on its screen matches no known model. Better keep it away from Security."
+panel_title,Module Optimizer
+panel_header,Module bay layout
+panel_wip,"Work in progress: later versions will read your machines and modules here and find the best layout."
+panel_version,Version {0}
+debug_spawn,Spawn Module Optimizer (counter)
+cfg_dev_spawn,Dev test: put a Module Optimizer on the counter after loading
+cfg_dev_spawn_tip,For testing only. Spawns one on every load.

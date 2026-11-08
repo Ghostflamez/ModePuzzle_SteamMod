@@ -259,18 +259,44 @@ namespace ModePuzzle
                 StatsRow(b, Loc.T("result_delta"), result.Totals.Select((v, i) => GameText.ColoredValue(v - before[i])), c[1]);
             }
             Separator(b, c[1]);
+            float gap = OptimizerTuning.RowGap;
+
+            // Settings, in the order they are chosen: target (custom bounds open right under it), time, options.
+            var targets = new List<string> { GameText.Performance, GameText.Efficiency, GameText.Quality, Loc.T("opt_custom") };
+            var times = OptimizerTuning.TimeLimitsSeconds.Select(s => Loc.T("opt_seconds", s)).ToList();
+            ChoiceSetting(b, Loc.T("opt_target"), targets, target, i => { target = i; detailAxis = i == 3 ? primary : Targets[i]; Invalidate(); Refresh(); }, c[1]);
+            if (target == 3) CustomTarget(b, c[1]);
+            ChoiceSetting(b, Loc.T("opt_time_limit"), times, timeIndex, i => { timeIndex = i; Refresh(); }, c[1]);
+            SearchOptions(b, c[1]);
+
+            // One action bar: start / stop on the left, apply / restore on the right, each a fixed block.
+            float startWidth = TextWidth(Loc.T(preview == null ? "opt_start" : "opt_restart"), true) + gap + TextWidth(Loc.T("opt_stop"), true);
+            float restoreWidth = TextWidth(Loc.T("opt_restore"), true), applyWidth = preview == null ? 0 : TextWidth(Loc.T("opt_apply"), true);
+            float actionsWidth = restoreWidth + (preview == null ? 0 : applyWidth + gap);
+            bool oneBar = startWidth + 2 * gap + actionsWidth <= c[1];
             Row(b, c[1]);
+            Row(b, oneBar ? c[1] - actionsWidth - gap : c[1]);
             b.AddButton(Loc.T(preview == null ? "opt_start" : "opt_restart"), StartSearch); b.Last.SetInteractable(!Busy);
             b.AddButton(Loc.T("opt_stop"), () => session?.Stop()); b.Last.SetInteractable(Busy);
             EndRow(b);
-            var progress = Columns(c[1], OptimizerTuning.RowGap, Mathf.Max(0, c[1] - PanelStyle.ProgressLabelWidth - OptimizerTuning.RowGap), PanelStyle.ProgressLabelWidth);
+            void Actions()
+            {
+                if (preview != null) { Button(b, Loc.T("opt_apply"), applyWidth, ApplyResult, !Busy && !invalid); applyElement = b.Last; }
+                Button(b, Loc.T("opt_restore"), restoreWidth, RestorePrevious, RestoreAvailable);
+            }
+            if (oneBar) { Row(b, actionsWidth); Actions(); EndRow(b, false); }
+            EndRow(b, false);
+            if (!oneBar) { Row(b, c[1]); Label(b, "", Mathf.Max(0, c[1] - actionsWidth - gap)); Actions(); EndRow(b, false); }
+
+            // Progress, then what the search found.
+            var progress = Columns(c[1], gap, Mathf.Max(0, c[1] - PanelStyle.ProgressLabelWidth - gap), PanelStyle.ProgressLabelWidth);
             Row(b, c[1]);
             b.AddProgressBar(); progressElement = b.Last; progressElement.SetFixedWidth(progress[0]);
             elapsedElement = Label(b, "", progress[1], true, PanelStyle.CaptionFont);
             EndRow(b, false);
             string[] keys = { "metric_nodes", "metric_best", "metric_bound", "metric_improvement" };
             int count = c[1] < PanelStyle.MetricRowMinimum ? 2 : keys.Length;
-            var metrics = Columns(c[1], OptimizerTuning.RowGap, Enumerable.Repeat(1f, count).ToArray());
+            var metrics = Columns(c[1], gap, Enumerable.Repeat(1f, count).ToArray());
             for (int start = 0; start < keys.Length; start += count)
             {
                 Row(b, c[1]);
@@ -282,49 +308,14 @@ namespace ModePuzzle
                 EndRow(b, false);
             }
             UpdateMetrics();
-            string counts = "";
             if (preview != null)
             {
                 var oldIds = new HashSet<int>(original.Installed.Select(p => p.Module.UniqueId));
                 var newIds = new HashSet<int>(preview.Installed.Select(p => p.Module.UniqueId));
                 int moved = preview.Installed.Count(p => oldIds.Contains(p.Module.UniqueId) && !original.Installed.Any(o => o.Module.UniqueId == p.Module.UniqueId &&
                     o.OriginX == p.OriginX && o.OriginY == p.OriginY && o.Orientation == p.Orientation && o.Flipped == p.Flipped));
-                counts = Loc.T("opt_counts", moved, oldIds.Except(newIds).Count(), newIds.Except(oldIds).Count());
+                Caption(b, Loc.T("opt_counts", moved, oldIds.Except(newIds).Count(), newIds.Except(oldIds).Count()), c[1]);
             }
-            float gap = OptimizerTuning.RowGap;
-            float restoreWidth = TextWidth(Loc.T("opt_restore"), true), applyWidth = preview == null ? 0 : TextWidth(Loc.T("opt_apply"), true);
-            float actionsWidth = restoreWidth + (preview == null ? 0 : applyWidth + gap);
-            var targets = new List<string> { GameText.Performance, GameText.Efficiency, GameText.Quality, Loc.T("opt_custom") };
-            var times = OptimizerTuning.TimeLimitsSeconds.Select(s => Loc.T("opt_seconds", s)).ToList();
-            string targetLabel = Loc.T("opt_target"), timeLabel = Loc.T("opt_time_limit");
-            float targetWidth = TextWidth(targetLabel) + gap + ChoiceWidth(targets), timeWidth = TextWidth(timeLabel) + gap + ChoiceWidth(times);
-            void Actions()
-            {
-                if (preview != null) { Button(b, Loc.T("opt_apply"), applyWidth, ApplyResult, !Busy && !invalid); applyElement = b.Last; }
-                Button(b, Loc.T("opt_restore"), restoreWidth, RestorePrevious, RestoreAvailable);
-            }
-            // 目标, with the move counts at the right when they fit. Left and right are blocks of fixed width, so the
-            // right one ends exactly at the column's edge.
-            float countsWidth = TextWidth(counts);
-            bool countsHere = counts.Length > 0 && targetWidth + gap + countsWidth <= c[1];
-            Row(b, c[1]);
-            Row(b, countsHere ? c[1] - countsWidth - gap : c[1]);
-            Label(b, targetLabel, TextWidth(targetLabel));
-            Choice.Buttons(b, targets, target, i => { target = i; detailAxis = i == 3 ? primary : Targets[i]; Invalidate(); Refresh(); }, !Busy);
-            EndRow(b);
-            if (countsHere) Caption(b, counts, countsWidth, true);
-            EndRow(b, false);
-            // 时长, with 应用布局 / 恢复上一布局 at the right when they fit.
-            bool actionsHere = timeWidth + gap + actionsWidth <= c[1];
-            Row(b, c[1]);
-            Row(b, actionsHere ? c[1] - actionsWidth - gap : c[1]);
-            Label(b, timeLabel, TextWidth(timeLabel));
-            Choice.Buttons(b, times, timeIndex, i => { timeIndex = i; Refresh(); }, !Busy);
-            EndRow(b);
-            if (actionsHere) { Row(b, actionsWidth); Actions(); EndRow(b, false); }
-            EndRow(b, false);
-            if (!countsHere && counts.Length > 0) Caption(b, counts, c[1]);
-            if (!actionsHere) { Row(b, c[1]); Label(b, "", Mathf.Max(0, c[1] - actionsWidth - gap)); Actions(); EndRow(b, false); }
             messageElement = Label(b, string.Join("\n", new[] { machine.Guessed ? Loc.T("panel_guessed") : null, message }.Where(t => !string.IsNullOrEmpty(t))), c[1]);
             b.End(); EndRow(b, false);
             return shown;

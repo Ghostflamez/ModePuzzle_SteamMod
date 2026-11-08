@@ -149,7 +149,8 @@ namespace ModePuzzle
         {
             Row(b, width); Label(b, label, TextWidth(label)); Choice.Buttons(b, labels, selected, set, !Busy); EndRow(b);
         }
-        static void Controls(CustomUIBuilder b, float width)
+        /// <summary>The three search options; two rows when they do not fit in one.</summary>
+        static void SearchOptions(CustomUIBuilder b, float width)
         {
             string degrading = Loc.T("opt_exclude_degrading"), overvolted = Loc.T("opt_exclude_overvolted"), only = Loc.T("opt_only_installed");
             float wd = ToggleWidth(degrading), wo = ToggleWidth(overvolted), wi = ToggleWidth(only);
@@ -160,8 +161,6 @@ namespace ModePuzzle
             if (!oneRow) { EndRow(b, false); Row(b, width, PanelStyle.SettingsGap); }
             SmallToggle(b, only, null, onlyInstalled, v => onlyInstalled = v, Mathf.Min(wi, width));
             EndRow(b, false);
-            if (target != 3) return;
-            CustomTarget(b, width);
         }
 
         /// <summary>
@@ -170,11 +169,7 @@ namespace ModePuzzle
         /// </summary>
         static void CustomTarget(CustomUIBuilder b, float width)
         {
-            Separator(b, width);
-            Row(b, width);
-            Label(b, Loc.T("opt_custom_title"), TextWidth(Loc.T("opt_custom_title")));
-            Caption(b, Loc.T("opt_custom_hint"), Mathf.Max(0, width - TextWidth(Loc.T("opt_custom_title")) - OptimizerTuning.RowGap));
-            EndRow(b, false);
+            Caption(b, Loc.T("opt_custom_hint"), width);
             ChoiceSetting(b, Loc.T("opt_primary"), Axes(), primary, i => { primary = i; detailAxis = i; if (secondary == i) secondary = -1; Invalidate(); Refresh(); }, width);
             var secondaryOptions = Axes(); secondaryOptions.Insert(0, Loc.T("opt_none"));
             ChoiceSetting(b, Loc.T("opt_secondary"), secondaryOptions, secondary + 1, i => { if (i - 1 != primary) { secondary = i - 1; Invalidate(); Refresh(); } }, width);

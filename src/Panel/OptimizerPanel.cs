@@ -117,8 +117,6 @@ namespace ModePuzzle
             MachineBar(b, snap, machine, index, inner);
             var shown = Dashboard(b, machine, inner);
             Separator(b, inner);
-            Controls(b, inner);
-            Separator(b, inner);
             Row(b, inner);
             Choice.Buttons(b, new List<string> { Loc.T("tab_modules", shown.Installed.Count), Loc.T("opt_details"), Loc.T("tab_free", fits.Count + borrowed.Count) },
                 (int)tab, i => { tab = (Tab)i; Refresh(); });

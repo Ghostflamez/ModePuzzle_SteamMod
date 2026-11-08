@@ -30,7 +30,6 @@ namespace ModePuzzle
             "random_performance_module", "random_efficiency_module", "random_quality_module",
             "random_overclock_module", "random_eco_module", "random_fineness_module", "random_node",
         };
-        static bool registered;
         static bool debugFunctionsAdded;
 
         public void Init(ModManifest manifest)
@@ -83,12 +82,18 @@ namespace ModePuzzle
             OptimizerPanel.Close();
         }
 
+        /// <summary>
+        /// Every scene load creates a new ModItemDirectory, but DirectoryMaster keeps only the first one and
+        /// ignores later instances as duplicates. Directory.Set first removes the id from every registered
+        /// directory, so calling it on a later instance unregistered the item from the one the game uses and
+        /// saved optimizers were dropped on the second load of a session. Register only when the game cannot
+        /// resolve the id, with Add (which never removes).
+        /// </summary>
         static void RegisterItems(ModItemDirectory directory)
         {
-            if (registered && directory.Has(OptimizerItem.Id)) return;
-            directory.Set(OptimizerItem.Id, OptimizerItem.Create);
-            registered = true;
-            Log.Log("Registered item " + OptimizerItem.Id);
+            if (DirectoryMaster.Has<GameItem>(OptimizerItem.Id)) return;
+            directory.Add(OptimizerItem.Id, OptimizerItem.Create);
+            Log.Log($"Registered item {OptimizerItem.Id}, resolvable={DirectoryMaster.Has<GameItem>(OptimizerItem.Id)}");
         }
 
         static void OnGameLoaded()

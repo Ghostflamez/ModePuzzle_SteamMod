@@ -24,7 +24,6 @@ cfg_dev_jackson_tip,For testing only. Normally a 10% chance per restock and neve
 smuggler_fence_line_1,"Huh... is that a Hypertech Module Optimizer you've got? I thought we had the whole shipment."
 smuggler_fence_line_2,"Getting one of those from someone else, now that's something. I won't be selling today, then. Any other hot goods you've got, I'll take, at a discount."
 smuggler_fence_line_3,I've got {0} credits on me.
-panel_machine,Machine
 panel_refresh,Refresh
 panel_no_machines,"No machine with a module bay found. Put one in your store or inventory, then press Refresh."
 panel_guessed,"Unlisted machine: accepted module types are guessed from universal modules and the ones installed."
@@ -43,11 +42,8 @@ cfg_dev_machine_tip,"For testing only. Each goes on the counter, else the back c
 cfg_dev_bay_kit,Dev test: Module Bay Expansion Kits every time you open the shop (0 = off)
 cfg_dev_modules,Dev test: random modules / nodes every time you open the shop (0 = off)
 cfg_dev_open_tip,"For testing only. Each goes on the counter, else the back counter, else your inventory; ones that fit nowhere are logged."
-panel_summary,"Module bay {0}×{1}: {2} / {3} cells used    Accepts: {4}"
 panel_bay_title,Module bay
-panel_installed,Installed modules ({0})
 panel_free,Free modules that fit this machine: {0} (of {1} free)
-panel_totals,Current totals    {0} {1}    {2} {3}    {4} {5}
 tab_bay,Module bay
 tab_free,Free modules ({0})
 type_MODULE_TYPE_UNIVERSAL,universal modules
@@ -61,7 +57,6 @@ type_MODULE_TYPE_ALARM,alarm modules
 opt_target,Target
 opt_custom,Custom
 opt_seconds,{0} s
-opt_only_installed,Use only modules installed in this machine
 opt_primary,Primary
 opt_secondary,Secondary
 opt_none,None
@@ -73,25 +68,12 @@ opt_preview,Preview
 opt_apply,Apply layout
 opt_restore,Restore previous
 opt_result,Result
-opt_lock_none,May remove / move
-opt_lock_required,Keep in machine (may move)
-opt_lock_fixed,Fixed position (must not move)
-opt_ready,Ready; set locks and start searching.
-opt_searching,Searching
-opt_stopped,Stopped (not proven)
-opt_timeout,Time limit reached (not proven)
-opt_infeasible,Infeasible (proven)
 opt_optimal,Proven optimal
-opt_status,{0} | {1} s | Nodes {2} | Best {3} | Root bound {4} | Last improvement {5} s ago
 opt_stale,"The machine, modules or settings changed: this search was stopped and discarded. Start a new one."
 opt_search_failed,Search or preview failed; see Player.log.
 opt_bad_range,Enter valid numbers with minimum <= maximum; leave blank for no limit.
 opt_too_many,More than {0} candidates; select installed modules only.
 opt_no_result,No feasible layout yet. You can preview the current best during search.
-opt_comparison,{0} / {1} / {2}\nCurrent: {3}\nProposed: {4}
-opt_counts,Moved {0} / Removed {1} / Added {2}
-opt_details,Attribute details ({0} / {1} / {2})
-opt_detail_row,Base {0} | Self (including mounts) {1}\nAbsorption {2} | Receiver {3} | Total {4}
 opt_locked,"Machine working, inventory locked or module cannot be removed; stuck modules cannot move."
 opt_illegal,Game rejected placement or compatibility.
 opt_overlap,Proposed placements overlap.
@@ -109,7 +91,6 @@ opt_remove_failed,Game removal failed.
 opt_insert_failed,Game insertion failed.
 opt_verify_failed,Actual placement differs from expected.
 
-opt_preview_machine,Preview machine: {0}
 opt_no_changes,Layout already matches; no changes needed.
 cfg_dev_apply_failure,Dev test: fail apply after the first insertion
 cfg_dev_apply_failure_tip,Test saves only. Apply throws after its first insertion and attempts rollback; Restore is unaffected. Disable after testing.
@@ -124,3 +105,35 @@ panel_next_machine,Next
 opt_restore_unavailable,"Cannot restore: only this machine's last applied layout, and only if nothing changed since."
 cfg_trait_badges,Show trait icons on all modules
 cfg_trait_badges_tip,"Marks every module with a special trait, in inventories, storage and machine bays. The icons stay upright and move with the cells when the module is rotated or flipped."
+panel_capacity,Bay {0}×{1} · {2}/{3} cells used
+panel_accepts,Accepts: {0}
+panel_free_title,Free modules
+panel_module,Module
+panel_traits,Traits
+opt_section,Optimize
+opt_invalid_tag,Invalidated
+metric_elapsed,Elapsed
+metric_nodes,Nodes
+metric_best,Best
+metric_bound,Bound
+metric_improvement,Since improvement
+detail_item,Item
+detail_base,Base
+detail_self,Self (incl. mounts)
+detail_absorbed,Absorption
+detail_receiver,Receiver
+detail_total,Total
+result_before,Current
+result_after,Proposed
+result_delta,Change
+opt_details,Attribute details
+opt_ready,Idle
+opt_searching,Searching
+opt_timeout,Time limit
+opt_stopped,Stopped
+opt_infeasible,Infeasible
+opt_counts,Moved {0} · Removed {1} · Added {2}
+opt_lock_none,May remove
+opt_lock_required,Keep here
+opt_lock_fixed,Fix position
+opt_only_installed,Installed modules only

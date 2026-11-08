@@ -16,15 +16,6 @@ namespace ModePuzzle
     static partial class OptimizerPanel
     {
         const string WindowId = "modepuzzle.optimizer.panel";
-        // Preferred size in canvas units; never wider than half the screen nor taller than 80% of it.
-        const float PreferredWidth = 980f, PreferredHeight = 680f, MaxWidthShare = 0.5f, MaxHeightShare = 0.8f;
-        // Room taken by the window frame and padding around the content.
-        const float FrameMargin = 48f, ColumnGap = 16f;
-        const float BayShare = 0.45f;
-        /// <summary>Canvas units per cell for the small module pictures in the lists.</summary>
-        const float IconCell = 12f;
-        const int FreeListMax = 200;
-
         enum View { Bay, Free, Result }
 
         static int selectedMachineId;
@@ -62,6 +53,7 @@ namespace ModePuzzle
         {
             var open = CustomUIManager.Instance?.GetWindow(WindowId);
             Vector2? position = open != null && open.IsAlive ? open.Rect.anchoredPosition : (Vector2?)null;
+            SaveScroll(open);
             rebuilding = true;
             try { CustomUIManager.Instance?.CloseWindow(WindowId); Build(position); }
             catch (System.Exception e) { ModePuzzleMod.Log?.Warning("Panel rebuild failed: " + e); }
@@ -73,7 +65,7 @@ namespace ModePuzzle
             Vector2 screen = new Vector2(Screen.width, Screen.height);
             var root = manager.GetLayerRoot(CustomUIManager.LAYER_OVERLAY);
             if (root != null && root.rect.width > 0 && root.rect.height > 0) screen = root.rect.size;
-            return new Vector2(Mathf.Min(PreferredWidth, screen.x * MaxWidthShare), Mathf.Min(PreferredHeight, screen.y * MaxHeightShare));
+            return new Vector2(Mathf.Min(PanelStyle.PreferredWidth, screen.x * PanelStyle.MaxWidthShare), Mathf.Min(PanelStyle.PreferredHeight, screen.y * PanelStyle.MaxHeightShare));
         }
 
         static void Build(Vector2? position)
@@ -81,7 +73,7 @@ namespace ModePuzzle
             var manager = CustomUIManager.Instance;
             if (manager == null) return;
             var size = WindowSize(manager);
-            float inner = size.x - FrameMargin;
+            float inner = size.x - PanelStyle.FrameMargin;
             if (SnapshotChanged()) Invalidate();
             var snap = LiveReader.Read();
             var b = manager.CreateWindow(WindowId, Loc.T("panel_title"), CustomUIManager.LAYER_OVERLAY, null, CustomUIManager.Style.Machinery)
@@ -90,7 +82,10 @@ namespace ModePuzzle
                 .SetCloseOnEscape(true)
                 .OnClose(OnClosed);
             statusElement = null; messageElement=null; applyElement=null;
-            b.BeginScroll(size.y - FrameMargin);
+            progressElement = null;
+            metricElements.Clear();
+            b.BeginScroll(size.y - PanelStyle.FrameMargin);
+            scroll = b.CurrentContainer.GetComponentInParent<UnityEngine.UI.ScrollRect>();
 
             if (snap.Machines.Count == 0)
             {
@@ -109,29 +104,30 @@ namespace ModePuzzle
             selectedMachineId = machine.UniqueId;
             var fits = snap.Free.Where(machine.CanHold).ToList();
 
-            b.BeginRow(8f, TextAnchor.MiddleLeft)
-                .AddLabel(Loc.T("panel_machine"))
-                .AddButton(Loc.T("panel_prev_machine"), () => SelectMachine(snap, index - 1))
-                .AddLabel($"{machine.Name}  ({index + 1}/{snap.Machines.Count})")
-                .AddButton(Loc.T("panel_next_machine"), () => SelectMachine(snap, index + 1))
-                .AddButton(Loc.T("panel_refresh"), UserRefresh)
-                .End();
-            b.AddLabel(Summary(machine));
-            b.Last.SetFixedWidth(inner);
+            b.BeginRow(OptimizerTuning.RowGap, TextAnchor.MiddleLeft);
+            b.AddButton(Loc.T("panel_prev_machine"), () => SelectMachine(snap, index - 1));
+            Label(b, $"{machine.Name} ({index + 1}/{snap.Machines.Count})", inner * PanelStyle.MachineNameShare);
+            b.AddButton(Loc.T("panel_next_machine"), () => SelectMachine(snap, index + 1));
+            b.AddButton(Loc.T("panel_refresh"), UserRefresh);
+            if (inner >= PanelStyle.WideBar)
+                statusElement = Label(b, Status(), inner * PanelStyle.StatusShare);
+            b.End();
+            if (inner < PanelStyle.WideBar) statusElement = Label(b, Status(), inner);
             if (machine.Guessed) { b.AddWarning(Loc.T("panel_guessed")); b.Last.SetFixedWidth(inner); }
 
-            b.BeginRow(6f, TextAnchor.MiddleLeft);
+            b.BeginRow(OptimizerTuning.RowGap, TextAnchor.MiddleLeft);
             ViewButton(b, View.Bay, Loc.T("tab_bay"));
             ViewButton(b, View.Free, Loc.T("tab_free", fits.Count));
             ViewButton(b, View.Result, Loc.T("opt_result"));
             b.End();
             b.AddSeparator();
 
-            Controls(b, inner);
             float listHeight = size.y * OptimizerTuning.ResultHeightShare;
             if (view == View.Bay) BayView(b, machine, inner, listHeight);
-            else if (view == View.Free) FreeView(b, snap, fits, inner, listHeight);
-            else ResultView(b, inner, listHeight);
+            Controls(b, inner);
+            if (view == View.Free) FreeView(b, snap, fits, inner, listHeight);
+            else if (view == View.Result) ResultView(b, inner, listHeight);
+            else Details(b, machine, EngineBridge.EvaluateCurrent(machine, new Engine.Rules()), inner);
 
             if (snap.Skipped.Count > 0)
             {
@@ -160,13 +156,6 @@ namespace ModePuzzle
             if (view == which) b.Last.SetInteractable(false);
         }
 
-        static string Summary(MachineInfo m)
-        {
-            int used = m.Installed.SelectMany(p => p.Cells).Count(c => m.IsUsable(c.X, c.Y));
-            var types = string.Join(Loc.T("panel_list_sep"), m.Accepts.Select(TypeName));
-            return Loc.T("panel_summary", m.Width, m.Height, used, m.UsableCount, types);
-        }
-
         static string TypeName(string moduleType)
         {
             var key = "type_" + moduleType;
@@ -176,73 +165,59 @@ namespace ModePuzzle
 
         static void BayView(CustomUIBuilder b, MachineInfo machine, float inner, float listHeight)
         {
-            // Whole-pixel scale keeps the pixel art crisp.
-            int px = ModuleArt.CellPixels;
-            float bayArea = inner * BayShare;
-            int scale = Mathf.Max(1, Mathf.FloorToInt(Mathf.Min(bayArea / (machine.Width * px), listHeight / (machine.Height * px))));
-            float bayW = machine.Width * px * scale, bayH = machine.Height * px * scale;
-            float rightW = Mathf.Max(160f, inner - bayW - ColumnGap);
-
-            Pixels.Destroy(baySprite);
-            baySprite = ModuleArt.ComposeBay(machine);
+            Section(b, "panel_bay_title");
+            BayImage(b, machine, inner, listHeight);
+            Legend(b, machine, inner, true);
             var totals = EngineBridge.EvaluateCurrent(machine, new Engine.Rules()).Total;
-
-            b.BeginRow(ColumnGap);
-            b.BeginColumn(6f).AddHeader(Loc.T("panel_bay_title")).AddImage(baySprite, bayW, bayH);
-            b.AddLabel(Loc.T("panel_totals", GameText.Efficiency, GameText.ColoredValue(totals[0]),
-                GameText.Quality, GameText.ColoredValue(totals[1]), GameText.Performance, GameText.ColoredValue(totals[2])));
-            b.Last.SetFixedWidth(bayW);
+            b.BeginRow(OptimizerTuning.RowGap);
+            for (int k = 0; k < Engine.Axis.Count; k++)
+                Tile(b, Axes()[k], GameText.ColoredValue(totals[k]), (inner - 2 * OptimizerTuning.RowGap) / 3);
             b.End();
-
-            b.BeginColumn(4f).AddHeader(Loc.T("panel_installed", machine.Installed.Count)).BeginScroll(listHeight);
-            if (machine.Installed.Count == 0) b.AddLabel(Loc.T("panel_none"));
-            for (int i = 0; i < machine.Installed.Count; i++)
-            {
-                var module = machine.Installed[i].Module;
-                ModuleRow(b, module, $"{i + 1}. ", rightW);
-                locks.TryGetValue(module.UniqueId, out var kind);
-                b.BeginRow(OptimizerTuning.RowGap, TextAnchor.MiddleLeft);
-                Choice.Buttons(b, new List<string> { Loc.T("opt_lock_none"), Loc.T("opt_lock_required"), Loc.T("opt_lock_fixed") },
-                    module.Stuck ? 2 : (int)kind, value => { locks[module.UniqueId] = (EngineBridge.LockKind)value; Invalidate(); Refresh(); },
-                    !module.Stuck && session?.Running != true);
-                b.End();
-            }
-            b.End().End();
-            b.End();
+            int used = machine.Installed.SelectMany(p => p.Cells).Count(c => machine.IsUsable(c.X, c.Y));
+            Label(b, Loc.T("panel_capacity", machine.Width, machine.Height, used, machine.UsableCount), inner);
+            Label(b, Loc.T("panel_accepts", string.Join(Loc.T("panel_list_sep"), machine.Accepts.Select(TypeName))), inner);
         }
 
         static void FreeView(CustomUIBuilder b, Snapshot snap, List<ModuleInfo> fits, float inner, float listHeight)
         {
-            b.AddLabel(Loc.T("panel_free", fits.Count, snap.Free.Count));
-            b.Last.SetFixedWidth(inner);
-            b.BeginScroll(listHeight);
+            Section(b, "panel_free_title");
+            Label(b, Loc.T("panel_free", fits.Count, snap.Free.Count), inner);
             if (fits.Count == 0) b.AddLabel(Loc.T("panel_none"));
-            // Identical modules (same name, stats and effects) are listed once with a count.
-            var groups = fits.GroupBy(GameText.Describe).OrderByDescending(g => g.Count()).ThenBy(g => g.Key).ToList();
-            foreach (var g in groups.Take(FreeListMax))
-                ModuleRow(b, g.First(), g.Count() > 1 ? $"×{g.Count()}  " : "", inner);
-            if (groups.Count > FreeListMax) b.AddLabel(Loc.T("panel_more", groups.Count - FreeListMax));
-            b.End();
-        }
-
-        /// <summary>Small unrotated module picture, then the name in its card colour and coloured stats.</summary>
-        static void ModuleRow(CustomUIBuilder b, ModuleInfo m, string prefix, float width)
-        {
-            float iconW = Mathf.Max(1, m.ShapeWidth) * IconCell, iconH = Mathf.Max(1, m.ShapeHeight) * IconCell;
-            b.BeginRow(8f, TextAnchor.MiddleLeft);
-            var sprite = ModuleArt.SpriteOf(m);
-            if (sprite != null) b.AddImage(sprite, iconW, iconH);
-            var card = ModuleArt.CardColorOf(m);
-            b.AddLabel(prefix + GameText.DescribeRich(m, card.HasValue ? ColorUtility.ToHtmlStringRGB(card.Value) : null));
-            b.Last.SetFixedWidth(Mathf.Max(80f, width - (sprite != null ? iconW : 0) - 8f));
-            b.End();
+            float available = inner - PanelStyle.IconSlot - 5 * OptimizerTuning.RowGap;
+            float name = available * PanelStyle.FreeNameShare, stat = available * PanelStyle.FreeStatShare;
+            b.BeginRow(OptimizerTuning.RowGap);
+            Label(b, "", PanelStyle.IconSlot); Label(b, Loc.T("panel_module"), name);
+            foreach (var axis in Axes()) Label(b, axis, stat, true);
+            Label(b, Loc.T("panel_traits"), available - name - 3 * stat); b.End();
+            foreach (var m in fits.Take(PanelStyle.FreeListMax))
+            {
+                b.BeginRow(OptimizerTuning.RowGap, TextAnchor.MiddleLeft);
+                ModuleIcon(b, m);
+                Name(b, m, name);
+                foreach (int value in new[] { m.Efficiency, m.Quality, m.Performance }) Label(b, GameText.ColoredValue(value), stat, true);
+                Chips(b, m, available - name - 3 * stat);
+                b.End();
+            }
+            if (fits.Count > PanelStyle.FreeListMax) b.AddLabel(Loc.T("panel_more", fits.Count - PanelStyle.FreeListMax));
         }
 
         static void Finish(CustomUIBuilder b, Vector2? position)
         {
             if (position.HasValue) b.SetPosition(position.Value);
             else b.Center();
+            FitButtons(b.Handle, b.Handle.Rect.rect.width - PanelStyle.FrameMargin);
+            builtView = view;
             b.Show();
+            CustomUIBuilder.RebuildLayout(b.Handle.Rect);
+            if (scroll != null)
+            {
+                CustomUIBuilder.RebuildLayout(scroll.content);
+                float viewportHeight = scroll.viewport != null ? scroll.viewport.rect.height : ((RectTransform)scroll.transform).rect.height;
+                var offset = scroll.content.anchoredPosition;
+                offset.y = Mathf.Clamp(scrollOffsets[(int)view], 0, Mathf.Max(0, scroll.content.rect.height - viewportHeight));
+                scroll.content.anchoredPosition = offset;
+                scroll.StopMovement();
+            }
         }
     }
 }

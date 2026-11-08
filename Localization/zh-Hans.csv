@@ -24,7 +24,6 @@ cfg_dev_jackson_tip,仅用于测试。正常为每次上货 10% 且已持有时�
 smuggler_fence_line_1,"哟……你手上那台是超科技模组优化器？我还以为整批货都在我们手里。"
 smuggler_fence_line_2,"能从别人那儿弄到这种好货，你可真不简单。这趟我就不卖了——你手上有别的赃货，我照单全收，只是价钱得压一压。"
 smuggler_fence_line_3,我身上带了{0}信用点。
-panel_machine,机器
 panel_refresh,刷新
 panel_no_machines,"没有找到带模组舱的机器。把机器放进店里或背包后点「刷新」。"
 panel_guessed,"未收录的机器：可用模组类型按通用模组和已安装模组推断。"
@@ -43,11 +42,8 @@ cfg_dev_machine_tip,仅用于测试。每台优先放柜台，放不下时依次
 cfg_dev_bay_kit,开发测试：每天开门时送几个模组舱扩建套件（选 0 关闭）
 cfg_dev_modules,开发测试：每天开门时送几个随机模组/节点（选 0 关闭）
 cfg_dev_open_tip,仅用于测试。每个优先放柜台，放不下时依次尝试后柜台和背包；都放不下的会留在日志里。
-panel_summary,模组舱 {0}×{1}：已用 {2} / {3} 格　可装：{4}
 panel_bay_title,模组舱
-panel_installed,已安装模组（{0}）
 panel_free,能装进这台机器的空闲模组 {0} 个（共 {1} 个空闲）
-panel_totals,当前合计　{0} {1}　{2} {3}　{4} {5}
 tab_bay,模组舱
 tab_free,空闲模组（{0}）
 type_MODULE_TYPE_UNIVERSAL,通用模组
@@ -61,7 +57,6 @@ type_MODULE_TYPE_ALARM,警报器模组
 opt_target,目标
 opt_custom,自定义
 opt_seconds,{0} 秒
-opt_only_installed,只使用本机器已安装的模块
 opt_primary,主目标
 opt_secondary,次目标
 opt_none,无
@@ -73,25 +68,12 @@ opt_preview,查看预览
 opt_apply,应用布局
 opt_restore,恢复上一布局
 opt_result,优化结果
-opt_lock_none,允许移出 / 移动
-opt_lock_required,保留在此机器（可移动）
-opt_lock_fixed,固定位置（不可移动）
-opt_ready,就绪；设置锁定后开始搜索。
-opt_searching,正在搜索
-opt_stopped,已停止（未证明最优）
-opt_timeout,达到时限（未证明最优）
-opt_infeasible,目标不可满足（已证明）
 opt_optimal,已证明最优
-opt_status,{0} | {1} 秒 | 节点 {2} | 最佳 {3} | 初始上界 {4} | 距上次改进 {5} 秒
 opt_stale,检测到机器、模组或设置有变化，本次搜索已停止并作废，请重新开始优化。
 opt_search_failed,搜索或预览失败；详情见 Player.log。
 opt_bad_range,范围必须是有效数字，下限不能大于上限；留空表示不限。
 opt_too_many,候选模块超过 {0} 件；请选择只使用本机器模块。
 opt_no_result,尚无可行布局。搜索时可随时查看当前最好预览。
-opt_comparison,{0} / {1} / {2}\n原布局：{3}\n拟用布局：{4}
-opt_counts,移动 {0} 件 / 移出 {1} 件 / 加入 {2} 件
-opt_details,属性明细（{0} / {1} / {2}）
-opt_detail_row,基础 {0} | 自身（含挂载）{1}\n吸收 {2} | 接收器 {3} | 合计 {4}
 opt_locked,机器正在工作、容器被锁定或模块无法移出；未允许移动卡住模块。
 opt_illegal,游戏拒绝此摆放或兼容性校验。
 opt_overlap,拟用布局存在重叠。
@@ -108,7 +90,6 @@ opt_phase_verify,事后校验
 opt_remove_failed,游戏移出操作失败。
 opt_insert_failed,游戏放入操作失败。
 opt_verify_failed,实际摆放与预期不符。
-opt_preview_machine,预览机器：{0}
 opt_no_changes,布局无需变动。
 cfg_dev_apply_failure,开发测试：应用首次放入后模拟失败
 cfg_dev_apply_failure_tip,仅在测试存档使用。应用会在首次放入后抛错并尝试恢复原布局；恢复按钮不受影响。测试后关闭。
@@ -123,3 +104,35 @@ panel_next_machine,下一台
 opt_restore_unavailable,无法恢复：只能恢复本台机器最近一次应用的布局，而且应用之后不能再改动过。
 cfg_trait_badges,在所有模组上显示特殊词条图标
 cfg_trait_badges_tip,给背包、仓库、机器模组舱里所有带特殊词条的模组标上小图标；图标始终朝上，并随模组的旋转、翻转自动换到对应的格子。
+panel_capacity,模组舱 {0}×{1} · 已用 {2}/{3} 格
+panel_accepts,可装类型：{0}
+panel_free_title,空闲模组
+panel_module,模组
+panel_traits,词条
+opt_section,优化
+opt_invalid_tag,结果已作废
+metric_elapsed,用时
+metric_nodes,节点
+metric_best,最佳
+metric_bound,上界
+metric_improvement,距上次改进
+detail_item,项目
+detail_base,基础
+detail_self,自身（含挂载）
+detail_absorbed,吸收
+detail_receiver,接收器
+detail_total,合计
+result_before,原布局
+result_after,拟用布局
+result_delta,变化
+opt_details,属性明细
+opt_ready,空闲
+opt_searching,搜索中
+opt_timeout,达到时限
+opt_stopped,已停止
+opt_infeasible,无可行解
+opt_counts,移动 {0} · 移出 {1} · 加入 {2}
+opt_lock_none,可移出
+opt_lock_required,保留本机
+opt_lock_fixed,固定位置
+opt_only_installed,只用本机模组

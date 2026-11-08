@@ -37,6 +37,60 @@ namespace ModePuzzle.Game
             };
         }
 
+        public enum LockKind { None, Required, Fixed }
+
+        public static SearchConfig Config(MachineInfo machine, IEnumerable<ModuleInfo> free, IDictionary<int, LockKind> locks)
+        {
+            var config = new SearchConfig { Board = BoardOf(machine) };
+            foreach (var placed in machine.Installed)
+            {
+                var item = ItemOf(placed.Module);
+                locks.TryGetValue(placed.Module.UniqueId, out var kind);
+                if (placed.Module.Stuck || kind == LockKind.Fixed)
+                {
+                    var placement = PlacementOf(config.Board, placed.Cells);
+                    placement.X = placed.Cells.Min(c => c.X); placement.Y = placed.Cells.Min(c => c.Y);
+                    placement.Rotation = ((4 - placed.Orientation) % 4) * 90; placement.Flipped = placed.Flipped;
+                    config.Fixed.Add(new PlacedPiece { Item = item, Instance = item.Id + ":1", Placement = placement });
+                }
+                else { item.Required = kind == LockKind.Required; config.Items.Add(item); }
+            }
+            foreach (var module in free)
+                if (!module.Stuck && machine.CanHold(module) && module.Shape.Count > 0)
+                {
+                    var item = ItemOf(module);
+                    if (Geometry.GeneratePlacements(config.Board, item).Count > 0) config.Items.Add(item);
+                }
+            return config;
+        }
+
+        /// <summary>Match occupied cells to the game's clockwise transform, including shape padding.</summary>
+        public static PlacedModule Proposed(ModuleInfo module, Placement placement, int width)
+        {
+            var wanted = placement.Cells.OrderBy(c => c).ToArray();
+            for (int flip = 0; flip < 2; flip++)
+                for (int rotation = 0; rotation < 4; rotation++)
+                {
+                    var cells = module.Shape.Select(c =>
+                    {
+                        int x = flip == 1 ? module.ShapeWidth - 1 - c.X : c.X, y = c.Y;
+                        switch (rotation)
+                        {
+                            case 1: { int t = x; x = y; y = module.ShapeWidth - 1 - t; break; }
+                            case 2: x = module.ShapeWidth - 1 - x; y = module.ShapeHeight - 1 - y; break;
+                            case 3: { int t = x; x = module.ShapeHeight - 1 - y; y = t; break; }
+                        }
+                        return new Cell(x, y);
+                    }).ToList();
+                    int dx = wanted.Min(c => c % width) - cells.Min(c => c.X);
+                    int dy = wanted.Min(c => c / width) - cells.Min(c => c.Y);
+                    cells = cells.Select(c => new Cell(c.X + dx, c.Y + dy)).ToList();
+                    if (cells.Select(c => c.Y * width + c.X).OrderBy(c => c).SequenceEqual(wanted))
+                        return new PlacedModule { Module = module, Cells = cells, OriginX = dx, OriginY = dy, Orientation = rotation, Flipped = flip == 1 };
+                }
+            throw new System.ArgumentException("Result shape has no game transform: " + module.UniqueId);
+        }
+
         /// <summary>A placement for cells a module already covers in the bay (mask, halo and mount edges as
         /// Geometry.GeneratePlacements computes them).</summary>
         public static Placement PlacementOf(Board board, IList<Cell> cells)

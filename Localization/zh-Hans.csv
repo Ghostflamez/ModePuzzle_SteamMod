@@ -56,3 +56,59 @@ type_MODULE_TYPE_DNA_MANIPULATOR,DNA编辑器模组
 type_MODULE_TYPE_EVAPORATOR,蒸发器模组
 type_MODULE_TYPE_FURNACE,熔炉模组
 type_MODULE_TYPE_ALARM,警报器模组
+
+opt_target,目标
+opt_custom,自定义
+opt_seconds,{0} 秒
+opt_only_installed,只使用本机器已安装的模块
+opt_primary,主目标
+opt_secondary,次目标
+opt_none,无
+opt_min,下限（不限）
+opt_max,上限（不限）
+opt_start,开始 / 重新搜索
+opt_stop,停止
+opt_preview,查看预览
+opt_apply,应用布局
+opt_restore,恢复上一布局
+opt_result,优化结果
+opt_lock_none,允许移出 / 移动
+opt_lock_required,保留在此机器（可移动）
+opt_lock_fixed,固定位置（不可移动）
+opt_ready,就绪；设置锁定后开始搜索。
+opt_searching,正在搜索
+opt_stopped,已停止（未证明最优）
+opt_timeout,达到时限（未证明最优）
+opt_infeasible,目标不可满足（已证明）
+opt_optimal,已证明最优
+opt_status,{0} | {1} 秒 | 节点 {2} | 最佳 {3} | 初始上界 {4} | 距上次改进 {5} 秒
+opt_stale,机器、模块或设置已变化，搜索已停止；原预览保留但不可应用，请重新搜索。
+opt_search_failed,搜索或预览失败；详情见 Player.log。
+opt_bad_range,范围必须是有效数字，下限不能大于上限；留空表示不限。
+opt_too_many,候选模块超过 {0} 件；请选择只使用本机器模块。
+opt_no_result,尚无可行布局。搜索时可随时查看当前最好预览。
+opt_comparison,{0} / {1} / {2}\n原布局：{3}\n拟用布局：{4}
+opt_counts,移动 {0} 件 / 移出 {1} 件 / 加入 {2} 件
+opt_details,属性明细（{0} / {1} / {2}）
+opt_detail_row,基础 {0} | 自身（含挂载）{1}\n吸收 {2} | 接收器 {3} | 合计 {4}
+opt_locked,机器正在工作、容器被锁定或模块无法移出；未允许移动卡住模块。
+opt_illegal,游戏拒绝此摆放或兼容性校验。
+opt_overlap,拟用布局存在重叠。
+opt_storage_full,无法为所有移出模块预留位置（背包 → 后柜台 → 前柜台）；请先腾出空间。
+opt_applied,布局已应用并校验；可一键恢复上一布局。
+opt_restored,恢复成功 / 原布局未变
+opt_restore_failed,恢复不完整！请查看 Player.log 中的模块编号并检查库存。
+opt_failure,失败阶段：{0}；原因：{1}；恢复结果：{2}
+opt_phase_preflight,应用前校验
+opt_phase_remove,移出
+opt_phase_insert,放入
+opt_phase_refresh,重算机器
+opt_phase_verify,事后校验
+opt_remove_failed,游戏移出操作失败。
+opt_insert_failed,游戏放入操作失败。
+opt_verify_failed,实际摆放与预期不符。
+opt_preview_machine,预览机器：{0}
+opt_no_changes,布局无需变动。
+cfg_dev_apply_failure,开发测试：应用首次放入后模拟失败
+cfg_dev_apply_failure_tip,仅在测试存档使用。应用会在首次放入后抛错并尝试恢复原布局；恢复按钮不受影响。测试后关闭。
+opt_test_failure,开发测试主动触发的放入失败。

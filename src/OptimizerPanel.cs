@@ -11,21 +11,21 @@ namespace ModePuzzle
     /// The optimizer window, in the game's machinery window style (CustomUIManager.Style.Machinery). Laid out
     /// like the external tool's machine view: machine picker, the bay drawn with the game's own sprites and
     /// the current totals, a legend of installed modules, and the free modules that fit. Rebuilt automatically
-    /// when the focused machine changes (PanelWatcher). Read-only for now; optimisation comes with step 5.
+    /// when the focused machine changes (PanelWatcher). Search runs on a plain-data worker; apply and preview stay on the main thread.
     /// </summary>
-    static class OptimizerPanel
+    static partial class OptimizerPanel
     {
         const string WindowId = "modepuzzle.optimizer.panel";
         // Preferred size in canvas units; never wider than half the screen nor taller than 80% of it.
         const float PreferredWidth = 980f, PreferredHeight = 680f, MaxWidthShare = 0.5f, MaxHeightShare = 0.8f;
         // Room taken by the window frame and padding around the content.
         const float FrameMargin = 48f, ColumnGap = 16f;
-        const float BayShare = 0.45f, ListHeightShare = 0.5f;
+        const float BayShare = 0.45f;
         /// <summary>Canvas units per cell for the small module pictures in the lists.</summary>
         const float IconCell = 12f;
         const int FreeListMax = 200;
 
-        enum View { Bay, Free }
+        enum View { Bay, Free, Result }
 
         static int selectedMachineId;
         static View view = View.Bay;
@@ -51,6 +51,7 @@ namespace ModePuzzle
 
         public static void Close()
         {
+            session?.Stop();
             var manager = CustomUIManager.Instance;
             if (manager != null && manager.IsOpen(WindowId)) manager.CloseWindow(WindowId);
             PanelWatcher.Stop();
@@ -61,8 +62,9 @@ namespace ModePuzzle
         {
             var open = CustomUIManager.Instance?.GetWindow(WindowId);
             Vector2? position = open != null && open.IsAlive ? open.Rect.anchoredPosition : (Vector2?)null;
-            CustomUIManager.Instance?.CloseWindow(WindowId);
-            Build(position);
+            rebuilding = true;
+            try { CustomUIManager.Instance?.CloseWindow(WindowId); Build(position); }
+            finally { rebuilding = false; }
         }
 
         static Vector2 WindowSize(CustomUIManager manager)
@@ -79,18 +81,22 @@ namespace ModePuzzle
             if (manager == null) return;
             var size = WindowSize(manager);
             float inner = size.x - FrameMargin;
+            if (SnapshotChanged()) Invalidate();
             var snap = LiveReader.Read();
             var b = manager.CreateWindow(WindowId, Loc.T("panel_title"), CustomUIManager.LAYER_OVERLAY, null, CustomUIManager.Style.Machinery)
                 .SetSize(size.x, size.y)
                 .SetDraggable(true)
                 .SetCloseOnEscape(true)
-                .OnClose(PanelWatcher.Stop);
+                .OnClose(OnClosed);
+            statusElement = null; messageElement=null; applyElement=null;
+            b.BeginScroll(size.y - FrameMargin);
 
             if (snap.Machines.Count == 0)
             {
                 b.AddHeader(Loc.T("panel_header")).AddLabel(Loc.T("panel_no_machines"));
                 b.Last.SetFixedWidth(inner);
                 b.AddButton(Loc.T("panel_refresh"), Refresh);
+                b.End();
                 Finish(b, position);
                 PanelWatcher.Stop();
                 return;
@@ -104,7 +110,7 @@ namespace ModePuzzle
 
             b.BeginRow(8f, TextAnchor.MiddleLeft)
                 .AddLabel(Loc.T("panel_machine"))
-                .AddDropdown(snap.Machines.Select(m => m.Name).ToList(), index, i => { selectedMachineId = snap.Machines[i].UniqueId; Refresh(); })
+                .AddDropdown(snap.Machines.Select(m => m.Name).ToList(), index, i => { Invalidate(); selectedMachineId = snap.Machines[i].UniqueId; Refresh(); })
                 .AddButton(Loc.T("panel_refresh"), Refresh)
                 .End();
             b.AddLabel(Summary(machine));
@@ -114,12 +120,15 @@ namespace ModePuzzle
             b.BeginRow(6f, TextAnchor.MiddleLeft);
             ViewButton(b, View.Bay, Loc.T("tab_bay"));
             ViewButton(b, View.Free, Loc.T("tab_free", fits.Count));
+            ViewButton(b, View.Result, Loc.T("opt_result"));
             b.End();
             b.AddSeparator();
 
-            float listHeight = size.y * ListHeightShare;
+            Controls(b, inner);
+            float listHeight = size.y * OptimizerTuning.ResultHeightShare;
             if (view == View.Bay) BayView(b, machine, inner, listHeight);
-            else FreeView(b, snap, fits, inner, listHeight);
+            else if (view == View.Free) FreeView(b, snap, fits, inner, listHeight);
+            else ResultView(b, inner, listHeight);
 
             if (snap.Skipped.Count > 0)
             {
@@ -127,6 +136,7 @@ namespace ModePuzzle
                     snap.Skipped.Select(kv => $"{Loc.T("skip_" + kv.Key)} ×{kv.Value}"))));
                 b.Last.SetFixedWidth(inner);
             }
+            b.End();
             Finish(b, position);
             PanelWatcher.Watch(machine.UniqueId);
         }
@@ -174,7 +184,14 @@ namespace ModePuzzle
             b.BeginColumn(4f).AddHeader(Loc.T("panel_installed", machine.Installed.Count)).BeginScroll(listHeight);
             if (machine.Installed.Count == 0) b.AddLabel(Loc.T("panel_none"));
             for (int i = 0; i < machine.Installed.Count; i++)
-                ModuleRow(b, machine.Installed[i].Module, $"{i + 1}. ", rightW);
+            {
+                var module = machine.Installed[i].Module;
+                ModuleRow(b, module, $"{i + 1}. ", rightW);
+                locks.TryGetValue(module.UniqueId, out var kind);
+                b.AddDropdown(new List<string> { Loc.T("opt_lock_none"), Loc.T("opt_lock_required"), Loc.T("opt_lock_fixed") },
+                    module.Stuck ? 2 : (int)kind, value => { locks[module.UniqueId] = (EngineBridge.LockKind)value; Invalidate(); Refresh(); });
+                b.Last.SetInteractable(!module.Stuck && session?.Running != true);
+            }
             b.End().End();
             b.End();
         }

@@ -30,7 +30,9 @@ namespace ModePuzzle.Game
                 if (MachineTable.ExcludedMachines.Contains(item.identifier)) continue;
                 var bay = SafeModuleInv(item);
                 if (bay == null) continue;
-                var machine = ReadMachine(item, bay);
+                MachineInfo machine;
+                try { machine = ReadMachine(item, bay); }
+                catch (Exception) { snap.Skip("bay_shape"); continue; }
                 if (machine == null) { snap.Skip("bay_shape"); continue; }
                 snap.Machines.Add(machine);
                 bayOwner[bay] = machine;
@@ -95,11 +97,22 @@ namespace ModePuzzle.Game
                 {
                     if (item == null || !IsModule(item)) continue;
                     var m = item.modifiedShape;
-                    parts.Add($"{item.uniqueId}@{m?.minX},{m?.minY},{m?.orientation},{m?.flipped}");
+                    parts.Add(ModuleSignature(item));
                 }
             parts.Sort(string.CompareOrdinal);
+            sb.Append(machine.IsTag(MachineHelper.LOCKED_WORKING_TAG)).Append(bay.IsInsertLocked()).Append(bay.IsRemoveLocked());
             sb.Append('|').Append(string.Join(";", parts));
             return sb.ToString();
+        }
+
+        public static string ModuleSignature(GameItem item)
+        {
+            var m = ReadModule(item);
+            var shape = item.modifiedShape;
+            return $"{m.UniqueId}:{m.Identifier}:{m.Efficiency},{m.Quality},{m.Performance}:{m.Stuck}:{m.ModuleType}:{string.Join(",", m.Effects)}:" +
+                $"{m.ShapeWidth}x{m.ShapeHeight}:" + string.Join(";", m.Shape.ConvertAll(c => c.X + "," + c.Y)) +
+                string.Join(";", LocalCells(shape).ConvertAll(c => c.X + "," + c.Y)) +
+                $"@{shape?.minX},{shape?.minY},{shape?.orientation},{shape?.flipped}:{item.unitCount}";
         }
 
         static GameGridInventory SafeModuleInv(GameItem machine)
@@ -113,7 +126,7 @@ namespace ModePuzzle.Game
         static MachineInfo ReadMachine(GameItem item, GameGridInventory bay)
         {
             var shape = bay.inventoryShape;
-            if (shape == null || shape.width <= 0 || shape.height <= 0) return null;
+            if (shape == null || shape.width <= 0 || shape.height <= 0 || shape.width > 10 || shape.height > 10) return null;
             var known = MachineTable.Lookup(item.identifier);
             var machine = new MachineInfo
             {
@@ -134,7 +147,7 @@ namespace ModePuzzle.Game
             return machine;
         }
 
-        static ModuleInfo ReadModule(GameItem item)
+        public static ModuleInfo ReadModule(GameItem item)
         {
             bool node = item.IsGameItemType("NODE");
             var m = new ModuleInfo
@@ -192,7 +205,7 @@ namespace ModePuzzle.Game
         }
 
         /// <summary>Bay cells of a placed item: the game's own ForwardTransform (flip, rotation, offset).</summary>
-        static List<Cell> PlacedCells(GridShape shape)
+        public static List<Cell> PlacedCells(GridShape shape)
         {
             var cells = new List<Cell>();
             if (shape == null) return cells;

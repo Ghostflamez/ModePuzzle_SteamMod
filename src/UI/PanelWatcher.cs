@@ -10,7 +10,8 @@ namespace ModePuzzle.UI
     /// </summary>
     sealed class PanelWatcher : MonoBehaviour
     {
-        const float IntervalSeconds = 0.5f;
+        const float IntervalSeconds = OptimizerTuning.WatchSeconds;
+        float nextPoll;
 
         static PanelWatcher instance;
         float next;
@@ -36,17 +37,30 @@ namespace ModePuzzle.UI
             instance = null;
         }
 
+        void OnDestroy()
+        {
+            if (instance != this) return;
+            instance = null;
+            OptimizerPanel.WindowGone();
+        }
+
         void Update()
         {
+            if (Time.unscaledTime >= nextPoll)
+            {
+                nextPoll = Time.unscaledTime + OptimizerTuning.PollSeconds;
+                if (!OptimizerPanel.IsOpen) { OptimizerPanel.WindowGone(); Stop(); return; }
+                OptimizerPanel.PollSearch();
+            }
             if (Time.unscaledTime < next) return;
             next = Time.unscaledTime + IntervalSeconds;
             if (!OptimizerPanel.IsOpen) { Stop(); return; }
             string now;
             try { now = LiveReader.Signature(machineId); }
-            catch (System.Exception) { return; }
-            if (now == signature) return;
+            catch (System.Exception) { OptimizerPanel.MachineChanged(); return; }
+            if (now == signature && !OptimizerPanel.SnapshotChanged()) return;
             signature = now;
-            OptimizerPanel.Refresh();
+            OptimizerPanel.MachineChanged();
         }
     }
 }

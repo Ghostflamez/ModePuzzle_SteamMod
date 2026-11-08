@@ -56,3 +56,60 @@ type_MODULE_TYPE_DNA_MANIPULATOR,DNA manipulator modules
 type_MODULE_TYPE_EVAPORATOR,evaporator modules
 type_MODULE_TYPE_FURNACE,furnace modules
 type_MODULE_TYPE_ALARM,alarm modules
+
+opt_target,Target
+opt_custom,Custom
+opt_seconds,{0} s
+opt_only_installed,Use only modules installed in this machine
+opt_primary,Primary
+opt_secondary,Secondary
+opt_none,None
+opt_min,Min (any)
+opt_max,Max (any)
+opt_start,Start / restart
+opt_stop,Stop
+opt_preview,Preview
+opt_apply,Apply layout
+opt_restore,Restore previous
+opt_result,Result
+opt_lock_none,May remove / move
+opt_lock_required,Keep in machine (may move)
+opt_lock_fixed,Fixed position (must not move)
+opt_ready,Ready; set locks and start searching.
+opt_searching,Searching
+opt_stopped,Stopped (not proven)
+opt_timeout,Time limit reached (not proven)
+opt_infeasible,Infeasible (proven)
+opt_optimal,Proven optimal
+opt_status,{0} | {1} s | Nodes {2} | Best {3} | Root bound {4} | Last improvement {5} s ago
+opt_stale,"Machine, modules or settings changed. Search stopped; the old preview is retained but cannot be applied. Start a new search."
+opt_search_failed,Search or preview failed; see Player.log.
+opt_bad_range,Enter valid numbers with minimum <= maximum; leave blank for no limit.
+opt_too_many,More than {0} candidates; select installed modules only.
+opt_no_result,No feasible layout yet. You can preview the current best during search.
+opt_comparison,{0} / {1} / {2}\nCurrent: {3}\nProposed: {4}
+opt_counts,Moved {0} / Removed {1} / Added {2}
+opt_details,Attribute details ({0} / {1} / {2})
+opt_detail_row,Base {0} | Self (including mounts) {1}\nAbsorption {2} | Receiver {3} | Total {4}
+opt_locked,"Machine working, inventory locked or module cannot be removed; stuck modules cannot move."
+opt_illegal,Game rejected placement or compatibility.
+opt_overlap,Proposed placements overlap.
+opt_storage_full,Cannot reserve space for every removed module (inventory -> back counter -> front counter). Free some space first.
+opt_applied,Layout applied and verified; previous layout can be restored.
+opt_restored,Restored / original layout unchanged
+opt_restore_failed,Restore incomplete! Check module IDs in Player.log and inspect inventories.
+opt_failure,Failed during {0}: {1}. Restore: {2}
+opt_phase_preflight,preflight
+opt_phase_remove,removal
+opt_phase_insert,insertion
+opt_phase_refresh,machine refresh
+opt_phase_verify,post-verification
+opt_remove_failed,Game removal failed.
+opt_insert_failed,Game insertion failed.
+opt_verify_failed,Actual placement differs from expected.
+
+opt_preview_machine,Preview machine: {0}
+opt_no_changes,Layout already matches; no changes needed.
+cfg_dev_apply_failure,Dev test: fail apply after the first insertion
+cfg_dev_apply_failure_tip,Test saves only. Apply throws after its first insertion and attempts rollback; Restore is unaffected. Disable after testing.
+opt_test_failure,Insertion failure deliberately triggered by the dev test setting.

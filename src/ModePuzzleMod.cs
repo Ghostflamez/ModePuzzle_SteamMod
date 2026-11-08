@@ -16,6 +16,7 @@ namespace ModePuzzle
         internal static ConfigEntry<bool> DevSmugglerDaily;
         internal static ConfigEntry<bool> DevCrateAlways;
         internal static ConfigEntry<bool> DevJacksonAlways;
+        internal static ConfigEntry<bool> DevApplyFailure;
         static ConfigEntry<bool> devCratesOnLoad;
         // Counts are dropdowns: the game's settings screen shows no number next to an int slider.
         static ConfigEntry<string> devMachinesPerDay;
@@ -57,6 +58,8 @@ namespace ModePuzzle
                 () => Loc.T("cfg_dev_crate"), () => Loc.T("cfg_dev_crate_tip"));
             DevJacksonAlways = config.Define("dev_jackson_always", false, "dev",
                 () => Loc.T("cfg_dev_jackson"), () => Loc.T("cfg_dev_jackson_tip"));
+            DevApplyFailure = config.Define("dev_apply_failure", false, "dev",
+                () => Loc.T("cfg_dev_apply_failure"), () => Loc.T("cfg_dev_apply_failure_tip"));
             devMachinesPerDay = config.Define("dev_machines_per_day", "0", "dev",
                 () => Loc.T("cfg_dev_machine"), SmallCounts, () => Loc.T("cfg_dev_machine_tip"));
             devBayKitsPerDay = config.Define("dev_bay_kits_per_day", "0", "dev",
@@ -98,6 +101,7 @@ namespace ModePuzzle
 
         static void OnGameLoaded()
         {
+            OptimizerPanel.ResetSession();
             LogOwnedOptimizers("after load");
             // The mod's localization is loaded after OnEnable, so the labels are added here.
             if (!debugFunctionsAdded)

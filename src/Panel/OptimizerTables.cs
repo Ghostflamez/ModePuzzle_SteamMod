@@ -149,18 +149,18 @@ namespace ModePuzzle
         {
             Row(b, width); Label(b, label, TextWidth(label)); Choice.Buttons(b, labels, selected, set, !Busy); EndRow(b);
         }
-        /// <summary>The three search options; two rows when they do not fit in one.</summary>
+        /// <summary>The three search options, one per line.</summary>
         static void SearchOptions(CustomUIBuilder b, float width)
         {
-            string degrading = Loc.T("opt_exclude_degrading"), overvolted = Loc.T("opt_exclude_overvolted"), only = Loc.T("opt_only_installed");
-            float wd = ToggleWidth(degrading), wo = ToggleWidth(overvolted), wi = ToggleWidth(only);
-            bool oneRow = wd + wo + wi + 2 * PanelStyle.SettingsGap <= width;
-            Row(b, width, PanelStyle.SettingsGap);
-            SmallToggle(b, degrading, Loc.T("opt_exclude_degrading_hint"), excludeDegrading, v => excludeDegrading = v, wd);
-            SmallToggle(b, overvolted, Loc.T("opt_exclude_overvolted_hint"), excludeOvervolted, v => excludeOvervolted = v, wo);
-            if (!oneRow) { EndRow(b, false); Row(b, width, PanelStyle.SettingsGap); }
-            SmallToggle(b, only, null, onlyInstalled, v => onlyInstalled = v, Mathf.Min(wi, width));
-            EndRow(b, false);
+            void Line(string label, string hint, bool on, Action<bool> set)
+            {
+                Row(b, width);
+                SmallToggle(b, label, hint, on, set, Mathf.Min(ToggleWidth(label), width));
+                EndRow(b, false);
+            }
+            Line(Loc.T("opt_exclude_degrading"), Loc.T("opt_exclude_degrading_hint"), excludeDegrading, v => excludeDegrading = v);
+            Line(Loc.T("opt_exclude_overvolted"), Loc.T("opt_exclude_overvolted_hint"), excludeOvervolted, v => excludeOvervolted = v);
+            Line(Loc.T("opt_only_installed"), null, onlyInstalled, v => onlyInstalled = v);
         }
 
         /// <summary>

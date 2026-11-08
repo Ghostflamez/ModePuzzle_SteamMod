@@ -245,7 +245,12 @@ namespace ModePuzzle
             EndRow(b);
             BayImage(b, shown, c[0]);
             int used = shown.Installed.SelectMany(p => p.Cells).Count(cell => shown.IsUsable(cell.X, cell.Y));
-            Caption(b, Loc.T("panel_capacity", shown.Width, shown.Height, used, shown.UsableCount), c[0]);
+            string capacity = Loc.T("panel_capacity", used, shown.UsableCount);
+            float restoreWidth = TextWidth(Loc.T("opt_restore"), true);
+            Row(b, c[0]);
+            Caption(b, capacity, Mathf.Max(0, c[0] - restoreWidth - OptimizerTuning.RowGap));
+            Button(b, Loc.T("opt_restore"), restoreWidth, RestorePrevious, RestoreAvailable);
+            EndRow(b, false);
             Caption(b, Loc.T("panel_accepts", string.Join(Loc.T("panel_list_sep"), machine.Accepts.Select(TypeName))), c[0]);
             b.End();
             Column(b, c[1]);
@@ -270,23 +275,19 @@ namespace ModePuzzle
             // One action bar: 时长 drop-down, start / stop on the left, apply / restore on the right, each a fixed block.
             float timeWidth = OptimizerTuning.TimeLimitsSeconds.Max(s => TextWidth(Loc.T("opt_seconds", s), true)) + PanelStyle.DropArrowSpace;
             float startWidth = timeWidth + gap + TextWidth(Loc.T(preview == null ? "opt_start" : "opt_restart"), true) + gap + TextWidth(Loc.T("opt_stop"), true);
-            float restoreWidth = TextWidth(Loc.T("opt_restore"), true), applyWidth = preview == null ? 0 : TextWidth(Loc.T("opt_apply"), true);
-            float actionsWidth = restoreWidth + (preview == null ? 0 : applyWidth + gap);
-            bool oneBar = startWidth + 2 * gap + actionsWidth <= c[1];
+            float applyWidth = preview == null ? 0 : TextWidth(Loc.T("opt_apply"), true);
+            float actionsWidth = applyWidth;
+            bool oneBar = preview == null || startWidth + 2 * gap + actionsWidth <= c[1];
             Row(b, c[1]);
-            Row(b, oneBar ? c[1] - actionsWidth - gap : c[1]);
+            Row(b, oneBar && preview != null ? c[1] - actionsWidth - gap : c[1]);
             TimeDropdown(b, timeWidth);
             b.AddButton(Loc.T(preview == null ? "opt_start" : "opt_restart"), StartSearch); b.Last.SetInteractable(!Busy);
             b.AddButton(Loc.T("opt_stop"), () => session?.Stop()); b.Last.SetInteractable(Busy);
             EndRow(b);
-            void Actions()
-            {
-                if (preview != null) { Button(b, Loc.T("opt_apply"), applyWidth, ApplyResult, !Busy && !invalid); applyElement = b.Last; }
-                Button(b, Loc.T("opt_restore"), restoreWidth, RestorePrevious, RestoreAvailable);
-            }
-            if (oneBar) { Row(b, actionsWidth); Actions(); EndRow(b, false); }
+            void Actions() { Button(b, Loc.T("opt_apply"), applyWidth, ApplyResult, !Busy && !invalid); applyElement = b.Last; }
+            if (preview != null && oneBar) { Row(b, actionsWidth); Actions(); EndRow(b, false); }
             EndRow(b, false);
-            if (!oneBar) { Row(b, c[1]); Label(b, "", Mathf.Max(0, c[1] - actionsWidth - gap)); Actions(); EndRow(b, false); }
+            if (preview != null && !oneBar) { Row(b, c[1]); Label(b, "", Mathf.Max(0, c[1] - actionsWidth - gap)); Actions(); EndRow(b, false); }
 
             // Progress, then what the search found.
             var progress = Columns(c[1], gap, Mathf.Max(0, c[1] - PanelStyle.ProgressLabelWidth - gap), PanelStyle.ProgressLabelWidth);

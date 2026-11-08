@@ -13,9 +13,10 @@ namespace ModePuzzle
             if (IconSprite.Ensure()) item.SetSpriteAndShapeFromMod(ModePuzzleMod.ModId, IconSprite.Key);
             else item.SetSpriteAndShape(IconSprite.ScannerAtlas, IconSprite.ScannerSprite);
 
-            item.name = Loc.T("item_name");
-            item.shortDescription = Loc.T("item_desc");
-            item.flavorText = Loc.T("item_flavor");
+            ApplyTexts(item);
+            // A save stores the item's name and texts and restores them over the factory's; onLoaded runs
+            // after that, so saved copies pick up the current name and language.
+            item.onLoaded += ApplyTexts;
             item.SetGameItemType("TOOL");
             ContrabandHelper.InitContrabandItem(item, ContrabandLevelHigh);
             item.SetValue(Value);
@@ -26,6 +27,13 @@ namespace ModePuzzle
             item.canActivateSlotItemFunc = (self, inventory, slot) => true;
             item.onActivateSlotItemFunc = (self, inventory, slot) => OptimizerPanel.Open();
             return item;
+        }
+
+        static void ApplyTexts(GameItem item)
+        {
+            item.name = Loc.T("item_name");
+            item.shortDescription = Loc.T("item_desc");
+            item.flavorText = Loc.T("item_flavor");
         }
     }
 }

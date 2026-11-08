@@ -14,6 +14,7 @@ namespace ModePuzzle
         internal static ConfigEntry<bool> DevSmugglerDaily;
         internal static ConfigEntry<bool> DevCrateAlways;
         static bool registered;
+        static bool debugFunctionsAdded;
 
         public void Init(ModManifest manifest)
         {
@@ -37,8 +38,6 @@ namespace ModePuzzle
                 () => Loc.T("cfg_dev_smuggler"), () => Loc.T("cfg_dev_smuggler_tip"));
             DevCrateAlways = config.Define("dev_crate_always", false, "dev",
                 () => Loc.T("cfg_dev_crate"), () => Loc.T("cfg_dev_crate_tip"));
-            ModHelper.AddDebugFunction(ModId, ModHelper.DEBUG_CATEGORY_SPAWN, Loc.T("debug_spawn"), SpawnToCounter);
-            ModHelper.AddDebugFunction(ModId, ModHelper.DEBUG_CATEGORY_SPAWN, Loc.T("debug_smuggler"), Smuggler.QueueNext);
 
             JacksonStock.Enable();
             Smuggler.Enable();
@@ -49,6 +48,7 @@ namespace ModePuzzle
             ModHook.OnModItemDirectoryInit -= RegisterItems;
             ModHook.OnGameLoadedLate -= OnGameLoaded;
             ModHelper.RemoveDebugFunctions(ModId);
+            debugFunctionsAdded = false;
             JacksonStock.Disable();
             Smuggler.Disable();
             OptimizerPanel.Close();
@@ -64,6 +64,13 @@ namespace ModePuzzle
 
         static void OnGameLoaded()
         {
+            // The mod's localization is loaded after OnEnable, so the labels are added here.
+            if (!debugFunctionsAdded)
+            {
+                ModHelper.AddDebugFunction(ModId, ModHelper.DEBUG_CATEGORY_SPAWN, Loc.T("debug_spawn"), SpawnToCounter);
+                ModHelper.AddDebugFunction(ModId, ModHelper.DEBUG_CATEGORY_SPAWN, Loc.T("debug_smuggler"), Smuggler.QueueNext);
+                debugFunctionsAdded = true;
+            }
             if (devSpawnOnLoad != null && devSpawnOnLoad.Value) SpawnToCounter();
         }
 

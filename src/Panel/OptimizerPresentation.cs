@@ -148,17 +148,19 @@ namespace ModePuzzle
             name.text.enableWordWrapping = false; name.text.overflowMode = TextOverflowModes.Ellipsis;
             float nameWidth = Mathf.Min(Mathf.Ceil(name.text.GetPreferredValues(name.text.text, float.PositiveInfinity, float.PositiveInfinity).x) + 2, width * PanelStyle.MachineNameShare);
             string change = Loc.T("panel_change_machine"), refresh = Loc.T("panel_refresh");
-            float status = Mathf.Floor(width * PanelStyle.StatusShare), gap = OptimizerTuning.RowGap;
-            float lockWidth = PanelStyle.LockButtonWidth;
-            float used = art + nameWidth + lockWidth + TextWidth(change, true) + TextWidth(refresh, true) + (art > 0 ? 6 : 5) * gap;
-            var c = Columns(width - status - gap - (art > 0 ? art + gap : 0) - lockWidth - gap, gap, nameWidth, TextWidth(change, true), TextWidth(refresh, true),
-                Mathf.Max(0, width - status - used));
-            name.SetFixedWidth(c[0]);
+            float gap = OptimizerTuning.RowGap, lockWidth = PanelStyle.LockButtonWidth;
+            // The status follows the buttons (spinner, then the coloured word), not the far edge of the row.
+            string[] states = { "opt_ready", "opt_searching", "opt_stopped", "opt_timeout", "opt_infeasible", "opt_optimal", "opt_failed_tag", "opt_invalid_tag" };
+            float status = states.Max(k => TextWidth(Loc.T(k))) + 4;
+            name.SetFixedWidth(nameWidth);
             LockButton(b, machine, lockWidth);
-            Button(b, change, c[1], OpenPicker);
-            Button(b, refresh, c[2], UserRefresh);
-            Label(b, "", c[3]);
-            statusElement = Label(b, StatusTag(), status, true);
+            Button(b, change, TextWidth(change, true), OpenPicker);
+            Button(b, refresh, TextWidth(refresh, true), UserRefresh);
+            Label(b, "", PanelStyle.StatusGap - gap);
+            b.AddImage(SpinnerFrame(0), PanelStyle.SpinnerSize, PanelStyle.SpinnerSize);
+            spinnerElement = b.Last;
+            if (spinnerElement.image != null) spinnerElement.image.color = new Color(1, 1, 1, Busy ? 1 : 0);
+            statusElement = Label(b, StatusTag(), status);
             statusElement.text.enableWordWrapping = false; statusElement.text.overflowMode = TextOverflowModes.Ellipsis;
             EndRow(b, false);
         }
@@ -288,7 +290,7 @@ namespace ModePuzzle
             SearchOptions(b, c[1]);
 
             // One action bar: 时长 drop-down, start / stop on the left, apply / restore on the right, each a fixed block.
-            float timeWidth = OptimizerTuning.TimeLimitsSeconds.Max(s => TextWidth(Loc.T("opt_seconds", s), true)) + PanelStyle.DropArrowSpace;
+            float timeWidth = OptimizerTuning.TimeLimitsSeconds.Max(s => TextWidth(Loc.T("opt_seconds", s))) + PanelStyle.DropArrowSpace + PanelStyle.DropPadding;
             float startWidth = timeWidth + gap + TextWidth(Loc.T(preview == null ? "opt_start" : "opt_restart"), true) + gap + TextWidth(Loc.T("opt_stop"), true);
             float applyWidth = preview == null ? 0 : TextWidth(Loc.T("opt_apply"), true);
             float actionsWidth = applyWidth;
@@ -305,13 +307,16 @@ namespace ModePuzzle
             if (preview != null && !oneBar) { Row(b, c[1]); Label(b, "", Mathf.Max(0, c[1] - actionsWidth - gap)); Actions(); EndRow(b, false); }
 
             // Progress, then what the search found.
-            var progress = Columns(c[1], gap, Mathf.Max(0, c[1] - PanelStyle.ProgressLabelWidth - gap), PanelStyle.ProgressLabelWidth);
             Row(b, c[1]);
-            b.AddProgressBar(); progressElement = b.Last; progressElement.SetFixedWidth(progress[0]);
-            elapsedElement = Label(b, "", progress[1], true, PanelStyle.CaptionFont);
+            b.AddProgressBar(); progressElement = b.Last; progressElement.SetFixedWidth(c[1]);
             EndRow(b, false);
-            // One plain line about the search; the heartbeat replaces its text.
-            metricElements.Add(Caption(b, "", c[1]));
+            // Under the bar: one plain line about the search on the left, the time on the right; the heartbeat
+            // replaces both texts.
+            var under = Columns(c[1], gap, Mathf.Max(0, c[1] - PanelStyle.ProgressLabelWidth - gap), PanelStyle.ProgressLabelWidth);
+            Row(b, c[1]);
+            metricElements.Add(Caption(b, "", under[0]));
+            elapsedElement = Caption(b, "", under[1], true);
+            EndRow(b, false);
             UpdateMetrics();
             if (preview != null)
             {

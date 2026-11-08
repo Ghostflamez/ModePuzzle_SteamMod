@@ -135,6 +135,11 @@ namespace ModePuzzle
         static void UpdateMetrics()
         {
             statusElement?.SetText(StatusTag());
+            if (spinnerElement?.image != null)
+            {
+                spinnerElement.image.color = new Color(1, 1, 1, Busy ? 1 : 0);
+                if (Busy) spinnerElement.image.sprite = SpinnerFrame(Mathf.FloorToInt(Time.unscaledTime / OptimizerTuning.PollSeconds));
+            }
             var r = result;
             // In plain words: how many layouts were tried, and at which second the best one turned up (found early in
             // a long search means a longer search will rarely help).

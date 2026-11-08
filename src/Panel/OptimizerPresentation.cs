@@ -286,6 +286,10 @@ namespace ModePuzzle
             // Settings, in the order they are chosen: target (custom bounds open right under it), time, options.
             var targets = new List<string> { GameText.Performance, GameText.Efficiency, GameText.Quality, Loc.T("opt_custom") };
             ChoiceSetting(b, Loc.T("opt_target"), targets, target, i => { target = i; detailAxis = i == 3 ? primary : Targets[i]; Invalidate(); Refresh(); }, c[1]);
+            // The action bar and the progress bar end where the 目标 row ends (its 自定义 button).
+            float data = Mathf.Min(c[1], TextWidth(Loc.T("opt_target")) + gap +
+                targets.Select((t, i) => TextWidth(i == target ? $"[ {t} ]" : t, true)).Sum() + gap * (targets.Count - 1) + gap);
+            lastDataWidth = data;
             if (target == 3) CustomTarget(b, c[1]);
             SearchOptions(b, c[1]);
 
@@ -294,9 +298,9 @@ namespace ModePuzzle
             float startWidth = timeWidth + gap + TextWidth(Loc.T(preview == null ? "opt_start" : "opt_restart"), true) + gap + TextWidth(Loc.T("opt_stop"), true);
             float applyWidth = preview == null ? 0 : TextWidth(Loc.T("opt_apply"), true);
             float actionsWidth = applyWidth;
-            bool oneBar = preview == null || startWidth + 2 * gap + actionsWidth <= c[1];
-            Row(b, c[1]);
-            Row(b, oneBar && preview != null ? c[1] - actionsWidth - gap : c[1]);
+            bool oneBar = preview == null || startWidth + 2 * gap + actionsWidth <= data;
+            Row(b, data);
+            Row(b, oneBar && preview != null ? data - actionsWidth - gap : data);
             TimeDropdown(b, timeWidth);
             b.AddButton(Loc.T(preview == null ? "opt_start" : "opt_restart"), StartSearch); b.Last.SetInteractable(!Busy);
             b.AddButton(Loc.T("opt_stop"), () => session?.Stop()); b.Last.SetInteractable(Busy);
@@ -304,19 +308,21 @@ namespace ModePuzzle
             void Actions() { Button(b, Loc.T("opt_apply"), applyWidth, ApplyResult, !Busy && !invalid); applyElement = b.Last; }
             if (preview != null && oneBar) { Row(b, actionsWidth); Actions(); EndRow(b, false); }
             EndRow(b, false);
-            if (preview != null && !oneBar) { Row(b, c[1]); Label(b, "", Mathf.Max(0, c[1] - actionsWidth - gap)); Actions(); EndRow(b, false); }
+            if (preview != null && !oneBar) { Row(b, data); Label(b, "", Mathf.Max(0, data - actionsWidth - gap)); Actions(); EndRow(b, false); }
 
             // Progress, then what the search found.
-            Row(b, c[1]);
-            b.AddProgressBar(); progressElement = b.Last; progressElement.SetFixedWidth(c[1]);
+            Row(b, data);
+            b.AddProgressBar(); progressElement = b.Last; progressElement.SetFixedWidth(data);
             EndRow(b, false);
-            // Under the bar: one plain line about the search on the left, the time on the right; the heartbeat
-            // replaces both texts.
-            var under = Columns(c[1], gap, Mathf.Max(0, c[1] - PanelStyle.ProgressLabelWidth - gap), PanelStyle.ProgressLabelWidth);
-            Row(b, c[1]);
+            // Under the bar: layouts tried with the time at the right (in the bar's colour), then the second the best
+            // one was found; the heartbeat replaces the texts.
+            var under = Columns(data, gap, Mathf.Max(0, data - PanelStyle.ProgressLabelWidth - gap), PanelStyle.ProgressLabelWidth);
+            Row(b, data);
             metricElements.Add(Caption(b, "", under[0]));
             elapsedElement = Caption(b, "", under[1], true);
+            elapsedElement.SetTextColor(PanelStyle.ProgressText);
             EndRow(b, false);
+            metricElements.Add(Caption(b, "", data));
             UpdateMetrics();
             if (preview != null)
             {

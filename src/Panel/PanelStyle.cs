@@ -4,7 +4,7 @@ namespace ModePuzzle.UI
 {
     static class PanelStyle
     {
-        public const float PreferredWidth = 840, PreferredHeight = 760, MaxWidthShare = .5f, MaxHeightShare = .8f;
+        public const float PreferredWidth = 790, PreferredHeight = 760, MaxWidthShare = .5f, MaxHeightShare = .8f;
         public const float FrameMargin = 64, ChromeFallback = 96, RightSafety = 24;
         public const float MachineNameShare = .35f, StatusGap = 24, SpinnerSize = 20;
         public const float BodyFont = 15, CaptionFont = 13, ButtonFont = 15, ButtonPadding = 28;
@@ -31,6 +31,7 @@ namespace ModePuzzle.UI
         public static readonly Px LockPlate = Px.Hex("1c1820"), LockedInk = Px.Hex("ffb0a0"), LockedBody = Px.Hex("d9483b"),
             UnlockedInk = Px.Hex("c8f5a8"), UnlockedBody = Px.Hex("5fb83a");
         public static readonly Color InputFill = new Color32(74, 65, 85, 255), InputEdge = new Color32(156, 150, 140, 255);
+        public static readonly Color ProgressText = new Color32(140, 205, 110, 255);
         public static readonly Px SpinnerInk = Px.Hex("e6c35c");
         public static readonly Px ArrowInk = Px.Hex("e8e0d0"), ArrowDark = Px.Hex("2b2523");
         public static readonly Color MenuPlate = new Color32(43, 37, 35, 245);

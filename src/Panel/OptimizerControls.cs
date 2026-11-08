@@ -143,10 +143,10 @@ namespace ModePuzzle
             var r = result;
             // In plain words: how many layouts were tried, and at which second the best one turned up (found early in
             // a long search means a longer search will rarely help).
-            string summary = r == null ? "" : r.Feasible
-                ? Loc.T("metric_summary", r.Visits.ToString("N0"), (r.LastImprovementMs / 1000).ToString("0.0"))
-                : Loc.T("metric_summary_none", r.Visits.ToString("N0"));
-            foreach (var e in metricElements) e.SetText(summary);
+            string tried = r == null ? "" : Loc.T("metric_tried", r.Visits.ToString("N0"));
+            string best = r == null ? "" : r.Feasible ? Loc.T("metric_best_at", (r.LastImprovementMs / 1000).ToString("0.0")) : Loc.T("metric_none");
+            if (metricElements.Count > 0) metricElements[0].SetText(tried);
+            if (metricElements.Count > 1) metricElements[1].SetText(best);
             elapsedElement?.SetText(Loc.T("opt_elapsed", ((r?.ElapsedMs ?? 0) / 1000).ToString("0.0"), displayLimitSeconds));
             progressElement?.SetProgress(Mathf.Clamp01((float)((r?.ElapsedMs ?? 0) / (displayLimitSeconds * 1000.0))));
         }

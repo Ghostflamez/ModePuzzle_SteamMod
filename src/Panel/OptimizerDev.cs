@@ -160,7 +160,7 @@ namespace ModePuzzle
                     }
                 case "state":
                     return $"open={IsOpen} machine={selectedMachineId} tab={tab} bay={bayShows} axis={detailAxis} target={target} " +
-                           $"time={timeIndex} busy={Busy} result={(result == null ? "none" : result.Phase.ToString())} message={message}";
+                           $"time={timeIndex} busy={Busy} result={(result == null ? "none" : result.Phase.ToString())} message={message} data={lastDataWidth:0} inner={lastInner:0}";
                 default:
                     return "unknown command: " + verb;
             }

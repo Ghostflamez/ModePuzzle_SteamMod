@@ -120,6 +120,8 @@ namespace ModePuzzle
             int expected = bayShows == BayShows.Result && result?.Feasible == true ? result.Totals[detailAxis] : evaluation.Total[detailAxis];
             if (totals[4] != expected) ModePuzzleMod.Log?.Warning($"Detail total assertion failed: axis={detailAxis}, rows={totals[4]}, dashboard={expected}");
         }
+        /// <summary>Width of the 目标 row in the last build (development diagnostics).</summary>
+        static float lastDataWidth;
         static float ToggleWidth(string label) => TextWidth(label) + PanelStyle.ToggleBox * PanelStyle.ToggleScale + PanelStyle.ToggleTextGap;
 
         /// <summary>

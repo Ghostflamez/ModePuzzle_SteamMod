@@ -24,6 +24,7 @@ namespace ModePuzzle
         static Tab tab;
         static int detailAxis = Engine.Axis.Performance;
         static Sprite baySprite;
+        static float lastInner;
 
         public static bool IsOpen
         {
@@ -94,6 +95,7 @@ namespace ModePuzzle
             CustomUIBuilder.RebuildLayout(b.Handle.Rect);
             Canvas.ForceUpdateCanvases();
             float inner = ContentWidth(size.x);
+            lastInner = inner;
             Column(b, inner);
 
             if (snap.Machines.Count == 0)

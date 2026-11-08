@@ -85,6 +85,32 @@ namespace ModePuzzle
                     }
                     return "ok " + count;
                 }
+                case "dumptoggle":
+                {
+                    // Hierarchy of a fresh game toggle: names, sizes, anchors and components.
+                    var manager = CustomUIManager.Instance;
+                    var w = manager.CreateWindow("modepuzzle.dev.toggle", "dev", CustomUIManager.LAYER_OVERLAY, null, CustomUIManager.Style.Machinery).SetSize(400, 200);
+                    w.AddToggle("dev", false, null);
+                    var root = w.Last.root.transform;
+                    w.Show(); UnityEngine.Canvas.ForceUpdateCanvases();
+                    var sb = new System.Text.StringBuilder();
+                    void Walk(UnityEngine.Transform t, int depth)
+                    {
+                        var r = t as UnityEngine.RectTransform;
+                        sb.Append(new string(' ', depth * 2)).Append(t.name);
+                        if (r != null) sb.Append($" size={r.rect.width:0}x{r.rect.height:0} aMin={r.anchorMin} aMax={r.anchorMax} sd={r.sizeDelta}");
+                        sb.Append(" [").Append(string.Join(",", t.GetComponents<UnityEngine.Component>().Select(c => c.GetType().Name))).Append("]");
+                        var le = t.GetComponent<UnityEngine.UI.LayoutElement>();
+                        if (le != null) sb.Append($" LE min={le.minWidth}x{le.minHeight} pref={le.preferredWidth}x{le.preferredHeight}");
+                        sb.Append(" | ");
+                        foreach (UnityEngine.Transform c in t) Walk(c, depth + 1);
+                    }
+                    Walk(root, 0);
+                    var tg = w.Last.toggle;
+                    sb.Append($" target={tg?.targetGraphic?.name} graphic={tg?.graphic?.name}");
+                    manager.CloseWindow("modepuzzle.dev.toggle");
+                    return sb.ToString();
+                }
                 case "tab":
                     tab = arg == "details" ? Tab.Details : arg == "free" ? Tab.Free : Tab.Modules;
                     Refresh(); return "ok";

@@ -19,7 +19,17 @@ namespace ModePuzzle
     {
         const string PickerId = "modepuzzle.optimizer.machines", ConfirmId = "modepuzzle.optimizer.unlock";
         static readonly Dictionary<string, Sprite> machineArt = new Dictionary<string, Sprite>();
-        static readonly Dictionary<int, Sprite> liveArt = new Dictionary<int, Sprite>();
+        static readonly Dictionary<string, Sprite> liveArt = new Dictionary<string, Sprite>();
+
+        static int Fingerprint(Px[] px)
+        {
+            unchecked
+            {
+                int h = 17;
+                foreach (var p in px) h = h * 31 + ((p.R << 24) | (p.G << 16) | (p.B << 8) | p.A);
+                return h;
+            }
+        }
         static Sprite lockedBadge, unlockedBadge;
 
         static string ArtKey(MachineInfo m) => (m.SpriteFromMod ? "mod:" : "") + m.SpriteAtlas + "/" + m.SpriteName;
@@ -51,9 +61,12 @@ namespace ModePuzzle
                 var px = LiveItemArt.Capture(LiveReader.MachineItem(m.UniqueId) as GameItemElement, out int w, out int h);
                 if (px != null)
                 {
-                    if (liveArt.TryGetValue(m.UniqueId, out var old) && old != null) Pixels.Destroy(old);
+                    // Reuse the sprite while the picture is unchanged. A replaced one is not destroyed: another window
+                    // (the panel's first row, the picker) may still show it.
+                    string key = m.UniqueId + ":" + w + "x" + h + ":" + Fingerprint(px);
+                    if (liveArt.TryGetValue(key, out var same) && same != null) return same;
                     var sprite = Pixels.ToSprite(px, w, h, "modepuzzle_machine_" + m.UniqueId);
-                    liveArt[m.UniqueId] = sprite;
+                    liveArt[key] = sprite;
                     return sprite;
                 }
             }

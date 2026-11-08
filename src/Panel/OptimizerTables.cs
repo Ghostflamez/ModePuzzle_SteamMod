@@ -133,18 +133,17 @@ namespace ModePuzzle
             e.SetFixedWidth(width); e.SetInteractable(!Busy);
             if (e.text != null) { e.text.fontSize = PanelStyle.BodyFont; e.text.enableAutoSizing = false; e.text.enableWordWrapping = false; }
             if (hint != null) e.SetTooltip(hint);
+            // The game's toggle: a root with a 32x32 "Background" box (fixed LayoutElement) whose "Checkmark" stretches
+            // over it, then the label. Shrink the box and the root's height together.
             var box = e.toggle?.targetGraphic?.rectTransform;
             if (box == null) return;
-            float side = Mathf.Max(box.rect.width, LayoutUtility.GetPreferredWidth(box));
-            if (side <= 0) side = PanelStyle.ToggleBox;
-            float small = Mathf.Round(side * PanelStyle.ToggleScale);
+            float small = Mathf.Round(PanelStyle.ToggleBox * PanelStyle.ToggleScale);
             var layout = box.GetComponent<LayoutElement>() ?? box.gameObject.AddComponent<LayoutElement>();
             layout.minWidth = layout.preferredWidth = layout.minHeight = layout.preferredHeight = small;
             layout.flexibleWidth = layout.flexibleHeight = 0;
             box.sizeDelta = new Vector2(small, small);
-            var mark = e.toggle.graphic?.rectTransform;
-            if (mark != null && mark != box && mark.anchorMin == mark.anchorMax)
-                mark.sizeDelta *= PanelStyle.ToggleScale;
+            var root = e.root.GetComponent<LayoutElement>();
+            if (root != null) root.minHeight = root.preferredHeight = small;
         }
         static void ChoiceSetting(CustomUIBuilder b, string label, IList<string> labels, int selected, Action<int> set, float width)
         {

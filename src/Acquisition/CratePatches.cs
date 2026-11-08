@@ -13,9 +13,14 @@ namespace ModePuzzle.Acquisition
         public static void Try(GameItem crate, float luckMult, float chance)
         {
             if (crate == null) return;
-            if (ModePuzzleMod.DevCrateAlways?.Value != true && !RNG.Roll(chance * luckMult)) return;
+            bool forced = ModePuzzleMod.DevCrateAlways?.Value == true;
+            if (!forced && !RNG.Roll(chance * luckMult)) return;
             var item = DirectoryMaster.Item(OptimizerItem.Id, true);
-            if (item != null && GraphUtils.TryAcceptAll(crate, item) > 0) item.Destroy();
+            if (item == null) { ModePuzzleMod.Log.Warning($"Crate {crate.identifier}: could not create the optimizer"); return; }
+            int left = GraphUtils.TryAcceptAll(crate, item);
+            if (left > 0) item.Destroy();
+            ModePuzzleMod.Log.Log($"Crate {crate.identifier}: optimizer {(left > 0 ? "did not fit, destroyed" : "added")}" +
+                                  (forced ? " (dev: always)" : $" (roll {chance * luckMult:0.#}%)"));
         }
     }
 

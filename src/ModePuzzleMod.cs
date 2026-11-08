@@ -84,9 +84,10 @@ namespace ModePuzzle
         {
             foreach (var crate in new[] { PreBuiltItemHelper.LootCrateEngineering(), PreBuiltItemHelper.LootCrateEvidence() })
             {
-                if (crate == null) continue;
+                if (crate == null) { Log.Warning("Dev crate: the game returned no crate"); continue; }
                 LockHelper.UnlockContainer(crate, true);
                 ModHelper.MoveItemToFrontCounter(crate);
+                Log.Log($"Dev crate {crate.identifier} placed on the counter, locked={LockHelper.IsCurrentlyLocked(crate)}");
             }
         }
 

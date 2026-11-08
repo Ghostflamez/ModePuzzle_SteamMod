@@ -4,7 +4,6 @@ item_desc,"以超科技工艺改装的仪器，能算出机器模组舱的最优
 item_flavor,"专为排布模组而生的超科技仪器，空间站上没人造得出来。传言最近存放整批货的仓库被人洗劫，如今大量流入黑市。"
 panel_title,超科技模组优化器
 panel_header,模组舱布局优化
-panel_version,版本 {0}
 debug_spawn,生成超科技模组优化器（柜台）
 cfg_dev_spawn,开发测试：读档后在柜台放一台超科技模组优化器
 cfg_dev_spawn_tip,仅用于测试。每次读档都会生成一台。
@@ -98,7 +97,6 @@ cfg_trait_badges_tip,给背包、仓库、机器模组舱里所有带特殊词�
 panel_capacity,已用 {0}/{1} 格
 panel_accepts,可装：{0}
 panel_module,模组
-panel_traits,词条
 opt_invalid_tag,结果已作废
 detail_base,初始
 detail_self,自身小计
@@ -124,9 +122,6 @@ bay_current,当前布局
 opt_restart,重新搜索
 opt_failed_tag,失败
 opt_elapsed,{0} / {1} 秒
-table_number,#
-table_icon,图
-table_lock,锁定
 panel_change_machine,更换机器
 picker_title,选择机器
 picker_hint,悬停查看详情，点击切换。左上角的锁表示这台机器是否借出模组。
@@ -184,4 +179,4 @@ filter_special_hint,只显示某台机器专用的模组（水培、DNA编辑器
 card_required,必选
 card_required_hint,必选：优化时一定要用到这件模组。不受“排除所有退化 / 易损模组”影响，勾选“只用已插入本机的模组”时也会加入。放不下时搜索会报告没有可行布局。
 filter_state_required,必选
-filter_count_required, · 必选 {0} 件
+filter_count_required,· 必选 {0} 件

@@ -124,7 +124,7 @@ namespace ModePuzzle
             // Count, the 仅显示专用模组 switch, and 清除筛选 while a filter is on.
             bool active = FilterActive;
             string count = active ? Loc.T("filter_count_some", shown.Count, all.Count) : Loc.T("filter_count_all", all.Count);
-            if (required > 0) count += Loc.T("filter_count_required", required);
+            if (required > 0) count += " " + Loc.T("filter_count_required", required);
             float gap = OptimizerTuning.RowGap, clear = active ? TextWidth(Loc.T("filter_clear"), true) : 0;
             string special = Loc.T("filter_special");
             float toggle = ToggleWidth(special);

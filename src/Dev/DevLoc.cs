@@ -42,7 +42,7 @@ namespace ModePuzzle.Dev
             {
                 int comma = line.IndexOf(',');
                 if (comma <= 0) continue;
-                string key = line.Substring(0, comma).Trim().TrimStart('﻿'), value = line.Substring(comma + 1);
+                string key = line.Substring(0, comma).Trim().TrimStart('﻿'), value = line.Substring(comma + 1).Trim();   // as ModLoader.ParseCsvValue
                 if (value.Length >= 2 && value[0] == '"' && value[value.Length - 1] == '"')
                     value = value.Substring(1, value.Length - 2).Replace("\"\"", "\"");
                 result[key] = value.Replace("\\n", "\n");   // a literal \n is a line break, as in ModLoader.ParseCsvValue

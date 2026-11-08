@@ -4,7 +4,6 @@ item_desc,"An instrument rebuilt with hypertech parts that works out the best mo
 item_flavor,"A Hypertech instrument built for one job: arranging modules. Nobody on the station can make one. Rumor has it the warehouse holding a whole shipment was recently raided, and now they are flooding the black market."
 panel_title,Hypertech Module Optimizer
 panel_header,Module bay layout
-panel_version,Version {0}
 debug_spawn,Spawn Hypertech Module Optimizer (counter)
 cfg_dev_spawn,Dev test: put a Hypertech Module Optimizer on the counter after loading
 cfg_dev_spawn_tip,For testing only. Spawns one on every load.
@@ -41,7 +40,7 @@ cfg_dev_machine_tip,"For testing only. Each goes on the counter, else the back c
 cfg_dev_bay_kit,Dev test: Module Bay Expansion Kits every time you open the shop (0 = off)
 cfg_dev_modules,Dev test: random modules / nodes every time you open the shop (0 = off)
 cfg_dev_open_tip,"For testing only. Each goes on the counter, else the back counter, else your inventory; ones that fit nowhere are logged."
-tab_free,Free modules ({0})
+tab_free,Spare modules ({0})
 type_MODULE_TYPE_UNIVERSAL,universal modules
 type_MODULE_TYPE_HYDROPONIC,hydroponic modules
 type_MODULE_TYPE_PRINTER,3D printer modules
@@ -67,7 +66,7 @@ opt_optimal,Proven optimal
 opt_stale,"The machine, modules or settings changed: this search was stopped and discarded. Start a new one."
 opt_search_failed,Search or preview failed; see Player.log.
 opt_bad_range,Enter valid numbers with minimum <= maximum; leave blank for no limit.
-opt_too_many,More than {0} candidates; select installed modules only.
+opt_too_many,More than {0} candidate modules. Narrow them down, for example with 'Only modules installed in this machine'.
 opt_locked,"Machine working, inventory locked or module cannot be removed; stuck modules cannot move."
 opt_illegal,Game rejected placement or compatibility.
 opt_overlap,Proposed placements overlap.
@@ -99,7 +98,6 @@ cfg_trait_badges_tip,"Marks every module with a special trait, in inventories, s
 panel_capacity,{0}/{1} cells used
 panel_accepts,Accepts: {0}
 panel_module,Module
-panel_traits,Traits
 opt_invalid_tag,Invalidated
 detail_base,Base
 detail_self,Self
@@ -116,7 +114,7 @@ opt_timeout,Time limit
 opt_stopped,Stopped
 opt_infeasible,Infeasible
 opt_counts,Moved {0} · Removed {1} · Added {2}
-opt_lock_none,Free
+opt_lock_none,Flexible
 opt_lock_required,Keep
 opt_lock_fixed,Fixed
 opt_only_installed,Only modules installed in this machine
@@ -125,39 +123,36 @@ bay_current,Current layout
 opt_restart,Search again
 opt_failed_tag,Failed
 opt_elapsed,{0} / {1} s
-table_number,#
-table_icon,Icon
-table_lock,Lock
 panel_change_machine,Change machine
 picker_title,Choose a machine
 picker_hint,Hover for details, click to switch. The lock in the corner shows whether a machine lends its modules.
-machine_locked_hint,Locked: optimising other machines never borrows this machine's modules.
-machine_unlocked_hint,Unlocked: optimising other machines may borrow this machine's modules.
-machine_unlock_warning,"Once unlocked, optimising other machines may borrow the {1} modules in {0}.\n\nIf a layout applied to another machine uses them, they are taken out of {0} and installed in that machine.\n\nYou can lock it again at any time."
+machine_locked_hint,Locked: optimizing other machines never borrows this machine's modules.
+machine_unlocked_hint,Unlocked: optimizing other machines may borrow this machine's modules.
+machine_unlock_warning,"Once unlocked, optimizing other machines may borrow the {1} modules in {0}.\n\nIf a layout applied to another machine uses them, they are taken out of {0} and installed in that machine.\n\nYou can lock it again at any time."
 machine_unlock_confirm,Unlock
 machine_unlock_cancel,Cancel
 opt_exclude_degrading,Exclude all Degrading
-opt_exclude_overvolted,Exclude all fragile
+opt_exclude_overvolted,Exclude all Overvolted
 opt_exclude_degrading_hint,Modules with Degrading take no part, installed ones are taken out too. Modules locked as Keep or Fixed stay.
 opt_exclude_overvolted_hint,Modules with Overvolted (may break for good when used) take no part, installed ones are taken out too. Modules locked as Keep or Fixed stay.
 machine_unlock_title,Unlock {0}
 machine_unlock_skip,Don't ask again (until the game closes)
 opt_custom_hint,Compared by primary, then secondary. Leave a bound empty for none; arrows step by 1, with Shift by 10.
 metric_tried,{0} layouts tried
-metric_best_at,best found at {0} s
-metric_none,no feasible layout yet
+metric_best_at,Best found at {0} s
+metric_none,No feasible layout yet
 card_added,Newly installed
 card_moved,Moved
 card_borrowed,From {0} · unlocked
 detail_self_hint,Base stats with the module's own bonuses (mounts, premium / inferior and so on), rounded.
 panel_show_more,Show {0} more ({1} left)
-lock_none_hint,Free: the optimizer decides. It may move the module, take it out, or leave it unused.
+lock_none_hint,Flexible: the optimizer decides. It may move the module, take it out, or leave it unused.
 lock_required_hint,Keep: the module must be used and stays in this machine, but its position and rotation may change.
 lock_fixed_hint,Fixed: the module stays exactly where it is, same position and rotation; the others are placed around it.
 lock_stuck_hint,This module is stuck: it needs a module extractor to come out, so it stays fixed in place. The panel updates once it is out.
 lock_stuck,Stuck
 lock_broken,Broken
-lock_broken_hint,This module is broken: it has no stats, stays fixed in place and takes no part. A corrupt module can be repaired with electronics; a ruined one only scrapped with a screwdriver. The panel updates once it is repaired or out.
+lock_broken_hint,This module is broken: it has no stats, stays fixed in place and takes no part. A corrupt module can be repaired with electronics; a ruined one can only be scrapped with a screwdriver. The panel updates once it is repaired or out.
 filter_search,Search name, trait, kind or lending machine (words separated by spaces)
 filter_node,Nodes
 filter_kind_all,All kinds
@@ -185,4 +180,4 @@ filter_special_hint,Only modules made for a particular machine (hydroponics, DNA
 card_required,Required
 card_required_hint,Required: the search must use this module. The exclusion switches and 'installed modules only' do not drop it. If it cannot fit, the search reports no feasible layout.
 filter_state_required,Required
-filter_count_required, · {0} required
+filter_count_required,· {0} required

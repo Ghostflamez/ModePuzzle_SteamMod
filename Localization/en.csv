@@ -121,3 +121,5 @@ opt_clear,Clear
 panel_prev_machine,Previous
 panel_next_machine,Next
 opt_restore_unavailable,"Cannot restore: only this machine's last applied layout, and only if nothing changed since."
+cfg_trait_badges,Show trait icons on all modules
+cfg_trait_badges_tip,"Marks every module with a special trait, in inventories, storage and machine bays. The icons stay upright and move with the cells when the module is rotated or flipped."

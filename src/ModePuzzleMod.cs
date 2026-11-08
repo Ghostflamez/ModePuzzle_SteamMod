@@ -23,6 +23,7 @@ namespace ModePuzzle
         static ConfigEntry<string> devBayKitsPerDay;
         static ConfigEntry<string> devModulesPerDay;
         static ConfigEntry<bool> devFullStorage;
+        internal static ConfigEntry<bool> TraitBadges;
         const string FullStorageId = "hypertech_bay", FullStorageFallbackId = "storage_bay_large";
         /// <summary>Stop filling after this many modules in a row did not fit.</summary>
         const int FullStorageMisses = 12, FullStorageMax = 80;   // leaves room under the 100-piece search limit for installed modules
@@ -54,6 +55,9 @@ namespace ModePuzzle
             if (directory != null) RegisterItems(directory);
 
             var config = ModHelper.GetConfig(ModId);
+            TraitBadges = config.Define("trait_badges", true, "display",
+                () => Loc.T("cfg_trait_badges"), () => Loc.T("cfg_trait_badges_tip"));
+            TraitBadges.OnChanged += _ => UI.TraitOverlay.SettingChanged();
             devSpawnOnLoad = config.Define("dev_spawn_on_load", false, "dev",
                 () => Loc.T("cfg_dev_spawn"), () => Loc.T("cfg_dev_spawn_tip"));
             DevSmugglerDaily = config.Define("dev_smuggler_daily", false, "dev",
@@ -85,6 +89,7 @@ namespace ModePuzzle
             ModHook.OnGameLoadedLate -= OnGameLoaded;
             ModHook.OnShutterOpenedLate -= OnShutterOpened;
             ModHelper.RemoveDebugFunctions(ModId);
+            UI.TraitOverlay.Clear();
             debugFunctionsAdded = false;
             JacksonStock.Disable();
             Smuggler.Disable();

@@ -121,7 +121,7 @@ namespace ModePuzzle.Game
             catch (Exception) { return null; }
         }
 
-        static bool IsModule(GameItem item) => item.IsTag(ModuleTag) || item.IsGameItemType("NODE");
+        internal static bool IsModule(GameItem item) => item.IsTag(ModuleTag) || item.IsGameItemType("NODE");
 
         static MachineInfo ReadMachine(GameItem item, GameGridInventory bay)
         {

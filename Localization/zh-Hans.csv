@@ -120,3 +120,5 @@ opt_clear,清除
 panel_prev_machine,上一台
 panel_next_machine,下一台
 opt_restore_unavailable,无法恢复：只能恢复本台机器最近一次应用的布局，而且应用之后不能再改动过。
+cfg_trait_badges,在所有模组上显示特殊词条图标
+cfg_trait_badges_tip,给背包、仓库、机器模组舱里所有带特殊词条的模组标上小图标；图标始终朝上，并随模组的旋转、翻转自动换到对应的格子。

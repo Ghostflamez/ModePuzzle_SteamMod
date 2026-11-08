@@ -18,6 +18,10 @@ namespace ModePuzzle.Acquisition
         public const float SmugglerDailyChance = 10f;
         public const int SmugglerCooldownDays = 7;
 
+        // When he arrives and the player already owns one, he buys stolen goods instead (25% below market).
+        // Budget as the game's 可疑的商人: 250 + random 0–50 + 3 per day.
+        public const int FenceBudgetBase = 250, FenceBudgetRandom = 50, FenceBudgetPerDay = 3;
+
         // Loot crates: one roll per crate, multiplied by the crate's luck like the game's own rolls.
         // The vanilla lists put rare, valuable items first; the optimizer (500, 2×3 cells) rolls right after
         // the anchor item, while the crate is still nearly empty.

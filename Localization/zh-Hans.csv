@@ -21,3 +21,6 @@ cfg_dev_crates_on_load,开发测试：读档后在柜台放一个已开锁的工
 cfg_dev_crates_on_load_tip,仅用于测试。每次读档都会生成；搭配「必出」开关可确认箱内有超科技模组优化器。
 cfg_dev_jackson,开发测试：杰克逊博士总是出售超科技模组优化器
 cfg_dev_jackson_tip,仅用于测试。即使已持有，博士来店和他的店里也会上架。
+smuggler_fence_line_1,"哟……你手上那台是超科技模组优化器？我还以为整批货都在我们手里。"
+smuggler_fence_line_2,"能从别人那儿弄到这种好货，你可真不简单。这趟我就不卖了——你手上有别的赃货，我照单全收，只是价钱得压一压。"
+smuggler_fence_line_3,我身上带了{0}信用点。

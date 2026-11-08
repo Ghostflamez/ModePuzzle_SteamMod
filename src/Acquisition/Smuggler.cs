@@ -1,3 +1,5 @@
+using HarmonyLib;
+
 namespace ModePuzzle.Acquisition
 {
     /// <summary>
@@ -34,15 +36,7 @@ namespace ModePuzzle.Acquisition
 
         static StoreClient Create()
         {
-            var client = new StoreClient
-            {
-                identifier = Tuning.SmugglerId,
-                displayName = Loc.T("smuggler_name"),
-                spriteName = SpriteDict.GetShadyMerchantSpriteName(),
-                clientFaction = "FACTION_BLACK_MARKET",
-                clientIntent = StoreClient.ClientIntent.SELL,
-                cooldown = Tuning.SmugglerCooldownDays,
-            };
+            var client = NewClient(StoreClient.ClientIntent.SELL);
             client.mainDialogue.SetText(client.displayName, Loc.T("smuggler_line_1"));
             client.mainDialogue.NextDialogue()
                 .SetText(client.displayName, Loc.T("smuggler_line_2"))
@@ -55,6 +49,52 @@ namespace ModePuzzle.Acquisition
             client.AddBasicDialog();
             client.CompleteClientCreation();
             return client;
+        }
+
+        /// <summary>
+        /// The same smuggler when he finds the player already has an optimizer (bought after his visit was
+        /// queued): amazed, he sells nothing and buys stolen goods instead, below market like the game's
+        /// 可疑的商人, with the same budget formula.
+        /// </summary>
+        public static StoreClient CreateFence()
+        {
+            var client = NewClient(StoreClient.ClientIntent.BUY);
+            client.SetBudget(Tuning.FenceBudgetBase + RNG.GetRandomInt(0, Tuning.FenceBudgetRandom)
+                             + StoreStation.Instance.dayCounter * Tuning.FenceBudgetPerDay);
+            client.clientBuyingTagList.Add("STOLEN_TAG");
+            client.mainDialogue.SetText(client.displayName, Loc.T("smuggler_fence_line_1"));
+            client.mainDialogue.NextDialogue().SetText(client.displayName, Loc.T("smuggler_fence_line_2"))
+                .NextDialogue().SetText(client.displayName, Loc.T("smuggler_fence_line_3", client.GetBudget()));
+            client.onItemAddedToWeighted = item =>
+            {
+                if (item != null && GeneralHelper.IsItemOwned(item)) item.AddItemFeature(ItemFeatureList.DiscountedBuy25());
+            };
+            client.AddBasicDialog();
+            client.CompleteClientCreation();
+            return client;
+        }
+
+        static StoreClient NewClient(StoreClient.ClientIntent intent) => new StoreClient
+        {
+            identifier = Tuning.SmugglerId,
+            displayName = Loc.T("smuggler_name"),
+            spriteName = SpriteDict.GetShadyMerchantSpriteName(),
+            clientFaction = "FACTION_BLACK_MARKET",
+            clientIntent = intent,
+            cooldown = Tuning.SmugglerCooldownDays,
+        };
+    }
+
+    /// <summary>Right before a queued customer walks in: a smuggler meeting a player who already owns an
+    /// optimizer becomes the fence.</summary>
+    [HarmonyPatch(typeof(PlayerStore), "GetNextClient")]
+    static class SmugglerArrivalPatch
+    {
+        static void Prefix(PlayerStore __instance)
+        {
+            var stack = __instance?.storeClientManager?.clientStack;
+            if (stack == null || stack.Count == 0 || stack[0]?.identifier != Tuning.SmugglerId) return;
+            if (Ownership.OwnsOptimizer()) stack[0] = Smuggler.CreateFence();
         }
     }
 }

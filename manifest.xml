@@ -12,5 +12,7 @@
   <Assemblies>
     <Assembly>ModePuzzle.dll</Assembly>
   </Assemblies>
-  <Capabilities />
+  <Capabilities>
+    <Capability>dynamic-code</Capability>
+  </Capabilities>
 </Manifest>

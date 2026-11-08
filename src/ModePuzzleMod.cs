@@ -13,6 +13,7 @@ namespace ModePuzzle
         static ConfigEntry<bool> devSpawnOnLoad;
         internal static ConfigEntry<bool> DevSmugglerDaily;
         internal static ConfigEntry<bool> DevCrateAlways;
+        internal static ConfigEntry<bool> DevJacksonAlways;
         static ConfigEntry<bool> devCratesOnLoad;
         static bool registered;
         static bool debugFunctionsAdded;
@@ -39,6 +40,8 @@ namespace ModePuzzle
                 () => Loc.T("cfg_dev_smuggler"), () => Loc.T("cfg_dev_smuggler_tip"));
             DevCrateAlways = config.Define("dev_crate_always", false, "dev",
                 () => Loc.T("cfg_dev_crate"), () => Loc.T("cfg_dev_crate_tip"));
+            DevJacksonAlways = config.Define("dev_jackson_always", false, "dev",
+                () => Loc.T("cfg_dev_jackson"), () => Loc.T("cfg_dev_jackson_tip"));
             devCratesOnLoad = config.Define("dev_crates_on_load", false, "dev",
                 () => Loc.T("cfg_dev_crates_on_load"), () => Loc.T("cfg_dev_crates_on_load_tip"));
 

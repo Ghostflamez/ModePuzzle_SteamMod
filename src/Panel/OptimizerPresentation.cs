@@ -244,7 +244,8 @@ namespace ModePuzzle
             float left = Mathf.Min(Mathf.Max(bayW * bayScale, restoreNeed), width * PanelStyle.MaxBayShare);
             var c = Columns(width, PanelStyle.ColumnGap, left, width - PanelStyle.ColumnGap - left);
             Row(b, width, PanelStyle.ColumnGap);
-            b.CurrentContainer.GetComponent<HorizontalLayoutGroup>().childAlignment = TextAnchor.UpperLeft;
+            // The custom target makes the data column much taller: the bay column then sits at its middle.
+            b.CurrentContainer.GetComponent<HorizontalLayoutGroup>().childAlignment = target == 3 ? TextAnchor.MiddleLeft : TextAnchor.UpperLeft;
             Column(b, c[0]);
             // Reserve the switch slot before feasibility so the bay's top never changes.
             Row(b, c[0]);

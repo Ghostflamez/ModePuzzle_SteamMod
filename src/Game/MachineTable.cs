@@ -29,6 +29,9 @@ namespace ModePuzzle.Game
         public static readonly HashSet<string> ExcludedMachines = new HashSet<string> { "blender", "heating_plate", "chem_finisher" };
         public static readonly HashSet<string> ExcludedModules = new HashSet<string> { "chem_module" };
 
+        /// <summary>Identifiers of the known machines with a module bay.</summary>
+        public static IReadOnlyCollection<string> KnownMachines => Accepts.Keys;
+
         /// <summary>Accepted types for a known machine, or null.</summary>
         public static string[] Lookup(string identifier) => Accepts.TryGetValue(identifier, out var a) ? a : null;
     }

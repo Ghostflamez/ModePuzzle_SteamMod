@@ -1,4 +1,6 @@
+using System.Linq;
 using ModePuzzle.Acquisition;
+using ModePuzzle.Game;
 using UnityEngine;
 
 namespace ModePuzzle
@@ -15,6 +17,7 @@ namespace ModePuzzle
         internal static ConfigEntry<bool> DevCrateAlways;
         internal static ConfigEntry<bool> DevJacksonAlways;
         static ConfigEntry<bool> devCratesOnLoad;
+        static ConfigEntry<bool> devMachineDaily;
         static bool registered;
         static bool debugFunctionsAdded;
 
@@ -28,6 +31,7 @@ namespace ModePuzzle
         {
             ModHook.OnModItemDirectoryInit += RegisterItems;
             ModHook.OnGameLoadedLate += OnGameLoaded;
+            ModHook.OnShutterOpenedLate += OnShutterOpened;
 
             // The item directory may already exist when the mod is enabled from the mods menu.
             var directory = Object.FindObjectOfType<ModItemDirectory>();
@@ -42,6 +46,8 @@ namespace ModePuzzle
                 () => Loc.T("cfg_dev_crate"), () => Loc.T("cfg_dev_crate_tip"));
             DevJacksonAlways = config.Define("dev_jackson_always", false, "dev",
                 () => Loc.T("cfg_dev_jackson"), () => Loc.T("cfg_dev_jackson_tip"));
+            devMachineDaily = config.Define("dev_machine_daily", false, "dev",
+                () => Loc.T("cfg_dev_machine"), () => Loc.T("cfg_dev_machine_tip"));
             devCratesOnLoad = config.Define("dev_crates_on_load", false, "dev",
                 () => Loc.T("cfg_dev_crates_on_load"), () => Loc.T("cfg_dev_crates_on_load_tip"));
 
@@ -53,6 +59,7 @@ namespace ModePuzzle
         {
             ModHook.OnModItemDirectoryInit -= RegisterItems;
             ModHook.OnGameLoadedLate -= OnGameLoaded;
+            ModHook.OnShutterOpenedLate -= OnShutterOpened;
             ModHelper.RemoveDebugFunctions(ModId);
             debugFunctionsAdded = false;
             JacksonStock.Disable();
@@ -92,6 +99,20 @@ namespace ModePuzzle
                 ModHelper.MoveItemToFrontCounter(crate);
                 Log.Log($"Dev crate {crate.identifier} placed on the counter, locked={LockHelper.IsCurrentlyLocked(crate)}");
             }
+        }
+
+        /// <summary>Dev test: a random machine with a module bay each time the shutter opens.</summary>
+        static void OnShutterOpened()
+        {
+            if (devMachineDaily == null || !devMachineDaily.Value) return;
+            var ids = MachineTable.KnownMachines.ToList();
+            var id = ids[RNG.GetRandomInt(0, ids.Count - 1)];
+            var machine = ModHelper.SpawnItem(id);
+            if (machine == null) { Log.Warning("Dev machine: could not spawn " + id); return; }
+            ModHelper.MoveItemToFrontCounter(machine);
+            if (machine.parentInventory == null) ModHelper.MoveItemToBackCounter(machine);
+            if (machine.parentInventory == null) ModHelper.MoveItemToInventory(machine);
+            Log.Log($"Dev machine {id} spawned, placed={machine.parentInventory != null}");
         }
 
         static void SpawnToCounter()

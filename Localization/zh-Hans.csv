@@ -40,3 +40,5 @@ skip_bay_shape,读不到模组舱形状的机器
 skip_chem_module,化学设备模组
 skip_in_chem_machine,装在化学类机器中的模组
 skip_in_unsupported_machine,装在不支持的机器中的模组
+cfg_dev_machine,开发测试：每天开门时送一台随机的带模组舱机器
+cfg_dev_machine_tip,仅用于测试。放在柜台上，放不下时依次尝试后柜台和背包。

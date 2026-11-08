@@ -93,6 +93,7 @@ namespace ModePuzzle
             statusElement = null; messageElement=null; applyElement=null;
             progressElement = null; elapsedElement = null;
             metricElements.Clear();
+            TooltipShield.Register(b.Handle.Rect);
             b.BeginScroll(size.y - PanelStyle.FrameMargin);
             scroll = b.CurrentContainer.GetComponentInParent<UnityEngine.UI.ScrollRect>();
             b.Show();

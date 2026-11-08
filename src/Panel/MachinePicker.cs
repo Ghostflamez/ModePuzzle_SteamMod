@@ -176,6 +176,7 @@ namespace ModePuzzle
             float width = PanelStyle.ConfirmWidth, inner = width - PanelStyle.ChromeFallback;
             var b = manager.CreateWindow(ConfirmId, Loc.T("machine_unlock_title", machine.Name), CustomUIManager.LAYER_OVERLAY, null, CustomUIManager.Style.Machinery)
                 .SetSize(width, PanelStyle.ConfirmHeight).SetDraggable(true).SetCloseOnEscape(true);
+            TooltipShield.Register(b.Handle.Rect);
             b.BeginColumn(OptimizerTuning.RowGap, TextAnchor.UpperLeft);
             var text = Label(b, Loc.T("machine_unlock_warning", machine.Name, machine.Installed.Count), inner);
             text.text.overflowMode = TextOverflowModes.Overflow;
@@ -249,6 +250,7 @@ namespace ModePuzzle
             float height = Mathf.Min(rows * cellH + (rows - 1) * PanelStyle.PickerGap + PanelStyle.PickerChromeHeight, PanelStyle.PreferredHeight);
             var b = manager.CreateWindow(PickerId, Loc.T("picker_title"), CustomUIManager.LAYER_OVERLAY, null, CustomUIManager.Style.Machinery)
                 .SetSize(width, height).SetDraggable(true).SetCloseOnEscape(true);
+            TooltipShield.Register(b.Handle.Rect);
             b.BeginScroll(height - PanelStyle.FrameMargin);
             b.AddLabel(Loc.T("picker_hint"));
             if (b.Last.text != null) { b.Last.text.fontSize = PanelStyle.CaptionFont; b.Last.text.enableAutoSizing = false; b.Last.SetTextColor(PanelStyle.Muted); }

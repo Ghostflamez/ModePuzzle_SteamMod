@@ -112,7 +112,8 @@ namespace ModePuzzle
             if (sprite != null)
             {
                 float side = Mathf.Max(sprite.rect.width, sprite.rect.height), room = frame - 2 * PanelStyle.CardFrameInset;
-                float scale = side <= room ? Mathf.Floor(room / side) : room / side;
+                // Every picture fills the frame along its longer side, so tall and small modules look alike in size.
+                float scale = room / side;
                 b.AddImage(sprite, sprite.rect.width * scale, sprite.rect.height * scale);
             }
             EndRow(b, false);

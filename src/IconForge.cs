@@ -154,7 +154,7 @@ namespace ModePuzzle
 
         // A two-cell module in miniature, drawn upright (pins left, board, cap right) in local coordinates and
         // turned 90° clockwise onto the screen: pins on top, cap at the bottom, lying horizontally.
-        const int MiniW = 11, MiniH = 18;   // MiniW includes the two-pixel fingers
+        const int MiniW = 11, MiniH = 17;   // MiniW includes the two-pixel fingers; odd MiniH keeps it symmetric
 
         static void DrawMiniModule(Px[] dst, int w, Box screen, ChipPalette pal)
         {
@@ -174,7 +174,7 @@ namespace ModePuzzle
             for (int y = 0; y < MiniH; y++)
             {
                 // Gold fingers, two pixels long, every other row; the gaps between them in the board's dark tone.
-                if (y >= 2 && y <= MiniH - 4)
+                if (y >= 2 && y <= MiniH - 3)
                 {
                     var c = y % 2 == 0 ? pal.Pin[(y / 2) % pal.Pin.Length] : pal.Board[0];
                     Put(0, y, c); Put(1, y, c);
@@ -193,7 +193,7 @@ namespace ModePuzzle
                 if (y != 0 && y != MiniH - 1) Body(9, y, pal.Cap[0]);
             }
             // Two chips with copper legs, one per cell.
-            foreach (int cy in new[] { 2, 11 })
+            foreach (int cy in new[] { 2, MiniH - 5 })
             {
                 for (int y = cy; y < cy + 3; y++)
                     for (int x = 3; x <= 5; x++) Body(x, y, pal.Chip);
@@ -201,8 +201,11 @@ namespace ModePuzzle
                 Body(6, cy + 1, pal.Copper[pal.Copper.Length - 1]);
             }
             // Traces in the lightest board colour.
-            for (int y = 6; y <= 9; y++) Body(4, y, pal.Board[top]);
-            Body(5, 9, pal.Board[top]); Body(2, 15, pal.Board[top]); Body(3, 15, pal.Board[top]); Body(4, 15, pal.Board[top]);
+            // Mirror-symmetric about the middle row.
+            for (int y = 6; y <= MiniH - 7; y++) Body(4, y, pal.Board[top]);
+            Body(5, MiniH / 2, pal.Board[top]);
+            foreach (int y in new[] { 1, MiniH - 2 })
+                for (int x = 2; x <= 4; x++) Body(x, y, pal.Board[top]);
         }
 
         static List<Px> Distinct(Px[] px)

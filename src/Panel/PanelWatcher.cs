@@ -5,46 +5,41 @@ namespace ModePuzzle.UI
 {
     /// <summary>
     /// While the optimizer window is open, checks the focused machine twice a second and rebuilds the window
-    /// when its bay is expanded or a module is added, removed, moved, rotated or flipped. Destroys itself
-    /// when the window is gone.
+    /// when its bay is expanded or a module is added, removed, moved, rotated or flipped. Stops when the window
+    /// is gone. Ticked by <see cref="PanelTicker"/>.
     /// </summary>
-    sealed class PanelWatcher : MonoBehaviour
+    static class PanelWatcher
     {
         const float IntervalSeconds = OptimizerTuning.WatchSeconds;
-        float nextPoll;
-
-        static PanelWatcher instance;
-        float next;
-        int machineId;
-        string signature;
+        static bool active;
+        static float next, nextPoll;
+        static int machineId;
+        static string signature;
 
         /// <summary>Starts (or retargets) watching after the window was built for this machine.</summary>
         public static void Watch(int machineUniqueId)
         {
-            if (instance == null)
-            {
-                var go = new GameObject("ModePuzzle.PanelWatcher");
-                instance = go.AddComponent<PanelWatcher>();
-            }
-            instance.machineId = machineUniqueId;
-            instance.signature = LiveReader.Signature(machineUniqueId);
-            instance.next = Time.unscaledTime + IntervalSeconds;
+            if (!active) { active = true; PanelTicker.Run(Tick, Gone); }
+            machineId = machineUniqueId;
+            signature = LiveReader.Signature(machineUniqueId);
+            next = Time.unscaledTime + IntervalSeconds;
         }
 
         public static void Stop()
         {
-            if (instance != null) Destroy(instance.gameObject);
-            instance = null;
+            if (!active) return;
+            active = false;
+            PanelTicker.Stop();
         }
 
-        void OnDestroy()
+        static void Gone()
         {
-            if (instance != this) return;
-            instance = null;
+            if (!active) return;
+            active = false;
             OptimizerPanel.WindowGone();
         }
 
-        void Update()
+        static void Tick()
         {
             if (Time.unscaledTime >= nextPoll)
             {

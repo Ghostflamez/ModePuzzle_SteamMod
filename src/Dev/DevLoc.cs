@@ -16,16 +16,21 @@ namespace ModePuzzle.Dev
         public static bool TryGet(string key, out string value)
         {
             value = null;
+            if (table == null) Load();
             return table != null && table.TryGetValue(key, out value);
         }
 
-        public static void Reload()
+        /// <summary>Forgets the table; it is read again (with the current language) on the next lookup.</summary>
+        public static void Reload() => table = null;
+
+        static void Load()
         {
-            var zh = Read("zh-Hans.csv");
-            var en = Read("en.csv");
-            table = null;
+            // The language is told by the loader's own copy of item_name, which exists only once the loader has
+            // read the mod's tables; until then the game's text is used.
             string shown = ModHelper.GetLocalized(ModePuzzleMod.ModId, "item_name");
-            table = en.TryGetValue("item_name", out var e) && e == shown ? en : zh;
+            if (shown == "item_name") return;
+            var en = Read("en.csv");
+            table = en.TryGetValue("item_name", out var e) && e == shown ? en : Read("zh-Hans.csv");
         }
 
         static Dictionary<string, string> Read(string file)

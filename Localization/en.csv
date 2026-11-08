@@ -40,5 +40,5 @@ skip_bay_shape,machines without a readable bay shape
 skip_chem_module,chemical equipment modules
 skip_in_chem_machine,modules in chemical machines
 skip_in_unsupported_machine,modules in unsupported machines
-cfg_dev_machine,Dev test: a random machine with a module bay every time you open the shop
-cfg_dev_machine_tip,"For testing only. Placed on the counter, else the back counter, else your inventory."
+cfg_dev_machine,Dev test: random machines with a module bay every time you open the shop (0 = off)
+cfg_dev_machine_tip,"For testing only. Each goes on the counter, else the back counter, else your inventory; ones that fit nowhere are logged."

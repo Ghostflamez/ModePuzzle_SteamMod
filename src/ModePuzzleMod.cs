@@ -17,7 +17,8 @@ namespace ModePuzzle
         internal static ConfigEntry<bool> DevCrateAlways;
         internal static ConfigEntry<bool> DevJacksonAlways;
         static ConfigEntry<bool> devCratesOnLoad;
-        static ConfigEntry<bool> devMachineDaily;
+        static ConfigEntry<int> devMachinesPerDay;
+        const int DevMachinesMax = 10;
         static bool registered;
         static bool debugFunctionsAdded;
 
@@ -46,8 +47,8 @@ namespace ModePuzzle
                 () => Loc.T("cfg_dev_crate"), () => Loc.T("cfg_dev_crate_tip"));
             DevJacksonAlways = config.Define("dev_jackson_always", false, "dev",
                 () => Loc.T("cfg_dev_jackson"), () => Loc.T("cfg_dev_jackson_tip"));
-            devMachineDaily = config.Define("dev_machine_daily", false, "dev",
-                () => Loc.T("cfg_dev_machine"), () => Loc.T("cfg_dev_machine_tip"));
+            devMachinesPerDay = config.Define("dev_machines_per_day", 0, "dev",
+                () => Loc.T("cfg_dev_machine"), 0, DevMachinesMax, () => Loc.T("cfg_dev_machine_tip"));
             devCratesOnLoad = config.Define("dev_crates_on_load", false, "dev",
                 () => Loc.T("cfg_dev_crates_on_load"), () => Loc.T("cfg_dev_crates_on_load_tip"));
 
@@ -101,18 +102,22 @@ namespace ModePuzzle
             }
         }
 
-        /// <summary>Dev test: a random machine with a module bay each time the shutter opens.</summary>
+        /// <summary>Dev test: random machines with a module bay each time the shutter opens.</summary>
         static void OnShutterOpened()
         {
-            if (devMachineDaily == null || !devMachineDaily.Value) return;
+            int count = devMachinesPerDay?.Value ?? 0;
+            if (count <= 0) return;
             var ids = MachineTable.KnownMachines.ToList();
-            var id = ids[RNG.GetRandomInt(0, ids.Count - 1)];
-            var machine = ModHelper.SpawnItem(id);
-            if (machine == null) { Log.Warning("Dev machine: could not spawn " + id); return; }
-            ModHelper.MoveItemToFrontCounter(machine);
-            if (machine.parentInventory == null) ModHelper.MoveItemToBackCounter(machine);
-            if (machine.parentInventory == null) ModHelper.MoveItemToInventory(machine);
-            Log.Log($"Dev machine {id} spawned, placed={machine.parentInventory != null}");
+            for (int i = 0; i < count; i++)
+            {
+                var id = ids[RNG.GetRandomInt(0, ids.Count - 1)];
+                var machine = ModHelper.SpawnItem(id);
+                if (machine == null) { Log.Warning("Dev machine: could not spawn " + id); continue; }
+                ModHelper.MoveItemToFrontCounter(machine);
+                if (machine.parentInventory == null) ModHelper.MoveItemToBackCounter(machine);
+                if (machine.parentInventory == null) ModHelper.MoveItemToInventory(machine);
+                Log.Log($"Dev machine {id} spawned, placed={machine.parentInventory != null}");
+            }
         }
 
         static void SpawnToCounter()

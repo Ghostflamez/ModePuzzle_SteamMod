@@ -148,20 +148,11 @@ namespace ModePuzzle
             name.text.enableWordWrapping = false; name.text.overflowMode = TextOverflowModes.Ellipsis;
             float nameWidth = Mathf.Min(Mathf.Ceil(name.text.GetPreferredValues(name.text.text, float.PositiveInfinity, float.PositiveInfinity).x) + 2, width * PanelStyle.MachineNameShare);
             string change = Loc.T("panel_change_machine"), refresh = Loc.T("panel_refresh");
-            float gap = OptimizerTuning.RowGap, lockWidth = PanelStyle.LockButtonWidth;
-            // The status follows the buttons (spinner, then the coloured word), not the far edge of the row.
-            string[] states = { "opt_ready", "opt_searching", "opt_stopped", "opt_timeout", "opt_infeasible", "opt_optimal", "opt_failed_tag", "opt_invalid_tag" };
-            float status = states.Max(k => TextWidth(Loc.T(k))) + 4;
+            float lockWidth = PanelStyle.LockButtonWidth;
             name.SetFixedWidth(nameWidth);
             LockButton(b, machine, lockWidth);
             Button(b, change, TextWidth(change, true), OpenPicker);
             Button(b, refresh, TextWidth(refresh, true), UserRefresh);
-            Label(b, "", PanelStyle.StatusGap - gap);
-            b.AddImage(SpinnerFrame(0), PanelStyle.SpinnerSize, PanelStyle.SpinnerSize);
-            spinnerElement = b.Last;
-            if (spinnerElement.image != null) spinnerElement.image.color = new Color(1, 1, 1, Busy ? 1 : 0);
-            statusElement = Label(b, StatusTag(), status);
-            statusElement.text.enableWordWrapping = false; statusElement.text.overflowMode = TextOverflowModes.Ellipsis;
             EndRow(b, false);
         }
         static string StatusTag()
@@ -322,7 +313,22 @@ namespace ModePuzzle
             elapsedElement = Caption(b, "", under[1], true);
             elapsedElement.SetTextColor(PanelStyle.ProgressText);
             EndRow(b, false);
-            metricElements.Add(Caption(b, "", data));
+            // Then the second the best layout was found, with the status (spinner while searching) at the right,
+            // under the time.
+            string[] states = { "opt_ready", "opt_searching", "opt_stopped", "opt_timeout", "opt_infeasible", "opt_optimal", "opt_failed_tag", "opt_invalid_tag" };
+            float status = PanelStyle.SpinnerSize + gap + states.Max(k => TextWidth(Loc.T(k))) + 4;
+            var line = Columns(data, gap, Mathf.Max(0, data - status - gap), status);
+            Row(b, data);
+            metricElements.Add(Caption(b, "", line[0]));
+            Row(b, line[1]);
+            b.CurrentContainer.GetComponent<HorizontalLayoutGroup>().childAlignment = TextAnchor.MiddleRight;
+            b.AddImage(SpinnerFrame(0), PanelStyle.SpinnerSize, PanelStyle.SpinnerSize);
+            spinnerElement = b.Last;
+            if (spinnerElement.image != null) spinnerElement.image.color = new Color(1, 1, 1, Busy ? 1 : 0);
+            statusElement = Label(b, StatusTag(), TextWidth(Status()) + 4, true);
+            statusElement.text.enableWordWrapping = false;
+            EndRow(b, false);
+            EndRow(b, false);
             UpdateMetrics();
             if (preview != null)
             {

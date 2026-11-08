@@ -134,7 +134,7 @@ namespace ModePuzzle
 
         static void UpdateMetrics()
         {
-            statusElement?.SetText(StatusTag());
+            if (statusElement != null) { statusElement.SetText(StatusTag()); statusElement.SetFixedWidth(TextWidth(Status()) + 4); }
             if (spinnerElement?.image != null)
             {
                 spinnerElement.image.color = new Color(1, 1, 1, Busy ? 1 : 0);

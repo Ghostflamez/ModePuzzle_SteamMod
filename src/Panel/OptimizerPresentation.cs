@@ -268,7 +268,6 @@ namespace ModePuzzle
             b.AddProgressBar(); progressElement = b.Last; progressElement.SetFixedWidth(progress[0]);
             elapsedElement = Label(b, "", progress[1], true, PanelStyle.CaptionFont);
             EndRow(b, false);
-            TargetAndTime(b, c[1]);
             string[] keys = { "metric_nodes", "metric_best", "metric_bound", "metric_improvement" };
             int count = c[1] < PanelStyle.MetricRowMinimum ? 2 : keys.Length;
             var metrics = Columns(c[1], OptimizerTuning.RowGap, Enumerable.Repeat(1f, count).ToArray());
@@ -283,6 +282,7 @@ namespace ModePuzzle
                 EndRow(b, false);
             }
             UpdateMetrics();
+            TargetAndTime(b, c[1]);
             Row(b, c[1]);
             string counts = "";
             if (preview != null)

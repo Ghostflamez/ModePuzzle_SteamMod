@@ -17,9 +17,16 @@ namespace ModePuzzle.UI
         public GameItem Item;
         bool hovered;
 
-        static Canvas raised;
-        static bool addedCanvas, oldOverride;
-        static int oldOrder;
+        // Better Item Tooltips draws its appraisal slip on objects of its own, outside the game's tooltip window.
+        static readonly string[] TooltipModRoots = { "SectionedTooltipsTicket", "SectionedTooltipsPanels", "SectionedTooltipsOverlay" };
+
+        sealed class Raised
+        {
+            public Canvas Canvas;
+            public bool Added, OldOverride;
+            public int OldOrder;
+        }
+        static readonly System.Collections.Generic.List<Raised> raised = new System.Collections.Generic.List<Raised>();
 
         public void OnPointerEnter(PointerEventData eventData) => hovered = true;
         public void OnPointerExit(PointerEventData eventData) { hovered = false; Hide(); }
@@ -39,30 +46,42 @@ namespace ModePuzzle.UI
             catch (System.Exception e) { ModePuzzleMod.Log?.Warning("Item tooltip: " + e.Message); hovered = false; }
         }
 
-        /// <summary>Puts the game's tooltip window above the canvas this element is drawn on.</summary>
+        /// <summary>
+        /// Puts the game's tooltip window, and the tooltip mod's slip when present, above the canvas this element is
+        /// drawn on. Checked every frame: the mod creates its objects on first use.
+        /// </summary>
         void Raise()
         {
-            if (raised != null) return;
-            var go = OverlayHandler.current.GetTooltipWindow()?.handler?.gameObject;
-            if (go == null) return;
             int top = 0;
             foreach (var c in GetComponentsInParent<Canvas>()) top = Mathf.Max(top, c.sortingOrder);
-            raised = go.GetComponent<Canvas>();
-            addedCanvas = raised == null;
-            if (addedCanvas) raised = go.AddComponent<Canvas>();
-            oldOverride = raised.overrideSorting; oldOrder = raised.sortingOrder;
-            raised.overrideSorting = true;
-            raised.sortingOrder = top + 1;
+            RaiseObject(OverlayHandler.current.GetTooltipWindow()?.handler?.gameObject, top + 1);
+            foreach (var name in TooltipModRoots) RaiseObject(GameObject.Find(name), top + 1);
+        }
+
+        static void RaiseObject(GameObject go, int order)
+        {
+            if (go == null) return;
+            var canvas = go.GetComponent<Canvas>();
+            foreach (var r in raised) if (r.Canvas != null && r.Canvas == canvas) return;
+            var record = new Raised { Added = canvas == null };
+            if (record.Added) canvas = go.AddComponent<Canvas>();
+            record.Canvas = canvas; record.OldOverride = canvas.overrideSorting; record.OldOrder = canvas.sortingOrder;
+            canvas.overrideSorting = true;
+            canvas.sortingOrder = order;
+            raised.Add(record);
         }
 
         static void Hide()
         {
             try { if (OverlayHandler.current != null) OverlayHandler.current.HideTooltip(); }
             catch (System.Exception) { }
-            if (raised == null) return;
-            if (addedCanvas) Destroy(raised);
-            else { raised.overrideSorting = oldOverride; raised.sortingOrder = oldOrder; }
-            raised = null;
+            foreach (var r in raised)
+            {
+                if (r.Canvas == null) continue;
+                if (r.Added) Destroy(r.Canvas);
+                else { r.Canvas.overrideSorting = r.OldOverride; r.Canvas.sortingOrder = r.OldOrder; }
+            }
+            raised.Clear();
         }
     }
 }

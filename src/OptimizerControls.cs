@@ -51,8 +51,13 @@ namespace ModePuzzle
         public static bool SnapshotChanged()
         {
             if (invalid || transaction == null) return false;
-            try { return !transaction.Unchanged(); }
-            catch (Exception) { return true; }
+            try
+            {
+                var reason = transaction.ChangeReason();
+                if (reason != null) ModePuzzleMod.Log?.Log("Snapshot changed: " + reason);
+                return reason != null;
+            }
+            catch (Exception e) { ModePuzzleMod.Log?.Warning("Snapshot check failed: " + e); return true; }
         }
 
         public static void PollSearch()
@@ -132,6 +137,9 @@ namespace ModePuzzle
             b.AddButton(Loc.T("opt_preview"),() => { view=View.Result; Refresh(); }); b.Last.SetInteractable(result?.Feasible == true);
             b.End().BeginRow(OptimizerTuning.RowGap);
             b.AddButton(Loc.T("opt_apply"),ApplyResult); applyElement=b.Last; b.Last.SetInteractable(!Busy && !invalid && result?.Feasible == true && transaction != null);
+            if (result != null)
+                ModePuzzleMod.Log?.Log($"Panel state: busy={Busy} invalid={invalid} feasible={result.Feasible} phase={result.Phase} " +
+                    $"transaction={transaction != null} canRestore={previous?.CanRestore == true} message={message}");
             b.AddButton(Loc.T("opt_restore"),RestorePrevious); b.Last.SetInteractable(!Busy && previous?.CanRestore == true);
             b.End();
             b.AddLabel(Status()); statusElement=b.Last; b.Last.SetFixedWidth(width);

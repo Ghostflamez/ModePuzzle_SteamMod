@@ -28,11 +28,13 @@ namespace ModePuzzle.UI
             }
             instance.machineId = machineUniqueId;
             instance.signature = LiveReader.Signature(machineUniqueId);
+            ModePuzzleMod.Log?.Log($"Watcher: machine {machineUniqueId}, signature {(instance.signature == null ? "null" : instance.signature.GetHashCode().ToString("x"))}");
             instance.next = Time.unscaledTime + IntervalSeconds;
         }
 
         public static void Stop()
         {
+            if (instance != null) ModePuzzleMod.Log?.Log("Watcher: stopped");
             if (instance != null) Destroy(instance.gameObject);
             instance = null;
         }
@@ -57,8 +59,12 @@ namespace ModePuzzle.UI
             if (!OptimizerPanel.IsOpen) { Stop(); return; }
             string now;
             try { now = LiveReader.Signature(machineId); }
-            catch (System.Exception) { OptimizerPanel.MachineChanged(); return; }
-            if (now == signature && !OptimizerPanel.SnapshotChanged()) return;
+            catch (System.Exception e) { ModePuzzleMod.Log?.Warning("Watcher: signature failed: " + e); OptimizerPanel.MachineChanged(); return; }
+            bool machineChanged = now != signature;
+            if (!machineChanged && !OptimizerPanel.SnapshotChanged()) return;
+            ModePuzzleMod.Log?.Log(machineChanged
+                ? $"Watcher: machine {machineId} changed\n  was {signature}\n  now {now}"
+                : $"Watcher: candidate snapshot changed for machine {machineId}");
             signature = now;
             OptimizerPanel.MachineChanged();
         }

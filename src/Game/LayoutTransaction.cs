@@ -54,7 +54,23 @@ namespace ModePuzzle.Game
             fixedIds = new HashSet<int>(config.Fixed.Select(p => int.Parse(p.Item.Id.Substring(1))));
         }
 
-        public bool Unchanged() => scene == EmporiumEntry.Instance && machine.parentInventory == machineParent && signature == LiveReader.Signature(baseline.UniqueId) && records.Values.All(r => r.Unchanged());
+        public bool Unchanged() => ChangeReason() == null;
+
+        /// <summary>Diagnostics: what differs from the snapshot, or null when nothing does.</summary>
+        public string ChangeReason()
+        {
+            if (scene != EmporiumEntry.Instance) return "scene";
+            if (machine.parentInventory != machineParent) return "machine moved";
+            var now = LiveReader.Signature(baseline.UniqueId);
+            if (signature != now) return $"machine signature\n  was {signature}\n  now {now}";
+            foreach (var r in records.Values)
+            {
+                if (r.Item.parentInventory != r.Parent) return $"module {r.Item.uniqueId} changed parent";
+                var sig = LiveReader.ModuleSignature(r.Item);
+                if (sig != r.Signature) return $"module {r.Item.uniqueId}\n  was {r.Signature}\n  now {sig}";
+            }
+            return null;
+        }
 
         public MachineInfo Preview(SearchResult result)
         {

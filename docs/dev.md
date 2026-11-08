@@ -10,7 +10,7 @@
 
 ```
 python build.py              # 编译并整理到 dist/ModePuzzle/
-python build.py --install    # 另外复制到游戏的 Mods/ModePuzzle/（写入游戏目录，由玩家自己执行）
+python build.py --install    # 另外复制到游戏的 Mods/ModePuzzle/；游戏运行中会拒绝安装
 python tools/icon_preview.py # 在游戏外生成物品贴图预览 build/icon_preview.png（需要 UnityPy、Pillow）
 ```
 

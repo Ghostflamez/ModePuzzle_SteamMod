@@ -103,7 +103,18 @@ def stage():
                 shutil.copy2(os.path.join(loc_src, name), os.path.join(loc_out, alias))
 
 
+def game_running():
+    try:
+        out = subprocess.run(['tasklist', '/FI', f'IMAGENAME eq {GAME_EXE}', '/NH'], capture_output=True, text=True,
+                             encoding='utf-8', errors='replace').stdout
+    except OSError:
+        return False
+    return GAME_EXE.lower() in out.lower()
+
+
 def install(game):
+    if game_running():
+        sys.exit('The game is running: close it, then install again (its loaded mod files must not change underneath it).')
     target = os.path.join(game, 'Mods', 'ModePuzzle')
     if os.path.exists(target):
         shutil.rmtree(target)

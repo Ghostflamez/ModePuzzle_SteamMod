@@ -9,3 +9,11 @@ panel_version,版本 {0}
 debug_spawn,生成模组优化器（柜台）
 cfg_dev_spawn,开发测试：读档后在柜台放一台模组优化器
 cfg_dev_spawn_tip,仅用于测试。每次读档都会生成一台。
+debug_smuggler,生成可疑的走私犯（下一位顾客）
+smuggler_name,可疑的走私犯
+smuggler_line_1,"嘘——老板，借一步说话。我手上有台好东西，治安部的人可不想让它流到外面。"
+smuggler_line_2,"能把机器里的模组排得明明白白。价钱嘛，比博士那儿贵点，但我从不多问。"
+cfg_dev_smuggler,开发测试：可疑的走私犯每天必来
+cfg_dev_smuggler_tip,仅用于测试。忽略天数、冷却和是否已拥有。
+cfg_dev_crate,开发测试：工程铸造厂物资箱和治安部物证柜必出模组优化器
+cfg_dev_crate_tip,仅用于测试。只影响打开设置之后新生成的箱子。

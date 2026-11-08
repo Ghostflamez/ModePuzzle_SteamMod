@@ -9,3 +9,11 @@ panel_version,Version {0}
 debug_spawn,Spawn Module Optimizer (counter)
 cfg_dev_spawn,Dev test: put a Module Optimizer on the counter after loading
 cfg_dev_spawn_tip,For testing only. Spawns one on every load.
+debug_smuggler,Spawn Suspicious Smuggler (next customer)
+smuggler_name,Suspicious Smuggler
+smuggler_line_1,"Psst, boss. A word? I've got a nice piece of kit here that Security would rather keep off the street."
+smuggler_line_2,"Sorts the modules in any machine just right. Costs a bit more than the doctor's, but I don't ask questions."
+cfg_dev_smuggler,Dev test: the Suspicious Smuggler comes every day
+cfg_dev_smuggler_tip,For testing only. Ignores the day, cooldown and whether you already own one.
+cfg_dev_crate,Dev test: engineering and evidence crates always contain a Module Optimizer
+cfg_dev_crate_tip,For testing only. Applies to crates generated after you turn it on.

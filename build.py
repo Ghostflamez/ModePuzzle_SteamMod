@@ -79,7 +79,7 @@ def game_dir():
 def compile_dll(data, managed):
     dotnet = os.path.join(data, 'NetCoreRuntime', 'dotnet.exe')
     csc = os.path.join(data, 'DotNetSdkRoslyn', 'csc.dll')
-    sources = sorted(os.path.join(ROOT, 'src', f) for f in os.listdir(os.path.join(ROOT, 'src')) if f.endswith('.cs'))
+    sources = sorted(os.path.join(d, f) for d, _, files in os.walk(os.path.join(ROOT, 'src')) for f in files if f.endswith('.cs'))
     refs = [f'-r:{os.path.join(managed, r)}' for r in REFERENCES]
     cmd = [dotnet, csc, '-nologo', '-noconfig', '-nostdlib', '-target:library', '-optimize+', '-deterministic',
            '-langversion:9.0', '-warnaserror+', f'-out:{os.path.join(OUT, DLL)}', *refs, *sources]

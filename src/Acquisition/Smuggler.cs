@@ -40,6 +40,7 @@ namespace ModePuzzle.Acquisition
             client.mainDialogue.SetText(client.displayName, Loc.T("smuggler_line_1"));
             client.mainDialogue.NextDialogue()
                 .SetText(client.displayName, Loc.T("smuggler_line_2"))
+                .NextDialogue().SetText(client.displayName, Loc.T("smuggler_line_3"))
                 .SetEndAction(() => Ownership.OfferStolen(Tuning.SmugglerHeatMin, Tuning.SmugglerHeatMax));
             client.onItemAddedToWeighted = item =>
             {

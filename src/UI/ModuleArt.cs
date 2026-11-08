@@ -116,6 +116,9 @@ namespace ModePuzzle.UI
                     Blit(dst, W, H, art, p);
                 else
                     FillCells(dst, W, H, p, art?.Card ?? new Color(0.77f, 0.77f, 0.69f));
+                // Effect badges on top, upright whatever the module's rotation. As in the external tool's bay
+                // view, nodes carry no badge (their 辅助节点 effect is implied).
+                if (!p.Module.IsNode) TraitIcons.Stamp(dst, W, H, p);
             }
             return Pixels.ToSprite(dst, W, H, "modepuzzle_bay");
         }

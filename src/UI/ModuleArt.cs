@@ -25,9 +25,6 @@ namespace ModePuzzle.UI
         }
 
         static readonly Dictionary<string, Art> cache = new Dictionary<string, Art>();
-        static Px[] cellPixels;
-        static bool cellRead;
-
         static string Key(ModuleInfo m) => (m.SpriteFromMod ? "mod:" : "") + m.SpriteAtlas + "/" + m.SpriteName;
 
         static Art Get(ModuleInfo m)
@@ -77,21 +74,8 @@ namespace ModePuzzle.UI
             return new Color32((byte)(best >> 16), (byte)(best >> 8), (byte)best, 255);
         }
 
-        static Px[] Cell()
-        {
-            if (cellRead) return cellPixels;
-            cellRead = true;
-            try
-            {
-                var s = RenderHandler.TryLoadFromAtlas("Window/machinery", "cell");
-                if (s != null && (int)s.textureRect.width == CellPixels) cellPixels = Pixels.Read(s, out _, out _);
-            }
-            catch (Exception) { cellPixels = null; }
-            return cellPixels;
-        }
-
         /// <summary>
-        /// The bay as one image, 16 px per cell: the game's cell sprite under usable cells, each installed module's
+        /// The bay as one image, 16 px per cell: opaque background, inset usable cells, each installed module's
         /// sprite transformed like GridShape.ForwardTransform (flip, quarter turns, offset) at pixel scale.
         /// Modules without a readable sprite are filled with their card colour or a neutral tone.
         /// </summary>
@@ -99,16 +83,17 @@ namespace ModePuzzle.UI
         {
             int W = m.Width * CellPixels, H = m.Height * CellPixels;
             var dst = new Px[W * H];
-            var cell = Cell();
+            for (int i = 0; i < dst.Length; i++) dst[i] = PanelStyle.BayBackground;
             for (int cy = 0; cy < m.Height; cy++)
                 for (int cx = 0; cx < m.Width; cx++)
                 {
                     if (!m.IsUsable(cx, cy)) continue;
-                    for (int y = 0; y < CellPixels; y++)
-                        for (int x = 0; x < CellPixels; x++)
-                            dst[(cy * CellPixels + y) * W + cx * CellPixels + x] = cell != null ? cell[y * CellPixels + x] : new Px(32, 30, 36, 204);
+                    for (int y = PanelStyle.CellInset; y < CellPixels - PanelStyle.CellInset; y++)
+                        for (int x = PanelStyle.CellInset; x < CellPixels - PanelStyle.CellInset; x++)
+                            dst[(cy * CellPixels + y) * W + cx * CellPixels + x] = PanelStyle.BayCell;
                 }
 
+            int number = 0;
             foreach (var p in m.Installed)
             {
                 var art = Get(p.Module);
@@ -119,8 +104,14 @@ namespace ModePuzzle.UI
                 // Effect badges on top, upright whatever the module's rotation. As in the external tool's bay
                 // view, nodes carry no badge (their 辅助节点 effect is implied).
                 if (!p.Module.IsNode) TraitIcons.Stamp(dst, W, H, p);
+                BayNumbers.Stamp(dst, W, H, p, ++number);
             }
-            return Pixels.ToSprite(dst, W, H, "modepuzzle_bay");
+            int framedW = W + 2 * PanelStyle.Frame, framedH = H + 2 * PanelStyle.Frame;
+            var framed = new Px[framedW * framedH];
+            for (int i = 0; i < framed.Length; i++) framed[i] = PanelStyle.BayFrame;
+            for (int y = 0; y < H; y++)
+                Array.Copy(dst, y * W, framed, (y + PanelStyle.Frame) * framedW + PanelStyle.Frame, W);
+            return Pixels.ToSprite(framed, framedW, framedH, "modepuzzle_bay");
         }
 
         static void Blit(Px[] dst, int W, int H, Art art, PlacedModule p)

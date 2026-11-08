@@ -146,3 +146,7 @@ machine_unlock_warning,"Once unlocked, optimising other machines may borrow the 
 machine_unlock_confirm,Unlock
 machine_unlock_cancel,Cancel
 tab_borrowed,Modules in unlocked machines ({0})
+opt_exclude_degrading,Exclude all Degrading
+opt_exclude_overvolted,Exclude all fragile
+opt_exclude_degrading_hint,Modules with Degrading take no part, installed ones are taken out too. Modules locked as Keep or Fixed stay.
+opt_exclude_overvolted_hint,Modules with Overvolted (may break for good when used) take no part, installed ones are taken out too. Modules locked as Keep or Fixed stay.

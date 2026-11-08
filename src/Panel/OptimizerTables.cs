@@ -120,6 +120,14 @@ namespace ModePuzzle
             int expected = bayShows == BayShows.Result && result?.Feasible == true ? result.Totals[detailAxis] : evaluation.Total[detailAxis];
             if (totals[4] != expected) ModePuzzleMod.Log?.Warning($"Detail total assertion failed: axis={detailAxis}, rows={totals[4]}, dashboard={expected}");
         }
+        /// <summary>A button that stays on: bracketed and highlighted while on, like a selected option.</summary>
+        static void ExcludeButton(CustomUIBuilder b, string label, string hint, bool on, Action<bool> set)
+        {
+            b.AddButton(on ? $"[ {label} ]" : label, () => { set(!on); Invalidate(); Refresh(); });
+            b.Last.SetInteractable(!Busy);
+            if (on && !Busy) b.Last.SetTextColor(PanelStyle.Selected);
+            b.Last.SetTooltip(hint);
+        }
         static void ChoiceSetting(CustomUIBuilder b, string label, IList<string> labels, int selected, Action<int> set, float width)
         {
             Row(b, width); Label(b, label, TextWidth(label)); Choice.Buttons(b, labels, selected, set, !Busy); EndRow(b);
@@ -148,7 +156,13 @@ namespace ModePuzzle
             string only = Loc.T("opt_only_installed");
             float lockWidth = Mathf.Max(TextWidth(Loc.T("machine_lock"), true), TextWidth(Loc.T("machine_unlock"), true));
             float toggleWidth = Mathf.Min(width - lockWidth - PanelStyle.SettingsGap, TextWidth(only) + PanelStyle.ToggleBox);
+            string degrading = Loc.T("opt_exclude_degrading"), overvolted = Loc.T("opt_exclude_overvolted");
+            float excludeWidth = TextWidth("[ " + degrading + " ]", true) + OptimizerTuning.RowGap + TextWidth("[ " + overvolted + " ]", true);
+            bool oneRow = excludeWidth + toggleWidth + lockWidth + 2 * PanelStyle.SettingsGap <= width;
             Row(b, width, PanelStyle.SettingsGap);
+            ExcludeButton(b, degrading, Loc.T("opt_exclude_degrading_hint"), excludeDegrading, v => excludeDegrading = v);
+            ExcludeButton(b, overvolted, Loc.T("opt_exclude_overvolted_hint"), excludeOvervolted, v => excludeOvervolted = v);
+            if (!oneRow) { EndRow(b); Row(b, width, PanelStyle.SettingsGap); }
             b.AddToggle(only, onlyInstalled, v => { onlyInstalled = v; Invalidate(); Refresh(); });
             b.Last.SetFixedWidth(toggleWidth); b.Last.SetInteractable(!Busy);
             if (b.Last.text != null) { b.Last.text.fontSize = PanelStyle.BodyFont; b.Last.text.enableAutoSizing = false; }

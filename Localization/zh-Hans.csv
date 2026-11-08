@@ -145,3 +145,7 @@ machine_unlock_warning,"解锁后，优化其他机器时可以借用「{0}」�
 machine_unlock_confirm,解锁
 machine_unlock_cancel,取消
 tab_borrowed,已解锁机器中的模组（{0}）
+opt_exclude_degrading,排除所有退化模组
+opt_exclude_overvolted,排除所有易损模组
+opt_exclude_degrading_hint,带「退化」词条的模组都不参与优化，已插入本机的也会被移出。锁成「保留」或「固定」的除外。
+opt_exclude_overvolted_hint,带「过载」词条（使用时可能永久损坏）的模组都不参与优化，已插入本机的也会被移出。锁成「保留」或「固定」的除外。

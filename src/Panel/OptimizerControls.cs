@@ -18,6 +18,20 @@ namespace ModePuzzle
         static SearchResult result;
         static MachineInfo original;
         static bool rebuilding, invalid, onlyInstalled, completionShown;
+        /// <summary>Leave every 退化 / 过载 (易损) module out of the search, installed ones included.</summary>
+        static bool excludeDegrading, excludeOvervolted;
+        const string DegradingEffect = "MODULE_EFFECT_DEGRADING", OvervoltedEffect = "MODULE_EFFECT_OVERVOLTED";
+
+        /// <summary>
+        /// Excluded by the two buttons. 保留 / 固定 modules and stuck ones stay: they must be used, as in the web tool,
+        /// where required modules are never excluded automatically.
+        /// </summary>
+        static bool Excluded(ModuleInfo m)
+        {
+            if (m.Stuck || m.Effects == null) return false;
+            if (locks.TryGetValue(m.UniqueId, out var kind) && kind != EngineBridge.LockKind.None) return false;
+            return excludeDegrading && m.Effects.Contains(DegradingEffect) || excludeOvervolted && m.Effects.Contains(OvervoltedEffect);
+        }
         static int resultAxis = Axis.Performance;
         static int target, timeIndex = OptimizerTuning.DefaultTimeIndex, primary = Axis.Performance, secondary = -1;
         static readonly string[] minimum = { "", "", "" }, maximum = { "", "", "" };
@@ -142,7 +156,10 @@ namespace ModePuzzle
                 // Capture at click time, not the potentially stale model used to draw the controls.
                 var snap=LiveReader.Read(); var machine=snap.Machines.Single(m => m.UniqueId == selectedMachineId);
                 var free=onlyInstalled ? new List<ModuleInfo>() : snap.Free.Where(machine.CanHold).Concat(Borrowable(snap,machine)).ToList();
+                free=free.Where(m => !Excluded(m)).ToList();
                 var config=EngineBridge.Config(machine,free,locks);
+                var dropped=new HashSet<string>(machine.Installed.Select(p => p.Module).Where(Excluded).Select(m => "u"+m.UniqueId));
+                config.Items.RemoveAll(i => dropped.Contains(i.Id));
                 if (target == 3)
                 {
                     config.Custom=new CustomTarget { Primary=primary, Secondary=secondary };

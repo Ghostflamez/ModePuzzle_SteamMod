@@ -52,6 +52,10 @@ namespace ModePuzzle
                     if (m == null) return "no machine";
                     ToggleLock(m); return "ok";
                 }
+                case "exclude":
+                    if (arg.StartsWith("d")) excludeDegrading = !excludeDegrading;
+                    else if (arg.StartsWith("o")) excludeOvervolted = !excludeOvervolted;
+                    Invalidate(); Refresh(); return $"ok degrading={excludeDegrading} overvolted={excludeOvervolted}";
                 case "tab":
                     tab = arg == "details" ? Tab.Details : arg == "free" ? Tab.Free : Tab.Modules;
                     Refresh(); return "ok";

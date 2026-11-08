@@ -158,9 +158,6 @@ namespace ModePuzzle
             b.AddButton(Loc.T("opt_preview"),() => { view=View.Result; Refresh(); }); b.Last.SetInteractable(result?.Feasible == true);
             b.End().BeginRow(OptimizerTuning.RowGap);
             b.AddButton(Loc.T("opt_apply"),ApplyResult); applyElement=b.Last; b.Last.SetInteractable(!Busy && !invalid && result?.Feasible == true && transaction != null);
-            if (result != null)
-                ModePuzzleMod.Log?.Log($"Panel state: busy={Busy} invalid={invalid} feasible={result.Feasible} phase={result.Phase} " +
-                    $"transaction={transaction != null} canRestore={RestoreAvailable} message={message}");
             b.AddButton(Loc.T("opt_restore"),RestorePrevious); b.Last.SetInteractable(RestoreAvailable);
             b.End();
             b.AddLabel(Status()); statusElement=b.Last; b.Last.SetFixedWidth(width);
@@ -210,12 +207,15 @@ namespace ModePuzzle
             if (Busy || invalid || result?.Feasible != true || transaction == null) return;
             message=transaction.Apply(result);
             if (transaction.CanRestore) previous=transaction;
+            ModePuzzleMod.Log?.Log($"Apply on machine {selectedMachineId}: {message}");
             invalid=true; DiscardResult(); Refresh();
         }
         static void RestorePrevious()
         {
             if (!RestoreAvailable) { message = Loc.T("opt_restore_unavailable"); Refresh(); return; }
-            message=previous.Restore(); invalid=true; DiscardResult(); Refresh();
+            message=previous.Restore(); invalid=true; DiscardResult();
+            ModePuzzleMod.Log?.Log($"Restore on machine {selectedMachineId}: {message}");
+            Refresh();
         }
         static string Values(int[] v) => string.Join(" / ",v.Select(GameText.ColoredValue));
         static void ResultView(CustomUIBuilder b,float width,float height)

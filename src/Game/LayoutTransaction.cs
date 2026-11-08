@@ -74,12 +74,12 @@ namespace ModePuzzle.Game
             if (scene != EmporiumEntry.Instance) return "scene";
             if (machine.parentInventory != machineParent) return "machine moved";
             var now = LiveReader.Signature(baseline.UniqueId);
-            if (signature != now) return $"machine signature\n  was {signature}\n  now {now}";
+            if (signature != now) return "machine bay";
             foreach (var r in records.Values)
             {
                 if (r.Item.parentInventory != r.Parent) return $"module {r.Item.uniqueId} changed parent";
                 var sig = LiveReader.ModuleSignature(r.Item);
-                if (sig != r.Signature) return $"module {r.Item.uniqueId}\n  was {r.Signature}\n  now {sig}";
+                if (sig != r.Signature) return $"module {r.Item.uniqueId}";
             }
             return null;
         }

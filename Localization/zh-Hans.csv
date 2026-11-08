@@ -64,8 +64,8 @@ opt_only_installed,只使用本机器已安装的模块
 opt_primary,主目标
 opt_secondary,次目标
 opt_none,无
-opt_min,下限（不限）
-opt_max,上限（不限）
+opt_min,下限
+opt_max,上限
 opt_start,开始 / 重新搜索
 opt_stop,停止
 opt_preview,查看预览
@@ -112,3 +112,10 @@ opt_no_changes,布局无需变动。
 cfg_dev_apply_failure,开发测试：应用首次放入后模拟失败
 cfg_dev_apply_failure_tip,仅在测试存档使用。应用会在首次放入后抛错并尝试恢复原布局；恢复按钮不受影响。测试后关闭。
 opt_test_failure,开发测试主动触发的放入失败。
+cfg_dev_full_storage,开发测试：每天开门时送一个装满随机模组和节点的超科技储藏区
+cfg_dev_full_storage_tip,仅用于测试长时间搜索。放不下超科技储藏区时改送大型储藏区；装到放不下为止。
+opt_time_limit,搜索时长
+opt_unbounded,不限
+opt_clear,清除
+panel_prev_machine,上一台
+panel_next_machine,下一台

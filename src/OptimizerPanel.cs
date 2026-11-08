@@ -110,7 +110,9 @@ namespace ModePuzzle
 
             b.BeginRow(8f, TextAnchor.MiddleLeft)
                 .AddLabel(Loc.T("panel_machine"))
-                .AddDropdown(snap.Machines.Select(m => m.Name).ToList(), index, i => { Invalidate(); selectedMachineId = snap.Machines[i].UniqueId; Refresh(); })
+                .AddButton(Loc.T("panel_prev_machine"), () => SelectMachine(snap, index - 1))
+                .AddLabel($"{machine.Name}  ({index + 1}/{snap.Machines.Count})")
+                .AddButton(Loc.T("panel_next_machine"), () => SelectMachine(snap, index + 1))
                 .AddButton(Loc.T("panel_refresh"), Refresh)
                 .End();
             b.AddLabel(Summary(machine));
@@ -139,6 +141,16 @@ namespace ModePuzzle
             b.End();
             Finish(b, position);
             PanelWatcher.Watch(machine.UniqueId);
+        }
+
+        /// <summary>Previous / next machine, wrapping around; re-reads everything.</summary>
+        static void SelectMachine(Snapshot snap, int index)
+        {
+            int count = snap.Machines.Count;
+            if (count == 0) return;
+            Invalidate();
+            selectedMachineId = snap.Machines[((index % count) + count) % count].UniqueId;
+            Refresh();
         }
 
         static void ViewButton(CustomUIBuilder b, View which, string text)
@@ -188,9 +200,11 @@ namespace ModePuzzle
                 var module = machine.Installed[i].Module;
                 ModuleRow(b, module, $"{i + 1}. ", rightW);
                 locks.TryGetValue(module.UniqueId, out var kind);
-                b.AddDropdown(new List<string> { Loc.T("opt_lock_none"), Loc.T("opt_lock_required"), Loc.T("opt_lock_fixed") },
-                    module.Stuck ? 2 : (int)kind, value => { locks[module.UniqueId] = (EngineBridge.LockKind)value; Invalidate(); Refresh(); });
-                b.Last.SetInteractable(!module.Stuck && session?.Running != true);
+                b.BeginRow(OptimizerTuning.RowGap, TextAnchor.MiddleLeft);
+                Choice.Buttons(b, new List<string> { Loc.T("opt_lock_none"), Loc.T("opt_lock_required"), Loc.T("opt_lock_fixed") },
+                    module.Stuck ? 2 : (int)kind, value => { locks[module.UniqueId] = (EngineBridge.LockKind)value; Invalidate(); Refresh(); },
+                    !module.Stuck && session?.Running != true);
+                b.End();
             }
             b.End().End();
             b.End();

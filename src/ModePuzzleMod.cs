@@ -22,6 +22,10 @@ namespace ModePuzzle
         static ConfigEntry<string> devMachinesPerDay;
         static ConfigEntry<string> devBayKitsPerDay;
         static ConfigEntry<string> devModulesPerDay;
+        static ConfigEntry<bool> devFullStorage;
+        const string FullStorageId = "hypertech_bay", FullStorageFallbackId = "storage_bay_large";
+        /// <summary>Stop filling after this many modules in a row did not fit.</summary>
+        const int FullStorageMisses = 12, FullStorageMax = 400;
         static readonly string[] SmallCounts = { "0", "1", "2", "3", "4", "5", "6", "8", "10" };
         static readonly string[] ModuleCounts = { "0", "1", "2", "3", "5", "8", "10", "15", "20", "30" };
         const string BayKitId = "module_bay_expansion_kit";
@@ -64,6 +68,8 @@ namespace ModePuzzle
                 () => Loc.T("cfg_dev_machine"), SmallCounts, () => Loc.T("cfg_dev_machine_tip"));
             devBayKitsPerDay = config.Define("dev_bay_kits_per_day", "0", "dev",
                 () => Loc.T("cfg_dev_bay_kit"), SmallCounts, () => Loc.T("cfg_dev_open_tip"));
+            devFullStorage = config.Define("dev_full_storage", false, "dev",
+                () => Loc.T("cfg_dev_full_storage"), () => Loc.T("cfg_dev_full_storage_tip"));
             devModulesPerDay = config.Define("dev_modules_per_day", "0", "dev",
                 () => Loc.T("cfg_dev_modules"), ModuleCounts, () => Loc.T("cfg_dev_open_tip"));
             devCratesOnLoad = config.Define("dev_crates_on_load", false, "dev",
@@ -133,6 +139,7 @@ namespace ModePuzzle
             var machines = MachineTable.KnownMachines.ToList();
             for (int i = 0; i < Count(devMachinesPerDay); i++) DevGive(machines[RNG.GetRandomInt(0, machines.Count - 1)]);
             for (int i = 0; i < Count(devBayKitsPerDay); i++) DevGive(BayKitId);
+            if (devFullStorage?.Value == true) DevFullStorage();
             for (int i = 0; i < Count(devModulesPerDay); i++) DevGive(RandomModuleIds[RNG.GetRandomInt(0, RandomModuleIds.Length - 1)]);
         }
 
@@ -140,14 +147,41 @@ namespace ModePuzzle
 
 
         /// <summary>Spawns an item for testing: counter, else back counter, else inventory.</summary>
-        static void DevGive(string id)
+        static GameItem DevGive(string id)
         {
             var item = ModHelper.SpawnItem(id);
-            if (item == null) { Log.Warning("Dev: could not spawn " + id); return; }
+            if (item == null) { Log.Warning("Dev: could not spawn " + id); return null; }
+            GeneralHelper.SetItemOwned(item, true);
             ModHelper.MoveItemToFrontCounter(item);
             if (item.parentInventory == null) ModHelper.MoveItemToBackCounter(item);
             if (item.parentInventory == null) ModHelper.MoveItemToInventory(item);
             Log.Log($"Dev: spawned {id} → {item.identifier}, placed={item.parentInventory != null}");
+            return item;
+        }
+
+        /// <summary>
+        /// Dev test: a 超科技储藏区 (or a large storage bay if that cannot be placed) filled with random modules and
+        /// nodes, for long searches with many candidates. Fills until several modules in a row no longer fit.
+        /// </summary>
+        static void DevFullStorage()
+        {
+            var storage = DevGive(FullStorageId);
+            if (storage == null || storage.parentInventory == null)
+            {
+                if (storage != null) storage.Destroy();
+                storage = DevGive(FullStorageFallbackId);
+            }
+            if (storage == null || storage.parentInventory == null) { Log.Warning("Dev storage: nowhere to put it"); return; }
+            int added = 0, misses = 0;
+            while (misses < FullStorageMisses && added < FullStorageMax)
+            {
+                var module = ModHelper.SpawnItem(RandomModuleIds[RNG.GetRandomInt(0, RandomModuleIds.Length - 1)]);
+                if (module == null) { misses++; continue; }
+                GeneralHelper.SetItemOwned(module, true);
+                if (GraphUtils.TryAcceptAll(storage, module) > 0) { module.Destroy(); misses++; }
+                else { added++; misses = 0; }
+            }
+            Log.Log($"Dev storage {storage.identifier}: {added} modules / nodes added");
         }
 
         /// <summary>Diagnostics: where every owned optimizer is.</summary>

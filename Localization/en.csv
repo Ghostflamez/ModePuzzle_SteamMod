@@ -64,8 +64,8 @@ opt_only_installed,Use only modules installed in this machine
 opt_primary,Primary
 opt_secondary,Secondary
 opt_none,None
-opt_min,Min (any)
-opt_max,Max (any)
+opt_min,min
+opt_max,max
 opt_start,Start / restart
 opt_stop,Stop
 opt_preview,Preview
@@ -113,3 +113,10 @@ opt_no_changes,Layout already matches; no changes needed.
 cfg_dev_apply_failure,Dev test: fail apply after the first insertion
 cfg_dev_apply_failure_tip,Test saves only. Apply throws after its first insertion and attempts rollback; Restore is unaffected. Disable after testing.
 opt_test_failure,Insertion failure deliberately triggered by the dev test setting.
+cfg_dev_full_storage,Dev test: a Hypertech storage bay full of random modules and nodes every time you open the shop
+cfg_dev_full_storage_tip,"For testing long searches. Falls back to a large storage bay if the Hypertech one cannot be placed; filled until nothing more fits."
+opt_time_limit,Time limit
+opt_unbounded,none
+opt_clear,Clear
+panel_prev_machine,Previous
+panel_next_machine,Next

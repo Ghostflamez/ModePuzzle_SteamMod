@@ -94,25 +94,36 @@ namespace ModePuzzle
         static void Controls(CustomUIBuilder b, float width)
         {
             b.BeginRow(OptimizerTuning.RowGap,TextAnchor.MiddleLeft).AddLabel(Loc.T("opt_target"));
-            b.AddDropdown(new List<string> { GameText.Performance, GameText.Efficiency, GameText.Quality, Loc.T("opt_custom") },target,
-                i => { target=i; Invalidate(); Refresh(); }); b.Last.SetInteractable(!Busy);
-            b.AddDropdown(OptimizerTuning.TimeLimitsSeconds.Select(s => Loc.T("opt_seconds",s)).ToList(),timeIndex,i => timeIndex=i);
-            b.Last.SetInteractable(!Busy); b.End();
+            Choice.Buttons(b, new List<string> { GameText.Performance, GameText.Efficiency, GameText.Quality, Loc.T("opt_custom") }, target,
+                i => { target=i; Invalidate(); Refresh(); }, !Busy);
+            b.End();
+            b.BeginRow(OptimizerTuning.RowGap,TextAnchor.MiddleLeft).AddLabel(Loc.T("opt_time_limit"));
+            Choice.Buttons(b, OptimizerTuning.TimeLimitsSeconds.Select(s => Loc.T("opt_seconds",s)).ToList(), timeIndex,
+                i => { timeIndex=i; Refresh(); }, !Busy);
+            b.End();
             b.AddToggle(Loc.T("opt_only_installed"),onlyInstalled,v => { onlyInstalled=v; Invalidate(); Refresh(); }); b.Last.SetInteractable(!Busy);
             if (target == 3)
             {
-                b.BeginRow(OptimizerTuning.RowGap).AddLabel(Loc.T("opt_primary"));
-                b.AddDropdown(Axes(),primary,i => { primary=i; Invalidate(); }); b.Last.SetInteractable(!Busy);
-                b.AddLabel(Loc.T("opt_secondary")); var options = Axes(); options.Insert(0,Loc.T("opt_none"));
-                b.AddDropdown(options,secondary+1,i => { secondary=i-1; Invalidate(); }); b.Last.SetInteractable(!Busy); b.End();
+                b.BeginRow(OptimizerTuning.RowGap,TextAnchor.MiddleLeft).AddLabel(Loc.T("opt_primary"));
+                Choice.Buttons(b, Axes(), primary, i => { primary=i; if (secondary==i) secondary=-1; Invalidate(); Refresh(); }, !Busy);
+                b.End();
+                b.BeginRow(OptimizerTuning.RowGap,TextAnchor.MiddleLeft).AddLabel(Loc.T("opt_secondary"));
+                var options = Axes(); options.Insert(0,Loc.T("opt_none"));
+                Choice.Buttons(b, options, secondary+1, i => { if (i-1 != primary) { secondary=i-1; Invalidate(); Refresh(); } }, !Busy);
+                b.End();
                 for (int k=0;k<Axis.Count;k++)
                 {
                     int axis=k;
-                    b.BeginRow(OptimizerTuning.RowGap).AddLabel(Axes()[k]); b.Last.SetFixedWidth(OptimizerTuning.ControlWidth);
-                    b.AddInput(Loc.T("opt_min"),minimum[k],v => { minimum[axis]=v; Invalidate(); });
-                    b.Last.SetFixedWidth(OptimizerTuning.RangeWidth).SetInteractable(!Busy);
-                    b.AddInput(Loc.T("opt_max"),maximum[k],v => { maximum[axis]=v; Invalidate(); });
-                    b.Last.SetFixedWidth(OptimizerTuning.RangeWidth).SetInteractable(!Busy); b.End();
+                    b.BeginRow(OptimizerTuning.RowGap,TextAnchor.MiddleLeft).AddLabel(Axes()[k] + " " + Loc.T("opt_min"));
+                    b.Last.SetFixedWidth(OptimizerTuning.ControlWidth);
+                    Choice.Stepper(b, minimum[k], OptimizerTuning.RangeStep, 0, v => { minimum[axis]=v; Invalidate(); Refresh(); },
+                        Loc.T("opt_unbounded"), Loc.T("opt_clear"), !Busy);
+                    b.End();
+                    b.BeginRow(OptimizerTuning.RowGap,TextAnchor.MiddleLeft).AddLabel(Axes()[k] + " " + Loc.T("opt_max"));
+                    b.Last.SetFixedWidth(OptimizerTuning.ControlWidth);
+                    Choice.Stepper(b, maximum[k], OptimizerTuning.RangeStep, 0, v => { maximum[axis]=v; Invalidate(); Refresh(); },
+                        Loc.T("opt_unbounded"), Loc.T("opt_clear"), !Busy);
+                    b.End();
                 }
             }
             b.BeginRow(OptimizerTuning.RowGap);

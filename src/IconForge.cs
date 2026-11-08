@@ -154,7 +154,7 @@ namespace ModePuzzle
 
         // A two-cell module in miniature, drawn upright (pins left, board, cap right) in local coordinates and
         // turned 90° clockwise onto the screen: pins on top, cap at the bottom, lying horizontally.
-        const int MiniW = 11, MiniH = 19;   // MiniW includes the two-pixel fingers; odd MiniH keeps it symmetric
+        const int MiniW = 11, MiniH = 18;   // MiniW includes the two-pixel fingers; 18 centres the board on the 26-pixel screen
 
         static void DrawMiniModule(Px[] dst, int w, Box screen, ChipPalette pal)
         {
@@ -173,10 +173,10 @@ namespace ModePuzzle
             var top = pal.Board.Length - 1;
             for (int y = 0; y < MiniH; y++)
             {
-                // Gold fingers, two pixels long, every other row; the gaps between them in the board's dark tone.
+                // Gold fingers, two pixels long, alternating with gaps in the board's dark tone (not mirror-symmetric).
                 if (y >= 2 && y <= MiniH - 3)
                 {
-                    var c = y % 2 == 0 ? pal.Pin[(y / 2) % pal.Pin.Length] : pal.Board[0];
+                    var c = (MiniH - 1 - y) % 2 == 0 ? pal.Pin[(y / 2) % pal.Pin.Length] : pal.Board[0];   // finger, gap, finger, ... from the left
                     Put(0, y, c); Put(1, y, c);
                 }
                 // Board, lit along the top and left and shaded along the right once turned.

@@ -17,7 +17,8 @@ namespace ModePuzzle.UI
         public const float PickerChrome = 72, PickerChromeHeight = 130, PickerMinWidth = 520, LockScale = 2, LockOutset = 2;
         public const float ConfirmWidth = 520, ConfirmHeight = 330;
         public const float BoundInput = 96, BoundArrow = 16, BoundHeight = 30;
-        public const int BoundDigits = 6;
+        public const int BoundDigits = 6, TabRadius = 5;
+        public const float TabPadding = 4;
         public const float DropArrowSpace = 14, DropArrowWidth = 14, DropArrowHeight = 8, DropArrowInset = 6, MenuPadding = 4, MenuGap = 2, DropPadding = 14;
         public const int PickerColumns = 4;
         public const float IconSlot = 28, IconSize = 24, NumberWidth = 28, StatWidth = 64, RowHeight = 28;
@@ -31,6 +32,7 @@ namespace ModePuzzle.UI
         public static readonly Px LockPlate = Px.Hex("1c1820"), LockedInk = Px.Hex("ffb0a0"), LockedBody = Px.Hex("d9483b"),
             UnlockedInk = Px.Hex("c8f5a8"), UnlockedBody = Px.Hex("5fb83a");
         public static readonly Color InputFill = new Color32(74, 65, 85, 255), InputEdge = new Color32(156, 150, 140, 255);
+        public static readonly Px TabFill = Px.Hex("3a3148"), TabEdge = Px.Hex("7a6c92");
         public static readonly Color ProgressText = new Color32(140, 205, 110, 255);
         public static readonly Px SpinnerInk = Px.Hex("e6c35c");
         public static readonly Px ArrowInk = Px.Hex("e8e0d0"), ArrowDark = Px.Hex("2b2523");

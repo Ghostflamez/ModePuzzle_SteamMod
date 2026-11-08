@@ -85,7 +85,7 @@ namespace ModePuzzle
                 .SetDraggable(true)
                 .SetCloseOnEscape(true)
                 .OnClose(OnClosed);
-            rowWidths.Clear(); measureText = null;
+            rowWidths.Clear(); measureText = null; ResetCustomBackdrop();
             statusElement = null; messageElement=null; applyElement=null;
             progressElement = null; elapsedElement = null;
             metricElements.Clear();
@@ -184,6 +184,7 @@ namespace ModePuzzle
                 scroll.content.anchoredPosition = offset;
                 scroll.StopMovement();
             }
+            PlaceCustomBackdrop();
         }
     }
 }

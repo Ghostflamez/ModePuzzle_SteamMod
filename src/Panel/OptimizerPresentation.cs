@@ -268,6 +268,7 @@ namespace ModePuzzle
             Caption(b, Loc.T("panel_accepts", string.Join(Loc.T("panel_list_sep"), machine.Accepts.Select(TypeName))), c[0]);
             b.End();
             Column(b, c[1]);
+            dataColumn = b.CurrentContainer;
             int axis = target == 3 ? primary : Targets[target];
             var before = EngineBridge.EvaluateCurrent(machine, new Rules()).Total;
             StatsTable(b, before, preview != null ? result.Totals : null, axis, c[1]);
@@ -281,7 +282,13 @@ namespace ModePuzzle
             float data = Mathf.Min(c[1], TextWidth(Loc.T("opt_target")) + gap +
                 targets.Select((t, i) => TextWidth(i == target ? $"[ {t} ]" : t, true)).Sum() + gap * (targets.Count - 1) + gap);
             lastDataWidth = data;
-            if (target == 3) CustomTarget(b, c[1]);
+            if (target == 3)
+            {
+                customButton = b.Last.Rect;   // the 自定义 button, last in the 目标 row
+                Column(b, c[1]); customBlock = b.CurrentContainer;
+                CustomTarget(b, c[1]);
+                b.End();
+            }
             SearchOptions(b, c[1]);
 
             // One action bar: 时长 drop-down, start / stop on the left, apply / restore on the right, each a fixed block.

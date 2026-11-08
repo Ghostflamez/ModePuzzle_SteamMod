@@ -7,7 +7,7 @@ namespace ModePuzzle.UI
         public const float PreferredWidth = 980, PreferredHeight = 680, MaxWidthShare = .5f, MaxHeightShare = .8f;
         public const float FrameMargin = 64, ChromeFallback = 96, RightSafety = 24;
         public const float MachineNameShare = .35f, StatusShare = .20f;
-        public const float BodyFont = 15, CaptionFont = 13, ButtonFont = 15, ButtonPadding = 18;
+        public const float BodyFont = 15, CaptionFont = 13, ButtonFont = 15, ButtonPadding = 28;
         public const float ColumnGap = 16, SettingsGap = 24, MetricRowMinimum = 420, ProgressLabelWidth = 90;
         public const float MinBayShare = .30f, MaxBayShare = .40f, MaxBayHeight = 220;
         public const int MaxBayScale = 2;

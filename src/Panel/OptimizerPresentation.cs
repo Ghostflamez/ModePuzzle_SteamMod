@@ -80,9 +80,8 @@ namespace ModePuzzle
                 var text = child.GetComponentInChildren<TMP_Text>();
                 if (text != null && child.GetComponent<Button>() != null)
                 {
-                    text.fontSize = PanelStyle.ButtonFont; text.enableAutoSizing = false;
-                    text.enableWordWrapping = true;
-                    if (fit) Fixed(child, text.preferredWidth + PanelStyle.ButtonPadding);
+                    float w = ButtonText(text);
+                    if (fit) Fixed(child, w + PanelStyle.ButtonPadding);
                 }
                 children.Add(child); natural.Add(Mathf.Max(0, LayoutUtility.GetPreferredWidth(child)));
             }
@@ -130,6 +129,14 @@ namespace ModePuzzle
         static void Button(CustomUIBuilder b, string text, float width, Action click, bool enabled = true)
         {
             b.AddButton(text, click); b.Last.SetFixedWidth(width); b.Last.SetInteractable(enabled);
+            if (b.Last.text != null) ButtonText(b.Last.text);
+        }
+        /// <summary>Button labels stay on one line; returns the label's natural width.</summary>
+        static float ButtonText(TMP_Text text)
+        {
+            text.fontSize = PanelStyle.ButtonFont; text.enableAutoSizing = false;
+            text.enableWordWrapping = false; text.overflowMode = TextOverflowModes.Overflow;
+            return Mathf.Ceil(text.GetPreferredValues(text.text, float.PositiveInfinity, float.PositiveInfinity).x);
         }
         static void MachineBar(CustomUIBuilder b, Snapshot snap, MachineInfo machine, int index, float width)
         {

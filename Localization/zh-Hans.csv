@@ -151,3 +151,7 @@ card_moved,位置已调整
 card_borrowed,来自「{0}」· 已解锁
 detail_self_hint,初始属性加上挂载、优质 / 劣质等自身加成，取整后的值。
 panel_show_more,再显示 {0} 件（还有 {1} 件）
+lock_none_hint,不锁：由优化器决定，可以移动位置、移出本机，也可以不用。
+lock_required_hint,保留：必须用到，一定留在本机，但位置和朝向可以调整。
+lock_fixed_hint,固定：原地不动，位置和朝向都保持现状，其他模组绕开它排布。
+lock_stuck_hint,这件模组需要模组提取器才能拆下，只能固定在原位。

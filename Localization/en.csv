@@ -152,3 +152,7 @@ card_moved,Moved
 card_borrowed,From {0} · unlocked
 detail_self_hint,Base stats with the module's own bonuses (mounts, premium / inferior and so on), rounded.
 panel_show_more,Show {0} more ({1} left)
+lock_none_hint,Free: the optimizer decides. It may move the module, take it out, or leave it unused.
+lock_required_hint,Keep: the module must be used and stays in this machine, but its position and rotation may change.
+lock_fixed_hint,Fixed: the module stays exactly where it is, same position and rotation; the others are placed around it.
+lock_stuck_hint,This module needs a module extractor to come out, so it stays fixed in place.

@@ -18,8 +18,11 @@ namespace ModePuzzle
         {
             Row(b, width);
             locks.TryGetValue(module.UniqueId, out var kind);
+            // Hover explains each choice; a stuck module can only stay where it is.
+            var tips = module.Stuck ? Enumerable.Repeat(Loc.T("lock_stuck_hint"), 3).ToList()
+                : new List<string> { Loc.T("lock_none_hint"), Loc.T("lock_required_hint"), Loc.T("lock_fixed_hint") };
             Choice.Buttons(b, LockLabels(), module.Stuck ? 2 : (int)kind,
-                value => { locks[module.UniqueId] = (EngineBridge.LockKind)value; Invalidate(); Refresh(); }, !module.Stuck && !Busy);
+                value => { locks[module.UniqueId] = (EngineBridge.LockKind)value; Invalidate(); Refresh(); }, !module.Stuck && !Busy, tips);
             EndRow(b);
         }
         static void Header(CustomUIBuilder b, float width, int[] columns, int numericEnd, params string[] labels)

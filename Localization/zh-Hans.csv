@@ -27,9 +27,6 @@ panel_machine,机器
 panel_refresh,刷新
 panel_no_machines,"没有找到带模组舱的机器。把机器放进店里或背包后点「刷新」。"
 panel_guessed,"未收录的机器：可用模组类型按通用模组和已安装模组推断。"
-panel_bay,模组舱：已用 {0} / {1} 格
-panel_installed,已安装模组（{0}）
-panel_free,可放入本机器的空闲模组：{0} 个（共 {1} 个空闲）
 panel_more,……还有 {0} 个
 panel_none,（无）
 panel_node,节点
@@ -45,3 +42,17 @@ cfg_dev_machine_tip,仅用于测试。每台优先放柜台，放不下时依次
 cfg_dev_bay_kit,开发测试：每天开门时送几个模组舱扩建套件（选 0 关闭）
 cfg_dev_modules,开发测试：每天开门时送几个随机模组/节点（选 0 关闭）
 cfg_dev_open_tip,仅用于测试。每个优先放柜台，放不下时依次尝试后柜台和背包；都放不下的会留在日志里。
+panel_summary,模组舱 {0}×{1}：已用 {2} / {3} 格　可装：{4}
+panel_bay_title,模组舱
+panel_installed,已安装模组（{0}）
+panel_free,能装进这台机器的空闲模组 {0} 个（共 {1} 个空闲）
+panel_totals,当前合计　{0} {1}　{2} {3}　{4} {5}
+tab_bay,模组舱
+tab_free,空闲模组（{0}）
+type_MODULE_TYPE_UNIVERSAL,通用模组
+type_MODULE_TYPE_HYDROPONIC,水培模组
+type_MODULE_TYPE_PRINTER,3D打印机模组
+type_MODULE_TYPE_DNA_MANIPULATOR,DNA编辑器模组
+type_MODULE_TYPE_EVAPORATOR,蒸发器模组
+type_MODULE_TYPE_FURNACE,熔炉模组
+type_MODULE_TYPE_ALARM,警报器模组

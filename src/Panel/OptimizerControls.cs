@@ -20,7 +20,7 @@ namespace ModePuzzle
         static bool rebuilding, invalid, onlyInstalled, completionShown;
         /// <summary>Leave every 退化 / 过载 (易损) module out of the search, installed ones included.</summary>
         static bool excludeDegrading, excludeOvervolted;
-        const string DegradingEffect = "MODULE_EFFECT_DEGRADING", OvervoltedEffect = "MODULE_EFFECT_OVERVOLTED";
+        const string DegradingEffect = "MODULE_EFFECT_DEGRADING", OvervoltedEffect = "MODULE_EFFECT_OVERVOLTED", LearningEffect = "MODULE_EFFECT_LEARNING_ALGORITHM";
 
         /// <summary>
         /// Excluded by the two buttons. 保留 / 固定 modules and stuck ones stay: they must be used, as in the web tool,

@@ -135,7 +135,6 @@ machine_unlocked_hint,本机已解锁：优化其他机器时可以借用本机�
 machine_unlock_warning,"解锁后，优化其他机器时可以借用「{0}」中的 {1} 件模组。\n\n如果在其他机器上应用的布局用到了这些模组，它们会从「{0}」拆下，装到那台机器上。\n\n之后可以随时重新锁定。"
 machine_unlock_confirm,解锁
 machine_unlock_cancel,取消
-tab_borrowed,已解锁机器中的模组（{0}）
 opt_exclude_degrading,排除所有退化模组
 opt_exclude_overvolted,排除所有易损模组
 opt_exclude_degrading_hint,带「退化」词条的模组都不参与优化，已插入本机的也会被移出。锁成「保留」或「固定」的除外。
@@ -158,3 +157,25 @@ lock_stuck_hint,这件模组卡住了，需要模组提取器才能取出，只�
 lock_stuck,卡住
 lock_broken,损坏
 lock_broken_hint,这件模组已损坏，没有属性，只能固定在原位，不参与优化。损坏模组可以用电子元件修复，报废模组只能用螺丝刀拆解。修好或取出后面板会自动更新。
+filter_search,搜索名称、词条、种类或借出机器（空格分隔多个词）
+filter_node,节点
+filter_kind_all,全部种类
+filter_trait_all,全部词条
+filter_trait_none,无词条
+filter_state_all,全部状态
+filter_state_risk,退化 / 过载
+filter_state_learning,自学习
+filter_state_borrowed,借自其他机器
+filter_state_used,本次布局已用
+filter_state_unused,本次布局未用
+sort_default,默认顺序
+sort_axis,按{0}排序
+filter_kind_hint,按模组种类筛选
+filter_trait_hint,按词条筛选
+filter_state_hint,按状态筛选
+sort_hint,按属性从高到低排序
+filter_count_all,共 {0} 件
+filter_count_some,显示 {0} / 共 {1} 件
+filter_clear,清除筛选
+filter_empty,没有符合筛选条件的模组。
+card_used,本次布局已用

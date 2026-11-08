@@ -89,7 +89,7 @@ namespace ModePuzzle
                 .SetDraggable(true)
                 .SetCloseOnEscape(true)
                 .OnClose(OnClosed);
-            rowWidths.Clear(); measureText = null; ResetCustomBackdrop();
+            rowWidths.Clear(); measureText = null; ResetCustomBackdrop(); ForgetDrops(false);
             statusElement = null; messageElement=null; applyElement=null;
             progressElement = null; elapsedElement = null;
             metricElements.Clear();

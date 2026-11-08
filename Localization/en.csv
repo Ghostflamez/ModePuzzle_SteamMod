@@ -136,7 +136,6 @@ machine_unlocked_hint,Unlocked: optimising other machines may borrow this machin
 machine_unlock_warning,"Once unlocked, optimising other machines may borrow the {1} modules in {0}.\n\nIf a layout applied to another machine uses them, they are taken out of {0} and installed in that machine.\n\nYou can lock it again at any time."
 machine_unlock_confirm,Unlock
 machine_unlock_cancel,Cancel
-tab_borrowed,Modules in unlocked machines ({0})
 opt_exclude_degrading,Exclude all Degrading
 opt_exclude_overvolted,Exclude all fragile
 opt_exclude_degrading_hint,Modules with Degrading take no part, installed ones are taken out too. Modules locked as Keep or Fixed stay.
@@ -159,3 +158,25 @@ lock_stuck_hint,This module is stuck: it needs a module extractor to come out, s
 lock_stuck,Stuck
 lock_broken,Broken
 lock_broken_hint,This module is broken: it has no stats, stays fixed in place and takes no part. A corrupt module can be repaired with electronics; a ruined one only scrapped with a screwdriver. The panel updates once it is repaired or out.
+filter_search,Search name, trait, kind or lending machine (words separated by spaces)
+filter_node,Nodes
+filter_kind_all,All kinds
+filter_trait_all,All traits
+filter_trait_none,No trait
+filter_state_all,Any state
+filter_state_risk,Degrading / Overvolted
+filter_state_learning,Learning
+filter_state_borrowed,Lent by other machines
+filter_state_used,Used by the result
+filter_state_unused,Not used by the result
+sort_default,Default order
+sort_axis,By {0}
+filter_kind_hint,Filter by kind
+filter_trait_hint,Filter by trait
+filter_state_hint,Filter by state
+sort_hint,Sort by a stat, highest first
+filter_count_all,{0} in all
+filter_count_some,Showing {0} of {1}
+filter_clear,Clear filters
+filter_empty,No module matches the filters.
+card_used,Used by the result

@@ -47,6 +47,7 @@ namespace ModePuzzle.UI
                 nextPoll = Time.unscaledTime + OptimizerTuning.PollSeconds;
                 if (!OptimizerPanel.IsOpen) { OptimizerPanel.WindowGone(); Stop(); return; }
                 OptimizerPanel.PollSearch();
+                OptimizerPanel.PollFilter();
             }
             if (Time.unscaledTime < next) return;
             next = Time.unscaledTime + IntervalSeconds;

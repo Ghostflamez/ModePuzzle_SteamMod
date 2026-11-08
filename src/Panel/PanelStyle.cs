@@ -19,7 +19,7 @@ namespace ModePuzzle.UI
         public const float BoundInput = 96, BoundArrow = 16, BoundHeight = 30;
         public const int BoundDigits = 6, TabRadius = 5;
         public const float TabPadding = 4;
-        public const float DropArrowSpace = 14, DropArrowWidth = 14, DropArrowHeight = 8, DropArrowInset = 6, MenuPadding = 4, MenuGap = 2, DropPadding = 14;
+        public const float DropArrowSpace = 14, DropArrowWidth = 14, DropArrowHeight = 8, DropArrowInset = 6, MenuPadding = 4, MenuGap = 2, DropPadding = 14, DropMenuMinWidth = 120, FilterDelay = .3f;
         public const int PickerColumns = 4;
         public const float IconSlot = 28, IconSize = 24, NumberWidth = 28, StatWidth = 64, RowHeight = 28;
         public const float NameShare = .22f, TraitShare = .18f;

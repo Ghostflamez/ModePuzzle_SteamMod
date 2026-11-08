@@ -95,6 +95,30 @@ namespace ModePuzzle
                     w.Center(); w.Show();
                     return $"input={(el.input != null)} root={el.root?.name} children={el.root?.transform.childCount}";
                 }
+                case "filter":
+                    // As if typed into the 空闲模组 search box.
+                    filterText = parts.Length > 1 ? parts[1].Trim() : ""; filterDue = 0; PollFilter();
+                    return "ok";
+                case "filterset":
+                {
+                    // filterset trait <effect id|none|all> / state <0-5> / sort <-1..2> / kind <type|node|all>
+                    var kv = (parts.Length > 1 ? parts[1] : "").Split(new[] { ' ' }, 2);
+                    string key = kv[0], value = kv.Length > 1 ? kv[1].Trim() : "";
+                    if (key == "trait") filterTrait = value == "all" ? "" : value;
+                    else if (key == "kind") filterKind = value == "all" ? "" : value;
+                    else if (key == "state" && int.TryParse(value, out int st)) filterState = (FreeState)st;
+                    else if (key == "sort" && int.TryParse(value, out int so)) sortAxis = so;
+                    else if (key == "clear") { ClearFilters(); return "ok"; }
+                    else return "usage: filterset trait|kind|state|sort|clear <value>";
+                    FiltersChanged();
+                    return $"ok kind={filterKind} trait={filterTrait} state={filterState} sort={sortAxis}";
+                }
+                case "dropopen":
+                    if (!int.TryParse(arg, out int d) || d < 0 || d >= drops.Count) return "usage: dropopen <0-" + (drops.Count - 1) + ">";
+                    OpenDrop(drops[d]); return "ok";
+                case "dropclose":
+                    foreach (var dd in drops) CloseDrop(dd);
+                    return "ok";
                 case "timemenu":
                     if (arg == "close") CloseTimeMenu(); else OpenTimeMenu();
                     return "ok";

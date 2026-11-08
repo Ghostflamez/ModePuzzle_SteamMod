@@ -28,33 +28,7 @@ namespace ModePuzzle
             Choice.Buttons(b, new List<string> { Loc.T("tab_modules", shown.Installed.Count), Loc.T("opt_details"), Loc.T("tab_free", fits.Count + borrowed.Count) },
                 (int)tab, i => SwitchTab((Tab)i));
             EndRow(b);
-            if (tab == Tab.Free)
-            {
-                var lenders = new Dictionary<int, string>();
-                foreach (var other in snap.Machines)
-                    foreach (var p in other.Installed) lenders[p.Module.UniqueId] = other.Name;
-                // Cards are costly to build (several ms each): show them a batch at a time.
-                var list = fits.Take(freeShown).ToList();
-                CardGrid(b, list, (m, i) => new CardInfo { Values = new[] { m.Efficiency, m.Quality, m.Performance } }, inner);
-                if (fits.Count > freeShown)
-                {
-                    Row(b, inner);
-                    b.AddButton(Loc.T("panel_show_more", Mathf.Min(PanelStyle.FreeBatch, fits.Count - freeShown), fits.Count - freeShown),
-                        () => { freeShown += PanelStyle.FreeBatch; SwitchTab(Tab.Free); });
-                    EndRow(b);
-                }
-                if (fits.Count == 0) Caption(b, Loc.T("panel_none"), inner);
-                if (borrowed.Count > 0)
-                {
-                    Label(b, Loc.T("tab_borrowed", borrowed.Count), inner);
-                    CardGrid(b, borrowed, (m, i) => new CardInfo
-                    {
-                        Values = new[] { m.Efficiency, m.Quality, m.Performance },
-                        Status = Loc.T("card_borrowed", lenders.TryGetValue(m.UniqueId, out var from) ? from : "?"),
-                        StatusColor = PanelStyle.StatusBorrowed,
-                    }, inner);
-                }
-            }
+            if (tab == Tab.Free) FreeTab(b, inner);
             else
             {
                 var evaluation = bayShows == BayShows.Result && result?.Feasible == true
@@ -100,6 +74,7 @@ namespace ModePuzzle
                 Object.Destroy(child);
             }
             rowWidths.Clear();
+            ForgetDrops(true);
             // Measuring needs a visible text: the status line in the upper half.
             if (measureText == null || !measureText.isActiveAndEnabled) measureText = statusElement?.text;
             var b = new CustomUIBuilder(manager, window, tabArea);

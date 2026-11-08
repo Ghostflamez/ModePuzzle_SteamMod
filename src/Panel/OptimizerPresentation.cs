@@ -84,7 +84,7 @@ namespace ModePuzzle
                     if (text != null)
                     {
                         float w = ButtonText(text);
-                        if (fit && child != timeButton) { known = w + PanelStyle.ButtonPadding; Fixed(child, known); }
+                        if (fit && !dropButtons.Contains(child)) { known = w + PanelStyle.ButtonPadding; Fixed(child, known); }
                     }
                 }
                 if (!fit) continue;

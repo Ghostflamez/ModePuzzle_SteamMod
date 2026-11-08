@@ -126,7 +126,6 @@ bay_current,Current layout
 opt_restart,Search again
 opt_failed_tag,Failed
 opt_elapsed,{0} / {1} s
-axis_target,{0} *
 table_number,#
 table_icon,Icon
 table_lock,Lock

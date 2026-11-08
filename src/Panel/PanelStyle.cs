@@ -12,6 +12,7 @@ namespace ModePuzzle.UI
         public const float MinBayShare = .30f, MaxBayShare = .40f, MaxBayHeight = 220;
         public const int MaxBayScale = 2;
         public const float NumberMargin = 12, NameFlexShare = .4f, ToggleBox = 32, ToggleScale = .75f, ToggleTextGap = 16, LockButtonWidth = 44;
+        public const float StatColumn = 84, StatNamePad = 16;
         public const float MachineArtSize = 56, PickerCell = 104, PickerIcon = 80, PickerName = 22, PickerGap = 8;
         public const float PickerChrome = 72, PickerChromeHeight = 130, PickerMinWidth = 520, LockScale = 2, LockOutset = 2;
         public const float ConfirmWidth = 520, ConfirmHeight = 330;
@@ -20,7 +21,7 @@ namespace ModePuzzle.UI
         public const float DropArrowSpace = 22, DropArrowWidth = 14, DropArrowHeight = 8, DropArrowInset = 8, MenuPadding = 4, MenuGap = 2;
         public const int PickerColumns = 4;
         public const float IconSlot = 28, IconSize = 24, NumberWidth = 28, StatWidth = 64, RowHeight = 28;
-        public const float NameShare = .22f, TraitShare = .18f, StatCaptionShare = .28f, StatShare = .24f;
+        public const float NameShare = .22f, TraitShare = .18f;
         public const int FreeListMax = 200, CellInset = 1, Frame = 1, DigitWidth = 3, DigitHeight = 5, DigitGap = 1, NumberPadding = 1;
         public const string MutedHex = "9c968c", PositiveHex = "8cc56a", NegativeHex = "d9675a", SearchingHex = "e6c35c", StoppedHex = "d8a657";
         public static readonly Color Selected = new Color32(150, 88, 20, 255);

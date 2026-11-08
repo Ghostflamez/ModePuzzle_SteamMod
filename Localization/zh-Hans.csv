@@ -125,7 +125,6 @@ bay_current,当前布局
 opt_restart,重新搜索
 opt_failed_tag,失败
 opt_elapsed,{0} / {1} 秒
-axis_target,{0} *
 table_number,#
 table_icon,图
 table_lock,锁定

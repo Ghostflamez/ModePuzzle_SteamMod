@@ -210,14 +210,32 @@ namespace ModePuzzle
             b.AddImage(baySprite, w * scale, h * scale);
             EndRow(b, false);
         }
-        static void StatsRow(CustomUIBuilder b, string caption, IEnumerable<string> values, float width, bool header = false)
+        /// <summary>
+        /// The machine's totals as a compact table read across: one row per axis, columns 当前 / 优化后 / 变化 (the last
+        /// two only with a result). The target axis is highlighted; the header sits on the table band colour.
+        /// </summary>
+        static void StatsTable(CustomUIBuilder b, int[] before, int[] after, int axis, float width)
         {
-            var c = Columns(width, OptimizerTuning.RowGap, PanelStyle.StatCaptionShare, PanelStyle.StatShare, PanelStyle.StatShare, PanelStyle.StatShare);
-            Row(b, width);
-            if (header) Caption(b, caption, c[0]); else Label(b, caption, c[0]);
-            int i = 1;
-            foreach (var value in values) { if (header) Caption(b, value, c[i++], true); else Label(b, value, c[i++], true); }
+            var labels = after == null ? new[] { "", Loc.T("result_before") } : new[] { "", Loc.T("result_before"), Loc.T("result_after"), Loc.T("result_delta") };
+            float name = Axes().Max(a => TextWidth(a)) + PanelStyle.StatNamePad, gap = OptimizerTuning.RowGap;
+            var widths = new List<float> { name };
+            for (int i = 1; i < labels.Length; i++) widths.Add(PanelStyle.StatColumn);
+            float table = Mathf.Min(width, widths.Sum() + gap * (widths.Count - 1));
+            var c = Columns(table, gap, widths.ToArray());
+            Row(b, table);
+            var band = b.CurrentContainer.gameObject.AddComponent<Image>(); band.color = PanelStyle.PanelColor; band.raycastTarget = false;
+            for (int i = 0; i < labels.Length; i++) NumberMargin(Caption(b, labels[i], c[i], i > 0));
             EndRow(b, false);
+            for (int k = 0; k < Axis.Count; k++)
+            {
+                Row(b, table);
+                var label = Label(b, Axes()[k], c[0]);
+                if (k == axis) label.SetTextColor(PanelStyle.Selected);
+                var values = new List<string> { GameText.ColoredValue(before[k]) };
+                if (after != null) { values.Add(GameText.ColoredValue(after[k])); values.Add(GameText.ColoredValue(after[k] - before[k])); }
+                for (int i = 0; i < values.Count; i++) NumberMargin(Label(b, values[i], c[i + 1], true));
+                EndRow(b, false);
+            }
         }
         static MachineInfo Dashboard(CustomUIBuilder b, MachineInfo machine, float width)
         {
@@ -255,14 +273,8 @@ namespace ModePuzzle
             b.End();
             Column(b, c[1]);
             int axis = target == 3 ? primary : Targets[target];
-            StatsRow(b, "", Axes().Select((name, i) => i == axis ? Loc.T("axis_target", name) : name), c[1], true);
             var before = EngineBridge.EvaluateCurrent(machine, new Rules()).Total;
-            StatsRow(b, Loc.T("result_before"), before.Select(GameText.ColoredValue), c[1]);
-            if (preview != null)
-            {
-                StatsRow(b, Loc.T("result_after"), result.Totals.Select(GameText.ColoredValue), c[1]);
-                StatsRow(b, Loc.T("result_delta"), result.Totals.Select((v, i) => GameText.ColoredValue(v - before[i])), c[1]);
-            }
+            StatsTable(b, before, preview != null ? result.Totals : null, axis, c[1]);
             Separator(b, c[1]);
             float gap = OptimizerTuning.RowGap;
 

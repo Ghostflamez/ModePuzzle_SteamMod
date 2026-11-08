@@ -4,7 +4,6 @@ item_desc,"A scanner rebuilt with hypertech parts that works out the best module
 item_flavor,"A Hypertech instrument built for one job: arranging modules. Nobody on the station can make one. Rumor has it the warehouse holding a whole shipment was recently raided, and now they are flooding the black market."
 panel_title,Hypertech Module Optimizer
 panel_header,Module bay layout
-panel_wip,"Work in progress: later versions will read your machines and modules here and find the best layout."
 panel_version,Version {0}
 debug_spawn,Spawn Hypertech Module Optimizer (counter)
 cfg_dev_spawn,Dev test: put a Hypertech Module Optimizer on the counter after loading
@@ -24,3 +23,20 @@ cfg_dev_jackson_tip,For testing only. Normally a 10% chance per restock and neve
 smuggler_fence_line_1,"Huh... is that a Hypertech Module Optimizer you've got? I thought we had the whole shipment."
 smuggler_fence_line_2,"Getting one of those from someone else, now that's something. I won't be selling today, then. Any other hot goods you've got, I'll take, at a discount."
 smuggler_fence_line_3,I've got {0} credits on me.
+panel_machine,Machine
+panel_refresh,Refresh
+panel_no_machines,"No machine with a module bay found. Put one in your store or inventory, then press Refresh."
+panel_guessed,"Unlisted machine: accepted module types are guessed from universal modules and the ones installed."
+panel_bay,Module bay: {0} / {1} cells used
+panel_installed,Installed modules ({0})
+panel_free,Free modules that fit this machine: {0} (of {1} free)
+panel_more,... and {0} more
+panel_none,(none)
+panel_node,Node
+panel_stuck,"(stuck, needs a Module Extractor)"
+panel_skipped,Left out: {0}
+panel_list_sep,", "
+skip_bay_shape,machines without a readable bay shape
+skip_chem_module,chemical equipment modules
+skip_in_chem_machine,modules in chemical machines
+skip_in_unsupported_machine,modules in unsupported machines

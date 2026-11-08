@@ -23,7 +23,8 @@ DLL = 'ModePuzzle.dll'
 GAME_EXE = 'Probably Stolen.exe'
 REFERENCES = [
     'mscorlib.dll', 'System.dll', 'System.Core.dll', 'netstandard.dll',
-    'UnityEngine.dll', 'UnityEngine.CoreModule.dll', 'UnityEngine.UI.dll', 'Unity.TextMeshPro.dll',
+    'UnityEngine.dll', 'UnityEngine.CoreModule.dll', 'UnityEngine.TextRenderingModule.dll', 'UnityEngine.UI.dll',
+    'Unity.TextMeshPro.dll',
     'Assembly-CSharp.dll', '0Harmony.dll',
 ]
 # Locale files the game may ask for; the first one is the source copied to the others.
@@ -81,10 +82,11 @@ def compile_dll(data, managed):
     csc = os.path.join(data, 'DotNetSdkRoslyn', 'csc.dll')
     sources = sorted(os.path.join(d, f) for d, _, files in os.walk(os.path.join(ROOT, 'src')) for f in files if f.endswith('.cs'))
     refs = [f'-r:{os.path.join(managed, r)}' for r in REFERENCES]
-    cmd = [dotnet, csc, '-nologo', '-noconfig', '-nostdlib', '-target:library', '-optimize+', '-deterministic',
+    cmd = [dotnet, csc, '-nologo', '-utf8output', '-noconfig', '-nostdlib', '-target:library', '-optimize+', '-deterministic',
            '-langversion:9.0', '-warnaserror+', f'-out:{os.path.join(OUT, DLL)}', *refs, *sources]
     result = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8', errors='replace')
-    print(result.stdout + result.stderr, end='')
+    out = result.stdout + result.stderr
+    sys.stdout.write(out.encode(sys.stdout.encoding or 'utf-8', errors='replace').decode(sys.stdout.encoding or 'utf-8'))
     if result.returncode != 0:
         sys.exit('Compilation failed.')
 

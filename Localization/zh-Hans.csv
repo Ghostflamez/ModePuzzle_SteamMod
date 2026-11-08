@@ -4,7 +4,6 @@ item_desc,"以超科技工艺改装的扫描仪，能算出机器模组舱的最
 item_flavor,"专为排布模组而生的超科技仪器，空间站上没人造得出来。传言最近存放整批货的仓库被人洗劫，如今大量流入黑市。"
 panel_title,超科技模组优化器
 panel_header,模组舱布局优化
-panel_wip,"开发中：后续版本会在这里读取机器与模组，并计算最优布局。"
 panel_version,版本 {0}
 debug_spawn,生成超科技模组优化器（柜台）
 cfg_dev_spawn,开发测试：读档后在柜台放一台超科技模组优化器
@@ -24,3 +23,20 @@ cfg_dev_jackson_tip,仅用于测试。正常为每次上货 10% 且已持有时�
 smuggler_fence_line_1,"哟……你手上那台是超科技模组优化器？我还以为整批货都在我们手里。"
 smuggler_fence_line_2,"能从别人那儿弄到这种好货，你可真不简单。这趟我就不卖了——你手上有别的赃货，我照单全收，只是价钱得压一压。"
 smuggler_fence_line_3,我身上带了{0}信用点。
+panel_machine,机器
+panel_refresh,刷新
+panel_no_machines,"没有找到带模组舱的机器。把机器放进店里或背包后点「刷新」。"
+panel_guessed,"未收录的机器：可用模组类型按通用模组和已安装模组推断。"
+panel_bay,模组舱：已用 {0} / {1} 格
+panel_installed,已安装模组（{0}）
+panel_free,可放入本机器的空闲模组：{0} 个（共 {1} 个空闲）
+panel_more,……还有 {0} 个
+panel_none,（无）
+panel_node,节点
+panel_stuck,（卡住，需模组提取器）
+panel_skipped,未纳入：{0}
+panel_list_sep,、
+skip_bay_shape,读不到模组舱形状的机器
+skip_chem_module,化学设备模组
+skip_in_chem_machine,装在化学类机器中的模组
+skip_in_unsupported_machine,装在不支持的机器中的模组

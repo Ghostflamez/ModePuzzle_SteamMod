@@ -19,7 +19,11 @@ namespace ModePuzzle.Acquisition
         public const int SmugglerCooldownDays = 7;
 
         // Loot crates: one roll per crate, multiplied by the crate's luck like the game's own rolls.
+        // The vanilla lists put rare, valuable items first; the optimizer (500, 2×3 cells) rolls right after
+        // the anchor item, while the crate is still nearly empty.
         public const float EngineeringCrateChance = 3f;   // 工程铸造厂物资箱
+        public const string EngineeringCrateAnchor = "system_capped_neural_core";   // 250, 2×2, 4%; before the 扩建套件
         public const float EvidenceCrateChance = 3f;      // 治安部物证柜
+        public const string EvidenceCrateAnchor = "current_converter";              // 300, 1×2, 20%; before the 500 精华液
     }
 }

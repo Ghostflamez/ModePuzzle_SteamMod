@@ -14,7 +14,7 @@ namespace ModePuzzle.UI
         static bool active;
         static float next, nextPoll;
         static int machineId;
-        static string signature;
+        static string signature, freeSignature;
 
         /// <summary>Starts (or retargets) watching after the window was built for this machine.</summary>
         public static void Watch(int machineUniqueId)
@@ -22,6 +22,7 @@ namespace ModePuzzle.UI
             if (!active) { active = true; PanelTicker.Run(Tick, Gone); }
             machineId = machineUniqueId;
             signature = LiveReader.Signature(machineUniqueId);
+            freeSignature = OptimizerPanel.FreeFingerprint();
             next = Time.unscaledTime + IntervalSeconds;
         }
 
@@ -54,9 +55,12 @@ namespace ModePuzzle.UI
             try { now = LiveReader.Signature(machineId); }
             catch (System.Exception e) { ModePuzzleMod.Log?.Warning("Watcher: signature failed: " + e); OptimizerPanel.MachineChanged(); return; }
             bool machineChanged = now != signature;
-            if (!machineChanged && !OptimizerPanel.SnapshotChanged()) return;
+            // Free modules repaired, broken or freed in storage change the candidates too.
+            string free = OptimizerPanel.FreeFingerprint();
+            bool freeChanged = free != freeSignature;
+            if (!machineChanged && !freeChanged && !OptimizerPanel.SnapshotChanged()) return;
             ModePuzzleMod.Log?.Log(machineChanged ? $"Machine {machineId} changed; panel refreshed" : $"Candidates of machine {machineId} changed");
-            signature = now;
+            signature = now; freeSignature = free;
             OptimizerPanel.MachineChanged();
         }
     }

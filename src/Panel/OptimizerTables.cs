@@ -18,11 +18,25 @@ namespace ModePuzzle
         {
             Row(b, width);
             locks.TryGetValue(module.UniqueId, out var kind);
-            // Hover explains each choice; a stuck module can only stay where it is.
-            var tips = module.Stuck ? Enumerable.Repeat(Loc.T("lock_stuck_hint"), 3).ToList()
+            // A stuck or broken module stays where it is: 固定 turns red and reads 卡住 / 损坏, and every button
+            // explains why on hover. Otherwise hover explains each choice.
+            bool broken = IsBroken(module), pinned = module.Stuck || broken;
+            var labels = LockLabels();
+            if (pinned) labels[2] = Loc.T(module.Stuck ? "lock_stuck" : "lock_broken");
+            var tips = pinned ? Enumerable.Repeat(Loc.T(module.Stuck ? "lock_stuck_hint" : "lock_broken_hint"), 3).ToList()
                 : new List<string> { Loc.T("lock_none_hint"), Loc.T("lock_required_hint"), Loc.T("lock_fixed_hint") };
-            Choice.Buttons(b, LockLabels(), module.Stuck ? 2 : (int)kind,
-                value => { locks[module.UniqueId] = (EngineBridge.LockKind)value; Invalidate(); Refresh(); }, !module.Stuck && !Busy, tips);
+            Choice.Buttons(b, labels, pinned ? 2 : (int)kind,
+                value => { locks[module.UniqueId] = (EngineBridge.LockKind)value; Invalidate(); Refresh(); }, !pinned && !Busy, tips);
+            if (pinned)
+            {
+                var red = b.CurrentContainer.GetChild(b.CurrentContainer.childCount - 1);
+                var image = red.GetComponent<Image>();
+                if (image != null) image.color = PanelStyle.PinnedButton;
+                var button = red.GetComponent<Button>();
+                if (button != null) { var colors = button.colors; colors.disabledColor = Color.white; button.colors = colors; }
+                var text = red.GetComponentInChildren<TMPro.TMP_Text>(true);
+                if (text != null) { text.text = labels[2]; text.color = PanelStyle.PinnedText; }
+            }
             EndRow(b);
         }
         static void Header(CustomUIBuilder b, float width, int[] columns, int numericEnd, params string[] labels)

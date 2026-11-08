@@ -119,7 +119,7 @@ namespace ModePuzzle
             if (index < 0) index = 0;
             var machine = snap.Machines[index];
             selectedMachineId = machine.UniqueId;
-            var fits = snap.Free.Where(machine.CanHold).ToList();
+            var fits = snap.Free.Where(m => machine.CanHold(m) && !IsBroken(m)).ToList();
             var borrowed = Borrowable(snap, machine);
 
             MachineBar(b, snap, machine, index, inner);

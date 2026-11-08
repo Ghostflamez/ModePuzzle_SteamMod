@@ -144,7 +144,7 @@ namespace ModePuzzle
         static List<ModuleInfo> Borrowable(Snapshot snap, MachineInfo machine) => snap.Machines
             .Where(o => o.UniqueId != machine.UniqueId && MachineLocks.IsUnlocked(o.UniqueId))
             .SelectMany(o => o.Installed.Select(p => p.Module))
-            .Where(m => !m.Stuck && machine.CanHold(m)).ToList();
+            .Where(m => !Pinned(m) && machine.CanHold(m)).ToList();
 
         /// <summary>Locking needs no confirmation (as in the web tool); unlocking asks unless 不再提示 was ticked.</summary>
         static void ToggleLock(MachineInfo machine)

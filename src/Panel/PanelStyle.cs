@@ -42,6 +42,7 @@ namespace ModePuzzle.UI
         public const string PaperMutedHex = "6b6458", PaperPositiveHex = "2f6e1f", PaperNegativeHex = "a3352a";
         public const float DetailColumn = 72;
         public static readonly Color RowStripe = new Color32(255, 255, 255, 10);
+        public static readonly Color PinnedButton = new Color32(200, 70, 60, 255), PinnedText = new Color32(255, 240, 230, 255);
         public static readonly Px TabFill = Px.Hex("3a3148"), TabEdge = Px.Hex("7a6c92");
         public static readonly Color ProgressText = new Color32(140, 205, 110, 255);
         public static readonly Px SpinnerInk = Px.Hex("e6c35c");

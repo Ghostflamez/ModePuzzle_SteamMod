@@ -26,9 +26,31 @@ namespace ModePuzzle
         /// Excluded by the two buttons. 保留 / 固定 modules and stuck ones stay: they must be used, as in the web tool,
         /// where required modules are never excluded automatically.
         /// </summary>
+        /// <summary>损坏模组 (repairable with electronics) and 报废模组 (only for scrap): no stats, they only take room.</summary>
+        static readonly HashSet<string> BrokenModules = new HashSet<string> { "system_module_corrupt", "system_module_ruined" };
+        static bool IsBroken(ModuleInfo m) => m?.Identifier != null && BrokenModules.Contains(m.Identifier);
+
+        /// <summary>Stuck or broken modules in the bay stay where they are; broken ones elsewhere are no candidates.</summary>
+        static bool Pinned(ModuleInfo m) => m.Stuck || IsBroken(m);
+
+        /// <summary>The user's locks plus 固定 for every stuck or broken module in the machine.</summary>
+        static Dictionary<int, EngineBridge.LockKind> EffectiveLocks(MachineInfo machine)
+        {
+            var result = new Dictionary<int, EngineBridge.LockKind>(locks);
+            foreach (var p in machine.Installed) if (IsBroken(p.Module)) result[p.Module.UniqueId] = EngineBridge.LockKind.Fixed;
+            return result;
+        }
+
+        /// <summary>Which modules are free and in what state: a repair or an extraction in storage changes it.</summary>
+        internal static string FreeFingerprint()
+        {
+            var snap = LiveReader.Read();
+            return string.Join(";", snap.Free.Select(m => m.UniqueId + ":" + m.Identifier + ":" + m.Stuck).OrderBy(s => s, StringComparer.Ordinal));
+        }
+
         static bool Excluded(ModuleInfo m)
         {
-            if (m.Stuck || m.Effects == null) return false;
+            if (Pinned(m) || m.Effects == null) return false;
             if (locks.TryGetValue(m.UniqueId, out var kind) && kind != EngineBridge.LockKind.None) return false;
             return excludeDegrading && m.Effects.Contains(DegradingEffect) || excludeOvervolted && m.Effects.Contains(OvervoltedEffect);
         }
@@ -159,8 +181,8 @@ namespace ModePuzzle
                 // Capture at click time, not the potentially stale model used to draw the controls.
                 var snap=LiveReader.Read(); var machine=snap.Machines.Single(m => m.UniqueId == selectedMachineId);
                 var free=onlyInstalled ? new List<ModuleInfo>() : snap.Free.Where(machine.CanHold).Concat(Borrowable(snap,machine)).ToList();
-                free=free.Where(m => !Excluded(m)).ToList();
-                var config=EngineBridge.Config(machine,free,locks);
+                free=free.Where(m => !Excluded(m) && !IsBroken(m)).ToList();
+                var config=EngineBridge.Config(machine,free,EffectiveLocks(machine));
                 var dropped=new HashSet<string>(machine.Installed.Select(p => p.Module).Where(Excluded).Select(m => "u"+m.UniqueId));
                 config.Items.RemoveAll(i => dropped.Contains(i.Id));
                 if (target == 3)

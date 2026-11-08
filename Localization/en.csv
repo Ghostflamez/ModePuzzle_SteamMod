@@ -155,4 +155,7 @@ panel_show_more,Show {0} more ({1} left)
 lock_none_hint,Free: the optimizer decides. It may move the module, take it out, or leave it unused.
 lock_required_hint,Keep: the module must be used and stays in this machine, but its position and rotation may change.
 lock_fixed_hint,Fixed: the module stays exactly where it is, same position and rotation; the others are placed around it.
-lock_stuck_hint,This module needs a module extractor to come out, so it stays fixed in place.
+lock_stuck_hint,This module is stuck: it needs a module extractor to come out, so it stays fixed in place. The panel updates once it is out.
+lock_stuck,Stuck
+lock_broken,Broken
+lock_broken_hint,This module is broken: it has no stats, stays fixed in place and takes no part. A corrupt module can be repaired with electronics; a ruined one only scrapped with a screwdriver. The panel updates once it is repaired or out.

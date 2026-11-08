@@ -24,6 +24,8 @@ namespace ModePuzzle.UI
         public static readonly Color Muted = new Color32(156, 150, 140, 255);
         public static readonly Color PanelColor = new Color32(51, 44, 61, 255);
         public static readonly Px BayBackground = Px.Hex("39352f"), BayCell = Px.Hex("2b2523"), BayFrame = Px.Hex("2b2721");
+        public static readonly Px LockPlate = Px.Hex("1c1820"), LockedInk = Px.Hex("ffb0a0"), LockedBody = Px.Hex("d9483b"),
+            UnlockedInk = Px.Hex("c8f5a8"), UnlockedBody = Px.Hex("5fb83a");
         public static readonly Px NumberPlate = Px.Hex("211e1b"), NumberInk = Px.Hex("fff3d6");
     }
 }

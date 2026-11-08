@@ -44,32 +44,6 @@ namespace ModePuzzle.UI
             new[] { ".####.", "#.+..#", "#+++.#", "#.+..#", ".####.", "..##.." },
             new[] { "..##..", ".#++#.", "##++##", "##++##", ".#++#.", "..##.." },
         };
-        // Lock state of a machine, from the web tool's PIXEL_ICONS (locked / unlocked).
-        static readonly string[] LockedRows = { "..#####..", ".#.....#.", ".#.....#.", "#########", "#+++++++#", "#+++#+++#", "#+++#+++#", "#+++++++#", "#########" };
-        static readonly string[] UnlockedRows = { "..#####..", ".#.....#.", ".#.......", "#########", "#+++++++#", "#+++#+++#", "#+++#+++#", "#+++++++#", "#########" };
-
-        /// <summary>A lock badge (plate, 1px border and the 9x9 icon) stamped at x, y of a top-left RGBA image.</summary>
-        public static void StampLock(Px[] dst, int width, int height, int x, int y, bool unlocked)
-        {
-            var rows = unlocked ? UnlockedRows : LockedRows;
-            for (int dy = -1; dy <= Side; dy++)
-                for (int dx = -1; dx <= Side; dx++)
-                {
-                    int px = x + dx, py = y + dy;
-                    if (px < 0 || py < 0 || px >= width || py >= height) continue;
-                    dst[py * width + px] = Over(Plate, dst[py * width + px]);
-                }
-            for (int dy = 0; dy < Side; dy++)
-                for (int dx = 0; dx < Side; dx++)
-                {
-                    int px = x + dx, py = y + dy;
-                    if (px < 0 || py < 0 || px >= width || py >= height) continue;
-                    char c = rows[dy][dx];
-                    if (c == '#') dst[py * width + px] = Ink;
-                    else if (c == '+') dst[py * width + px] = Accent;
-                }
-        }
-
         public static bool TryEffect(string id, out Icon icon)
         {
             int index = Array.IndexOf(EffectIds, id);

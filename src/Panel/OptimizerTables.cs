@@ -145,31 +145,20 @@ namespace ModePuzzle
             var root = e.root.GetComponent<LayoutElement>();
             if (root != null) root.minHeight = root.preferredHeight = small;
         }
+        /// <summary>目标 and 时长, one row each, left-aligned with the progress bar above them.</summary>
+        static void TargetAndTime(CustomUIBuilder b, float width)
+        {
+            var targets = new List<string> { GameText.Performance, GameText.Efficiency, GameText.Quality, Loc.T("opt_custom") };
+            var times = OptimizerTuning.TimeLimitsSeconds.Select(s => Loc.T("opt_seconds", s)).ToList();
+            ChoiceSetting(b, Loc.T("opt_target"), targets, target, i => { target = i; detailAxis = i == 3 ? primary : Targets[i]; Invalidate(); Refresh(); }, width);
+            ChoiceSetting(b, Loc.T("opt_time_limit"), times, timeIndex, i => { timeIndex = i; Refresh(); }, width);
+        }
         static void ChoiceSetting(CustomUIBuilder b, string label, IList<string> labels, int selected, Action<int> set, float width)
         {
             Row(b, width); Label(b, label, TextWidth(label)); Choice.Buttons(b, labels, selected, set, !Busy); EndRow(b);
         }
         static void Controls(CustomUIBuilder b, float width)
         {
-            var targets = new List<string> { GameText.Performance, GameText.Efficiency, GameText.Quality, Loc.T("opt_custom") };
-            var times = OptimizerTuning.TimeLimitsSeconds.Select(s => Loc.T("opt_seconds", s)).ToList();
-            float targetWidth = TextWidth(Loc.T("opt_target")) + OptimizerTuning.RowGap + ChoiceWidth(targets);
-            float timeWidth = TextWidth(Loc.T("opt_time_limit")) + OptimizerTuning.RowGap + ChoiceWidth(times);
-            Action<int> setTarget = i => { target = i; detailAxis = i == 3 ? primary : Targets[i]; Invalidate(); Refresh(); };
-            Action<int> setTime = i => { timeIndex = i; Refresh(); };
-            if (targetWidth + PanelStyle.SettingsGap + timeWidth <= width)
-            {
-                var c = Columns(targetWidth + PanelStyle.SettingsGap + timeWidth, PanelStyle.SettingsGap, targetWidth, timeWidth);
-                Row(b, width, PanelStyle.SettingsGap);
-                ChoiceSetting(b, Loc.T("opt_target"), targets, target, setTarget, c[0]);
-                ChoiceSetting(b, Loc.T("opt_time_limit"), times, timeIndex, setTime, c[1]);
-                EndRow(b, false);
-            }
-            else
-            {
-                ChoiceSetting(b, Loc.T("opt_target"), targets, target, setTarget, width);
-                ChoiceSetting(b, Loc.T("opt_time_limit"), times, timeIndex, setTime, width);
-            }
             string degrading = Loc.T("opt_exclude_degrading"), overvolted = Loc.T("opt_exclude_overvolted"), only = Loc.T("opt_only_installed");
             float wd = ToggleWidth(degrading), wo = ToggleWidth(overvolted), wi = ToggleWidth(only);
             bool oneRow = wd + wo + wi + 2 * PanelStyle.SettingsGap <= width;

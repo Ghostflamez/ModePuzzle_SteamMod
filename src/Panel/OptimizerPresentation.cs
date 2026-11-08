@@ -149,16 +149,17 @@ namespace ModePuzzle
             float nameWidth = Mathf.Min(Mathf.Ceil(name.text.GetPreferredValues(name.text.text, float.PositiveInfinity, float.PositiveInfinity).x) + 2, width * PanelStyle.MachineNameShare);
             string change = Loc.T("panel_change_machine"), refresh = Loc.T("panel_refresh");
             float status = Mathf.Floor(width * PanelStyle.StatusShare), gap = OptimizerTuning.RowGap;
-            float used = art + nameWidth + TextWidth(change, true) + TextWidth(refresh, true) + (art > 0 ? 5 : 4) * gap;
-            var c = Columns(width - status - gap - (art > 0 ? art + gap : 0), gap, nameWidth, TextWidth(change, true), TextWidth(refresh, true),
+            float lockWidth = PanelStyle.LockButtonWidth;
+            float used = art + nameWidth + lockWidth + TextWidth(change, true) + TextWidth(refresh, true) + (art > 0 ? 6 : 5) * gap;
+            var c = Columns(width - status - gap - (art > 0 ? art + gap : 0) - lockWidth - gap, gap, nameWidth, TextWidth(change, true), TextWidth(refresh, true),
                 Mathf.Max(0, width - status - used));
             name.SetFixedWidth(c[0]);
+            LockButton(b, machine, lockWidth);
             Button(b, change, c[1], OpenPicker);
             Button(b, refresh, c[2], UserRefresh);
             Label(b, "", c[3]);
-            statusElement = Label(b, StatusTag(), status - PanelStyle.LockButtonWidth - gap, true);
+            statusElement = Label(b, StatusTag(), status, true);
             statusElement.text.enableWordWrapping = false; statusElement.text.overflowMode = TextOverflowModes.Ellipsis;
-            LockButton(b, machine, PanelStyle.LockButtonWidth);
             EndRow(b, false);
         }
         static string StatusTag()
@@ -267,6 +268,7 @@ namespace ModePuzzle
             b.AddProgressBar(); progressElement = b.Last; progressElement.SetFixedWidth(progress[0]);
             elapsedElement = Label(b, "", progress[1], true, PanelStyle.CaptionFont);
             EndRow(b, false);
+            TargetAndTime(b, c[1]);
             string[] keys = { "metric_nodes", "metric_best", "metric_bound", "metric_improvement" };
             int count = c[1] < PanelStyle.MetricRowMinimum ? 2 : keys.Length;
             var metrics = Columns(c[1], OptimizerTuning.RowGap, Enumerable.Repeat(1f, count).ToArray());

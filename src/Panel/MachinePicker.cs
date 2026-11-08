@@ -74,13 +74,30 @@ namespace ModePuzzle
             return MachineSprite(m);
         }
 
+        // Original 9x9 pixel art: # outline, + body, o keyhole. Locked: shackle closed into the body. Unlocked: shackle
+        // lifted with its left leg out of the body.
+        static readonly string[] LockedArt = { "..#####..", ".#.....#.", ".#.....#.", ".#.....#.", "#########", "#+++++++#", "#+++o+++#", "#+++o+++#", "#########" };
+        static readonly string[] UnlockedArt = { "...#####.", "..#.....#", "..#.....#", "........#", "#########", "#+++++++#", "#+++o+++#", "#+++o+++#", "#########" };
+
+        /// <summary>The lock badge: the icon on a dark plate with a 1px border, red when locked, green when unlocked.</summary>
         static Sprite Badge(bool unlocked)
         {
             ref Sprite slot = ref unlocked ? ref unlockedBadge : ref lockedBadge;
             if (slot != null) return slot;
-            int side = TraitIcons.Side + 2;
+            var art = unlocked ? UnlockedArt : LockedArt;
+            Px plate = PanelStyle.LockPlate, ink = unlocked ? PanelStyle.UnlockedInk : PanelStyle.LockedInk,
+                body = unlocked ? PanelStyle.UnlockedBody : PanelStyle.LockedBody, hole = PanelStyle.LockPlate;
+            int side = art.Length + 2;
             var px = new Px[side * side];
-            TraitIcons.StampLock(px, side, side, 1, 1, unlocked);
+            for (int i = 0; i < px.Length; i++) px[i] = plate;
+            for (int y = 0; y < art.Length; y++)
+                for (int x = 0; x < art[y].Length; x++)
+                {
+                    char c = art[y][x];
+                    if (c == '#') px[(y + 1) * side + x + 1] = ink;
+                    else if (c == '+') px[(y + 1) * side + x + 1] = body;
+                    else if (c == 'o') px[(y + 1) * side + x + 1] = hole;
+                }
             slot = Pixels.ToSprite(px, side, side, unlocked ? "modepuzzle_unlocked" : "modepuzzle_locked");
             return slot;
         }
@@ -110,7 +127,7 @@ namespace ModePuzzle
             art.root.AddComponent<ItemHoverTooltip>().Item = LiveReader.MachineItem(m.UniqueId);
 
             bool unlocked = MachineLocks.IsUnlocked(m.UniqueId);
-            float badge = (TraitIcons.Side + 2) * PanelStyle.LockScale;
+            float badge = (LockedArt.Length + 2) * PanelStyle.LockScale;
             b.AddIconButton(Badge(unlocked), badge, () => ToggleLock(m));
             var rect = b.Last.Rect;
             var layout = rect.GetComponent<LayoutElement>() ?? rect.gameObject.AddComponent<LayoutElement>();
@@ -186,7 +203,7 @@ namespace ModePuzzle
             rect.SetParent(b.Last.Rect, false);
             var layout = icon.AddComponent<LayoutElement>(); layout.ignoreLayout = true;
             rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(.5f, .5f);
-            float side = (TraitIcons.Side + 2) * PanelStyle.LockScale;
+            float side = (LockedArt.Length + 2) * PanelStyle.LockScale;
             rect.sizeDelta = new Vector2(side, side);
             var image = icon.GetComponent<Image>();
             image.sprite = Badge(unlocked); image.raycastTarget = false; image.preserveAspect = true;

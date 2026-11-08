@@ -1,13 +1,13 @@
-# Module Optimizer — English.
-item_name,Module Optimizer
-item_desc,"A modified scanner that works out the best module-bay layout for a machine. Double-click it, or right-click and choose Activate."
-item_flavor,"The chip on its screen matches no known model. Better keep it away from Security."
-panel_title,Module Optimizer
+# Hypertech Module Optimizer — English.
+item_name,Hypertech Module Optimizer
+item_desc,"A scanner rebuilt with hypertech parts that works out the best module-bay layout for a machine. Double-click it, or right-click and choose Activate."
+item_flavor,"Under the white-and-gold shell sits a chip that matches no known model. Better keep it away from Security."
+panel_title,Hypertech Module Optimizer
 panel_header,Module bay layout
 panel_wip,"Work in progress: later versions will read your machines and modules here and find the best layout."
 panel_version,Version {0}
-debug_spawn,Spawn Module Optimizer (counter)
-cfg_dev_spawn,Dev test: put a Module Optimizer on the counter after loading
+debug_spawn,Spawn Hypertech Module Optimizer (counter)
+cfg_dev_spawn,Dev test: put a Hypertech Module Optimizer on the counter after loading
 cfg_dev_spawn_tip,For testing only. Spawns one on every load.
 debug_smuggler,Spawn Suspicious Smuggler (next customer)
 smuggler_name,Suspicious Smuggler
@@ -15,5 +15,5 @@ smuggler_line_1,"Psst, boss. A word? I've got a nice piece of kit here that Secu
 smuggler_line_2,"Sorts the modules in any machine just right. Costs a bit more than the doctor's, but I don't ask questions."
 cfg_dev_smuggler,Dev test: the Suspicious Smuggler comes every day
 cfg_dev_smuggler_tip,For testing only. Ignores the day, cooldown and whether you already own one.
-cfg_dev_crate,Dev test: engineering and evidence crates always contain a Module Optimizer
+cfg_dev_crate,Dev test: engineering and evidence crates always contain a Hypertech Module Optimizer
 cfg_dev_crate_tip,For testing only. Applies to crates generated after you turn it on.

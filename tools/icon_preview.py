@@ -17,7 +17,7 @@ from PIL import Image  # noqa: E402
 
 ROOT = build.ROOT
 OUT = os.path.join(ROOT, 'build')
-SPRITES = ('genetic_scanner', 'module_black_4')
+SPRITES = ('genetic_scanner',)
 SCALE = 8
 
 
@@ -58,8 +58,7 @@ def main():
     scanner = sprites['genetic_scanner']
     out_raw = os.path.join(OUT, 'icon.raw')
     mono = os.path.join(data, 'MonoBleedingEdge', 'bin', 'mono.exe')
-    subprocess.run([mono, exe, raw['genetic_scanner'], str(scanner.width), str(scanner.height),
-                    raw['module_black_4'], out_raw], check=True)
+    subprocess.run([mono, exe, raw['genetic_scanner'], str(scanner.width), str(scanner.height), out_raw], check=True)
 
     icon = Image.frombytes('RGBA', scanner.size, open(out_raw, 'rb').read())
     icon.save(os.path.join(OUT, 'icon.png'))

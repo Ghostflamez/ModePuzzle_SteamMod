@@ -1,6 +1,6 @@
 namespace ModePuzzle
 {
-    /// <summary>The 模组优化器 item: a tool and high-level contraband that opens the optimizer panel.</summary>
+    /// <summary>The 超科技模组优化器 item: a tool and high-level contraband that opens the optimizer panel.</summary>
     static class OptimizerItem
     {
         public const string Id = "modepuzzle_optimizer";

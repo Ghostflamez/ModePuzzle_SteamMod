@@ -1,6 +1,6 @@
 namespace ModePuzzle.Acquisition
 {
-    /// <summary>Where and how often the 模组优化器 can be obtained. Chances are percentages.</summary>
+    /// <summary>Where and how often the 超科技模组优化器 can be obtained. Chances are percentages.</summary>
     static class Tuning
     {
         // 杰克逊博士: offered on every visit and at his shop while the player owns none.

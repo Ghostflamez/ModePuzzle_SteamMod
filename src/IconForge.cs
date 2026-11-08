@@ -13,72 +13,86 @@ namespace ModePuzzle
         public int Lum => R * 299 + G * 587 + B * 114;
         public bool Same(Px o) => R == o.R && G == o.G && B == o.B;
         public override string ToString() => $"#{R:x2}{G:x2}{B:x2}";
+
+        public static Px Hex(string hex)
+        {
+            int v = Convert.ToInt32(hex.TrimStart('#'), 16);
+            return new Px((byte)(v >> 16), (byte)(v >> 8), (byte)v);
+        }
     }
 
     /// <summary>
-    /// Builds the 模组优化器 icon from sprites the game has already loaded: the 基因扫描仪 body is recoloured
-    /// with the 神经核心模组 palette, and a two-cell neural-core module is drawn on its screen.
+    /// Builds the 超科技模组优化器 icon from the 基因扫描仪 sprite the game has loaded: the body is recoloured in
+    /// the game's hypertech palette (cream white, gold, pink) and a two-cell module is drawn on its screen.
     /// Pure pixel logic (no Unity types) so it can be previewed outside the game.
     /// </summary>
     public static class IconForge
     {
-        /// <summary>Colour roles sampled from a neural-core module sprite.</summary>
-        public class Palette
+        /// <summary>Colours of the miniature module on the screen.</summary>
+        public class ChipPalette
         {
-            public Px Outline = new Px(0x29, 0x22, 0x34);
-            public Px[] Board = { new Px(0x27, 0x56, 0x54), new Px(0x2f, 0x75, 0x6f), new Px(0x45, 0x91, 0x8b), new Px(0x67, 0xaa, 0xa5) };
-            public Px[] Cap = { new Px(0x5e, 0x2b, 0x45), new Px(0x74, 0x3d, 0x70), new Px(0xa2, 0x72, 0xac) };
-            public Px[] Pin = { new Px(0xbb, 0x91, 0x65), new Px(0xcc, 0xb9, 0x87), new Px(0xe0, 0xd0, 0x9b) };
-            public Px[] Copper = { new Px(0x95, 0x5c, 0x4b), new Px(0xb2, 0x6b, 0x4e) };
-            public Px Chip = new Px(0x37, 0x35, 0x41);
+            public Px[] Board;    // dark to light
+            public Px[] Cap;      // dark, mid, light
+            public Px[] Pin;      // two alternating pin colours
+            public Px[] Copper;   // chip legs
+            public Px Chip;
         }
 
-        /// <summary>Sorts the module's colours into roles by hue; roles not found keep their defaults.</summary>
-        public static Palette SamplePalette(Px[] module)
+        /// <summary>Scanner body roles, in the order of the scanner's own colours from dark to light.</summary>
+        public class Scheme
         {
-            var p = new Palette();
-            var colors = Distinct(module);
-            if (colors.Count == 0) return p;
-            p.Outline = colors.OrderBy(c => c.Lum).First();
-            Take(colors.Where(c => c.G > c.R + 15 && c.B > c.R), 2, ref p.Board);
-            Take(colors.Where(c => c.R > c.G + 15 && c.B > c.G + 15), 2, ref p.Cap);
-            Take(colors.Where(c => c.R > c.G && c.G > c.B && c.G >= 140), 2, ref p.Pin);
-            Take(colors.Where(c => c.R > c.G && c.G > c.B && c.G < 140), 1, ref p.Copper);
-            var chip = colors.Where(c => !c.Same(p.Outline) && Math.Abs(c.R - c.G) < 20 && Math.Abs(c.B - c.G) < 20 && c.Lum < 80000).ToList();
-            if (chip.Count > 0) p.Chip = chip.OrderBy(c => c.Lum).First();
-            return p;
+            public Px Button, Shadow, Main, Light, Bezel;
+            public ChipPalette Chip;
         }
 
-        public static Px[] Build(Px[] scanner, int w, int h, Px[] module)
+        // Colours from the game's hypertech items (超科技能源单元, 超科技涡轮增压器, 超科技储藏区).
+        // Frame: cream body, pink screen bezel, gold button. Chip: white board, gold cap and pins.
+        public static readonly Scheme Hypertech = new Scheme
         {
-            var pal = SamplePalette(module);
-            var outPx = Recolor(scanner, pal);
+            Button = Px.Hex("#d59f75"),
+            Shadow = Px.Hex("#88948a"),
+            Main = Px.Hex("#c4c4b0"),
+            Light = Px.Hex("#d5d2b8"),
+            Bezel = Px.Hex("#a272ac"),
+            Chip = new ChipPalette
+            {
+                Board = new[] { Px.Hex("#88948a"), Px.Hex("#a8aea5"), Px.Hex("#c4c4b0"), Px.Hex("#d5d2b8") },
+                Cap = new[] { Px.Hex("#ba8953"), Px.Hex("#d59f75"), Px.Hex("#e0d09b") },
+                Pin = new[] { Px.Hex("#d59f75"), Px.Hex("#e0d09b") },
+                Copper = new[] { Px.Hex("#b26b4e"), Px.Hex("#ba8953") },
+                Chip = Px.Hex("#44464c"),
+            },
+        };
+
+        public static Px[] Build(Px[] scanner, int w, int h) => Build(scanner, w, h, Hypertech);
+
+        public static Px[] Build(Px[] scanner, int w, int h, Scheme scheme)
+        {
+            var result = Recolor(scanner, scheme);
             var screen = FindScreen(scanner, w, h);
-            if (screen != null) DrawMiniModule(outPx, w, screen.Value, pal);
-            return outPx;
+            if (screen != null) DrawMiniModule(result, w, screen.Value, scheme.Chip);
+            return result;
         }
 
-        /// <summary>Maps the scanner's body colours, darkest to lightest, onto the board ramp; the darkest
-        /// (the button) becomes the cap accent when the body has one colour more than the ramp.</summary>
-        static Px[] Recolor(Px[] src, Palette pal)
+        /// <summary>Maps the scanner's body colours, darkest first, onto button, shadow, main, light and
+        /// bezel; the outline (darkest colour, also the screen) is kept.</summary>
+        static Px[] Recolor(Px[] src, Scheme scheme)
         {
             var colors = Distinct(src);
+            if (colors.Count == 0) return (Px[])src.Clone();
             var outline = colors.OrderBy(c => c.Lum).First();
             var body = colors.Where(c => !c.Same(outline)).OrderBy(c => c.Lum).ToList();
+            var roles = new[] { scheme.Button, scheme.Shadow, scheme.Main, scheme.Light, scheme.Bezel };
+            // Fewer colours than roles: skip the button role first, then take roles from the light end.
+            int skip = Math.Max(0, roles.Length - body.Count);
             var map = new Dictionary<int, Px>();
-            int offset = body.Count > pal.Board.Length ? 1 : 0;
-            if (offset == 1) map[Key(body[0])] = pal.Cap[0];
-            for (int i = offset; i < body.Count; i++)
-            {
-                int n = body.Count - offset;
-                int k = n <= 1 ? pal.Board.Length - 1 : (int)Math.Round((i - offset) * (pal.Board.Length - 1) / (double)(n - 1));
-                map[Key(body[i])] = pal.Board[k];
-            }
+            for (int i = 0; i < body.Count; i++) map[Key(body[i])] = roles[Math.Min(roles.Length - 1, i + skip)];
+
             var result = new Px[src.Length];
             for (int i = 0; i < src.Length; i++)
             {
                 var c = src[i];
-                if (!c.Opaque) { result[i] = default; continue; }
+                if (!c.Opaque) continue;
                 result[i] = map.TryGetValue(Key(c), out var m) ? new Px(m.R, m.G, m.B, c.A) : c;
             }
             return result;
@@ -86,10 +100,12 @@ namespace ModePuzzle
 
         public struct Box { public int X, Y, W, H; }
 
-        /// <summary>The screen: the largest enclosed region of the outline colour, found by flood fill.</summary>
+        /// <summary>The screen: the largest connected region of the outline colour.</summary>
         public static Box? FindScreen(Px[] src, int w, int h)
         {
-            var outline = Distinct(src).OrderBy(c => c.Lum).First();
+            var colors = Distinct(src);
+            if (colors.Count == 0) return null;
+            var outline = colors.OrderBy(c => c.Lum).First();
             var seen = new bool[src.Length];
             Box? best = null;
             int bestArea = 0;
@@ -120,10 +136,10 @@ namespace ModePuzzle
             return best;
         }
 
-        // A vertical two-cell neural-core module in miniature: pins on the left, board, cap on the right.
+        // A vertical two-cell module in miniature: pins on the left, board, cap on the right.
         const int MiniW = 10, MiniH = 18;
 
-        static void DrawMiniModule(Px[] dst, int w, Box screen, Palette pal)
+        static void DrawMiniModule(Px[] dst, int w, Box screen, ChipPalette pal)
         {
             int ox = screen.X + (screen.W - MiniW) / 2;
             int oy = screen.Y + (screen.H - MiniH) / 2;
@@ -134,10 +150,11 @@ namespace ModePuzzle
                 if (i >= 0 && i < dst.Length) dst[i] = c;
             }
 
+            var top = pal.Board.Length - 1;
             for (int y = 0; y < MiniH; y++)
             {
-                // Pins: every other row, alternating two golds.
-                if (y >= 2 && y <= MiniH - 3 && y % 2 == 0) Put(0, y, pal.Pin[(y / 2) % 2 == 0 ? 1 : 0]);
+                // Pins: every other row, alternating colours.
+                if (y >= 2 && y <= MiniH - 3 && y % 2 == 0) Put(0, y, pal.Pin[(y / 2) % pal.Pin.Length]);
                 // Board, lit along the top-left and shaded along the bottom.
                 for (int x = 1; x <= 6; x++)
                 {
@@ -160,23 +177,8 @@ namespace ModePuzzle
                 Put(6, cy + 1, pal.Copper[pal.Copper.Length - 1]);
             }
             // Traces in the lightest board colour.
-            for (int y = 6; y <= 9; y++) Put(4, y, pal.Board[3]);
-            Put(5, 9, pal.Board[3]); Put(2, 15, pal.Board[3]); Put(3, 15, pal.Board[3]); Put(4, 15, pal.Board[3]);
-        }
-
-        static void Take(IEnumerable<Px> found, int minCount, ref Px[] slot)
-        {
-            var list = found.OrderBy(c => c.Lum).ToArray();
-            if (list.Length >= minCount) slot = Resample(list, slot.Length);
-        }
-
-        /// <summary>Picks n colours spread evenly over a sorted ramp.</summary>
-        static Px[] Resample(Px[] ramp, int n)
-        {
-            if (ramp.Length == n) return ramp;
-            var r = new Px[n];
-            for (int i = 0; i < n; i++) r[i] = ramp[n == 1 ? 0 : (int)Math.Round(i * (ramp.Length - 1) / (double)(n - 1))];
-            return r;
+            for (int y = 6; y <= 9; y++) Put(4, y, pal.Board[top]);
+            Put(5, 9, pal.Board[top]); Put(2, 15, pal.Board[top]); Put(3, 15, pal.Board[top]); Put(4, 15, pal.Board[top]);
         }
 
         static List<Px> Distinct(Px[] px)

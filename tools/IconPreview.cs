@@ -15,16 +15,16 @@ static class IconPreview
 
     static int Main(string[] args)
     {
-        if (args.Length != 5) { Console.Error.WriteLine("usage: scanner.raw width height module.raw out.raw"); return 2; }
+        if (args.Length != 4) { Console.Error.WriteLine("usage: scanner.raw width height out.raw"); return 2; }
         int w = int.Parse(args[1]), h = int.Parse(args[2]);
-        var result = IconForge.Build(Load(args[0]), w, h, Load(args[3]));
+        var result = IconForge.Build(Load(args[0]), w, h);
         var bytes = new byte[result.Length * 4];
         for (int i = 0; i < result.Length; i++)
         {
             bytes[i * 4] = result[i].R; bytes[i * 4 + 1] = result[i].G;
             bytes[i * 4 + 2] = result[i].B; bytes[i * 4 + 3] = result[i].A;
         }
-        File.WriteAllBytes(args[4], bytes);
+        File.WriteAllBytes(args[3], bytes);
         var screen = IconForge.FindScreen(Load(args[0]), w, h);
         Console.WriteLine(screen == null ? "screen: none" : $"screen: {screen.Value.X},{screen.Value.Y} {screen.Value.W}x{screen.Value.H}");
         return 0;

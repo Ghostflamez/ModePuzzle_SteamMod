@@ -4,7 +4,7 @@ using UnityEngine;
 namespace ModePuzzle
 {
     /// <summary>
-    /// Generates the item sprite at runtime from the game's own loaded sprites and registers it under this
+    /// Generates the item sprite at runtime from the game's own loaded scanner sprite and registers it under this
     /// mod, so SetSpriteAndShapeFromMod can use it. No game image is shipped with the mod.
     /// </summary>
     static class IconSprite
@@ -12,8 +12,6 @@ namespace ModePuzzle
         public const string Key = "modepuzzle_optimizer";
         public const string ScannerAtlas = "Items/items_amenities";
         public const string ScannerSprite = "genetic_scanner";
-        const string ModuleAtlas = "Items/items_module";
-        const string ModuleSprite = "module_black_4";   // 神经核心模组（受限）
 
         static Sprite cached;
         static bool failed;
@@ -26,11 +24,10 @@ namespace ModePuzzle
             try
             {
                 var scanner = RenderHandler.TryLoadFromAtlas(ScannerAtlas, ScannerSprite);
-                var module = RenderHandler.TryLoadFromAtlas(ModuleAtlas, ModuleSprite);
-                if (scanner == null || module == null) throw new Exception("source sprite not found");
+                if (scanner == null) throw new Exception("scanner sprite not found");
 
                 int w = (int)scanner.rect.width, h = (int)scanner.rect.height;
-                var pixels = IconForge.Build(Read(scanner), w, h, Read(module));
+                var pixels = IconForge.Build(Read(scanner), w, h);
 
                 var tex = new Texture2D(w, h, TextureFormat.RGBA32, false)
                 {

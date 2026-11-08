@@ -1,13 +1,13 @@
-# 模组优化器 — 简体中文。build.py 会复制为 zh.csv。
-item_name,模组优化器
-item_desc,"一台改装过的扫描仪，能算出机器模组舱的最优布局。左键双击或右键选择「激活」打开。"
-item_flavor,"屏幕上那块芯片不属于任何已知型号。来路不明，最好别让治安部看见。"
-panel_title,模组优化器
+# 超科技模组优化器 — 简体中文。build.py 会复制为 zh.csv。
+item_name,超科技模组优化器
+item_desc,"以超科技工艺改装的扫描仪，能算出机器模组舱的最优布局。左键双击或右键选择「激活」打开。"
+item_flavor,"白金外壳下藏着一块不属于任何已知型号的芯片。来路不明，最好别让治安部看见。"
+panel_title,超科技模组优化器
 panel_header,模组舱布局优化
 panel_wip,"开发中：后续版本会在这里读取机器与模组，并计算最优布局。"
 panel_version,版本 {0}
-debug_spawn,生成模组优化器（柜台）
-cfg_dev_spawn,开发测试：读档后在柜台放一台模组优化器
+debug_spawn,生成超科技模组优化器（柜台）
+cfg_dev_spawn,开发测试：读档后在柜台放一台超科技模组优化器
 cfg_dev_spawn_tip,仅用于测试。每次读档都会生成一台。
 debug_smuggler,生成可疑的走私犯（下一位顾客）
 smuggler_name,可疑的走私犯
@@ -15,5 +15,5 @@ smuggler_line_1,"嘘——老板，借一步说话。我手上有台好东西，
 smuggler_line_2,"能把机器里的模组排得明明白白。价钱嘛，比博士那儿贵点，但我从不多问。"
 cfg_dev_smuggler,开发测试：可疑的走私犯每天必来
 cfg_dev_smuggler_tip,仅用于测试。忽略天数、冷却和是否已拥有。
-cfg_dev_crate,开发测试：工程铸造厂物资箱和治安部物证柜必出模组优化器
+cfg_dev_crate,开发测试：工程铸造厂物资箱和治安部物证柜必出超科技模组优化器
 cfg_dev_crate_tip,仅用于测试。只影响打开设置之后新生成的箱子。

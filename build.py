@@ -31,6 +31,7 @@ REFERENCES = [
 LOCALE_ALIASES = {'zh-Hans.csv': ['zh.csv']}
 # Keys used only by development builds (dev switches, debug functions).
 DEV_ONLY_STRINGS = ('cfg_dev_', 'debug_')
+DEV_CAPABILITIES = ('files', 'reflection-external', 'dynamic-code')
 
 
 def unity_data_dir():
@@ -143,13 +144,12 @@ def compile_panel(data, managed):
 def stage(dev=False):
     shutil.copy2(os.path.join(ROOT, 'manifest.xml'), OUT)
     if dev:
-        # The development host reads the panel and commands from the repository, writes screenshots there and
-        # calls the loaded panel through reflection.
+        # The development host reads the panel and commands from the repository, writes screenshots there, loads
+        # the panel assembly and calls it through reflection. Release builds declare no capability.
         path = os.path.join(OUT, 'manifest.xml')
         text = open(path, encoding='utf-8').read()
-        for capability in ('files', 'reflection-external'):
-            if f'<Capability>{capability}</Capability>' not in text:
-                text = text.replace('</Capabilities>', f'  <Capability>{capability}</Capability>\n  </Capabilities>')
+        caps = ''.join(f'    <Capability>{c}</Capability>\n' for c in DEV_CAPABILITIES)
+        text = re.sub(r'<Capabilities\s*/>|<Capabilities>.*?</Capabilities>', '<Capabilities>\n' + caps + '  </Capabilities>', text, flags=re.S)
         open(path, 'w', encoding='utf-8').write(text)
     loc_src = os.path.join(ROOT, 'Localization')
     loc_out = os.path.join(OUT, 'Localization')

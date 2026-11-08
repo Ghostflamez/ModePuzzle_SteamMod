@@ -154,7 +154,7 @@ namespace ModePuzzle
 
         // A two-cell module in miniature, drawn upright (pins left, board, cap right) in local coordinates and
         // turned 90° clockwise onto the screen: pins on top, cap at the bottom, lying horizontally.
-        const int MiniW = 11, MiniH = 17;   // MiniW includes the two-pixel fingers; odd MiniH keeps it symmetric
+        const int MiniW = 11, MiniH = 19;   // MiniW includes the two-pixel fingers; odd MiniH keeps it symmetric
 
         static void DrawMiniModule(Px[] dst, int w, Box screen, ChipPalette pal)
         {

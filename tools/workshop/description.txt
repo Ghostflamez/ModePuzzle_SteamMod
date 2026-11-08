@@ -1,0 +1,34 @@
+[h1]超科技模组优化器 · Hypertech Module Optimizer[/h1]
+
+新增一件道具「超科技模组优化器」：为机器算出模组舱的最优布局，一键应用，一键恢复。
+Adds the [b]Hypertech Module Optimizer[/b]: it works out the best module-bay layout for a machine and applies (or undoes) it with one click.
+
+[h2]功能[/h2]
+[list]
+[*][b]获取[/b]：杰克逊博士偶尔上架；可疑的走私犯上门兜售；工程铸造厂物资箱、治安部物证柜小概率开出。赃物，高级违禁品。
+[*][b]打开[/b]：左键双击或右键「激活」；或右键「装备」后点击机器，或直接拖到机器上。
+[*][b]优化[/b]：目标可选性能 / 效率 / 质量，或自定义主次目标与上下限；可排除所有退化 / 过载模组、只用已插入本机的模组、把模组设为保留 / 固定、把空闲模组设为必选。
+[*][b]对比与应用[/b]：当前布局 / 优化结果对比，优化明细逐件列出贡献；「应用布局」移动游戏里的模组，「恢复上一布局」撤销。
+[*][b]多台机器[/b]：更换机器、锁定 / 解锁；解锁的机器可以把模组借给其他机器。
+[*][b]空闲模组[/b]：搜索、按种类 / 词条 / 状态筛选、按属性排序。
+[*][b]词条图标[/b]（可在 Mod 设置里关闭）：所有模组显示特殊词条的小图标，跟随旋转与翻转。
+[*]中文 / English；兼容「物品详情美化 · Better Item Tooltips」。
+[/list]
+
+[h2]Features[/h2]
+[list]
+[*][b]Getting one[/b]: Dr. Jackson sometimes stocks it, a suspicious smuggler drops by to sell one, and engineering and evidence crates rarely contain one. Stolen goods, high-level contraband.
+[*][b]Opening it[/b]: double-click or Activate; or Equip it and click a machine, or drag it onto a machine.
+[*][b]Optimizing[/b]: Performance / Efficiency / Quality, or a custom primary and secondary target with bounds; exclude Degrading / Overvolted modules, use only installed modules, mark modules Keep or Fixed, mark spare modules Required.
+[*][b]Comparing and applying[/b]: Current layout vs Result, per-module Breakdown; Apply layout moves your modules, Restore previous undoes it.
+[*][b]Several machines[/b]: change machine, lock / unlock; an unlocked machine lends its modules to the others.
+[*][b]Spare modules[/b]: search, filters by kind / trait / state, sort by a stat.
+[*][b]Trait icons[/b] (can be turned off in the mod settings) on every module, following rotation and flips.
+[/list]
+
+[h2]注意 · Notes[/h2]
+[list]
+[*]「应用布局」会移动你的模组；首次使用前建议存档。Apply layout moves your modules; save before first use.
+[*]本 Mod 不申请任何额外权限。The mod requests no capabilities.
+[*]源码 · Source (MIT): https://github.com/Ghostflamez/ModePuzzle_SteamMod
+[/list]

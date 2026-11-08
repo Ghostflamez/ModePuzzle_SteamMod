@@ -101,10 +101,6 @@ panel_accepts,可装：{0}
 panel_module,模组
 panel_traits,词条
 opt_invalid_tag,结果已作废
-metric_nodes,节点
-metric_best,最佳
-metric_bound,上界
-metric_improvement,距改进
 detail_base,基础
 detail_self,自身（含挂载）
 detail_absorbed,吸收
@@ -149,3 +145,5 @@ opt_exclude_overvolted_hint,带「过载」词条（使用时可能永久损坏�
 machine_unlock_title,解锁「{0}」
 machine_unlock_skip,不再提示（直到关闭游戏）
 opt_custom_hint,按主目标、次目标的顺序比较；下限、上限留空表示不限，箭头每次 ±1，按住 Shift ±10。
+metric_summary,已尝试 {0} 种排布 · 最好的布局在第 {1} 秒找到
+metric_summary_none,已尝试 {0} 种排布 · 还没有找到可行布局

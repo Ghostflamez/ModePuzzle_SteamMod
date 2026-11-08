@@ -295,19 +295,8 @@ namespace ModePuzzle
             b.AddProgressBar(); progressElement = b.Last; progressElement.SetFixedWidth(progress[0]);
             elapsedElement = Label(b, "", progress[1], true, PanelStyle.CaptionFont);
             EndRow(b, false);
-            string[] keys = { "metric_nodes", "metric_best", "metric_bound", "metric_improvement" };
-            int count = c[1] < PanelStyle.MetricRowMinimum ? 2 : keys.Length;
-            var metrics = Columns(c[1], gap, Enumerable.Repeat(1f, count).ToArray());
-            for (int start = 0; start < keys.Length; start += count)
-            {
-                Row(b, c[1]);
-                for (int i = 0; i < count; i++)
-                {
-                    // Caption and value form one wrapping pair; the heartbeat replaces only this label's text.
-                    metricElements.Add(Label(b, "", metrics[i]));
-                }
-                EndRow(b, false);
-            }
+            // One plain line about the search; the heartbeat replaces its text.
+            metricElements.Add(Caption(b, "", c[1]));
             UpdateMetrics();
             if (preview != null)
             {

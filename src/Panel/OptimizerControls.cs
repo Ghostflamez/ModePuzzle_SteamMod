@@ -136,14 +136,12 @@ namespace ModePuzzle
         {
             statusElement?.SetText(StatusTag());
             var r = result;
-            string[] values = {
-                r?.Visits.ToString("N0") ?? "0",
-                r?.Feasible == true ? r.Totals[resultAxis].ToString() : "—",
-                r?.UpperBound?.ToString("0.##") ?? "—",
-                Loc.T("opt_seconds", (r == null ? 0 : (r.ElapsedMs - r.LastImprovementMs) / 1000).ToString("0.0"))
-            };
-            string[] keys = { "metric_nodes", "metric_best", "metric_bound", "metric_improvement" };
-            for (int i = 0; i < metricElements.Count; i++) metricElements[i].SetText($"<size={PanelStyle.CaptionFont}><color=#{PanelStyle.MutedHex}>{Loc.T(keys[i])}</color></size> {values[i]}");
+            // In plain words: how many layouts were tried, and at which second the best one turned up (found early in
+            // a long search means a longer search will rarely help).
+            string summary = r == null ? "" : r.Feasible
+                ? Loc.T("metric_summary", r.Visits.ToString("N0"), (r.LastImprovementMs / 1000).ToString("0.0"))
+                : Loc.T("metric_summary_none", r.Visits.ToString("N0"));
+            foreach (var e in metricElements) e.SetText(summary);
             elapsedElement?.SetText(Loc.T("opt_elapsed", ((r?.ElapsedMs ?? 0) / 1000).ToString("0.0"), displayLimitSeconds));
             progressElement?.SetProgress(Mathf.Clamp01((float)((r?.ElapsedMs ?? 0) / (displayLimitSeconds * 1000.0))));
         }

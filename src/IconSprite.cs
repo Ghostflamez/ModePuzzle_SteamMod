@@ -11,8 +11,9 @@ namespace ModePuzzle
     static class IconSprite
     {
         public const string Key = "modepuzzle_optimizer";
-        public const string ScannerAtlas = "Items/items_amenities";
-        public const string ScannerSprite = "genetic_scanner";
+        // Base sprite: the Deal Maker (谈判专家), recoloured; its screen shows the miniature module.
+        public const string ScannerAtlas = "Items/items_tool";
+        public const string ScannerSprite = "dealmaker";
 
         static Sprite cached;
         static bool failed;
@@ -25,7 +26,7 @@ namespace ModePuzzle
             try
             {
                 var scanner = RenderHandler.TryLoadFromAtlas(ScannerAtlas, ScannerSprite);
-                if (scanner == null) throw new Exception("scanner sprite not found");
+                if (scanner == null) throw new Exception("base sprite not found");
                 var source = Pixels.Read(scanner, out int w, out int h);
                 cached = Pixels.ToSprite(IconForge.Build(source, w, h), w, h, Key);
                 return Register(cached);

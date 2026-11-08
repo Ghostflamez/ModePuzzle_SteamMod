@@ -43,6 +43,9 @@ namespace ModePuzzle
         {
             public Px Button, Shadow, Main, Light, Bezel;
             public ChipPalette Chip;
+            /// <summary>Role of each body colour of the source sprite, darkest first (0 button, 1 shadow, 2 main,
+            /// 3 light, 4 bezel). Null: map the darkest colours onto the roles in order.</summary>
+            public int[] RankRoles;
         }
 
         // Colours from the game's hypertech items (超科技能源单元, 超科技涡轮增压器, 超科技储藏区).
@@ -54,6 +57,8 @@ namespace ModePuzzle
             Main = Px.Hex("#c4c4b0"),
             Light = Px.Hex("#d5d2b8"),
             Bezel = Px.Hex("#a272ac"),
+            // Deal Maker (谈判专家) body, darkest first: #2f2b3a #373541 #44464c #53585b #5f6868 #88948a.
+            RankRoles = new[] { 1, 1, 2, 1, 4, 0 },
             Chip = new ChipPalette
             {
                 Board = new[] { Px.Hex("#88948a"), Px.Hex("#a8aea5"), Px.Hex("#c4c4b0"), Px.Hex("#d5d2b8") },
@@ -83,11 +88,22 @@ namespace ModePuzzle
             var outline = colors.OrderBy(c => c.Lum).First();
             var body = colors.Where(c => !c.Same(outline)).OrderBy(c => c.Lum).ToList();
             var roles = new[] { scheme.Button, scheme.Shadow, scheme.Main, scheme.Light, scheme.Bezel };
+            if (scheme.RankRoles != null && scheme.RankRoles.Length == body.Count)
+            {
+                var ranked = new Dictionary<int, Px>();
+                for (int i = 0; i < body.Count; i++) ranked[Key(body[i])] = roles[scheme.RankRoles[i]];
+                return Apply(src, ranked);
+            }
             // Fewer colours than roles: skip the button role first, then take roles from the light end.
             int skip = Math.Max(0, roles.Length - body.Count);
             var map = new Dictionary<int, Px>();
             for (int i = 0; i < body.Count; i++) map[Key(body[i])] = roles[Math.Min(roles.Length - 1, i + skip)];
 
+            return Apply(src, map);
+        }
+
+        static Px[] Apply(Px[] src, Dictionary<int, Px> map)
+        {
             var result = new Px[src.Length];
             for (int i = 0; i < src.Length; i++)
             {

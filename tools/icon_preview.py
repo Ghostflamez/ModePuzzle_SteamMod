@@ -17,7 +17,7 @@ from PIL import Image  # noqa: E402
 
 ROOT = build.ROOT
 OUT = os.path.join(ROOT, 'build')
-SPRITES = ('genetic_scanner',)
+SPRITES = ('dealmaker',)
 SCALE = 8
 
 
@@ -55,10 +55,10 @@ def main():
                     *[f'-r:{os.path.join(managed, r)}' for r in ('mscorlib.dll', 'System.dll', 'System.Core.dll')],
                     os.path.join(ROOT, 'tools', 'IconPreview.cs'), os.path.join(ROOT, 'src', 'IconForge.cs')], check=True)
 
-    scanner = sprites['genetic_scanner']
+    scanner = sprites['dealmaker']
     out_raw = os.path.join(OUT, 'icon.raw')
     mono = os.path.join(data, 'MonoBleedingEdge', 'bin', 'mono.exe')
-    subprocess.run([mono, exe, raw['genetic_scanner'], str(scanner.width), str(scanner.height), out_raw], check=True)
+    subprocess.run([mono, exe, raw['dealmaker'], str(scanner.width), str(scanner.height), out_raw], check=True)
 
     icon = Image.frombytes('RGBA', scanner.size, open(out_raw, 'rb').read())
     icon.save(os.path.join(OUT, 'icon.png'))

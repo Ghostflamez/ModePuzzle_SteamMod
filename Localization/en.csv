@@ -180,3 +180,5 @@ filter_count_some,Showing {0} of {1}
 filter_clear,Clear filters
 filter_empty,No module matches the filters.
 card_used,Used by the result
+filter_special,Machine-specific only
+filter_special_hint,Only modules made for a particular machine (hydroponics, DNA editor, 3D printer, furnace, alarm, evaporator and so on); no universal modules or nodes.

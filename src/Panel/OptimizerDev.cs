@@ -108,6 +108,7 @@ namespace ModePuzzle
                     else if (key == "kind") filterKind = value == "all" ? "" : value;
                     else if (key == "state" && int.TryParse(value, out int st)) filterState = (FreeState)st;
                     else if (key == "sort" && int.TryParse(value, out int so)) sortAxis = so;
+                    else if (key == "special") filterSpecial = value == "1";
                     else if (key == "clear") { ClearFilters(); return "ok"; }
                     else return "usage: filterset trait|kind|state|sort|clear <value>";
                     FiltersChanged();

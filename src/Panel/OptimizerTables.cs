@@ -124,11 +124,15 @@ namespace ModePuzzle
         /// The game's toggle with its box shrunk to <see cref="PanelStyle.ToggleScale"/>; changing it invalidates the
         /// result and rebuilds the window.
         /// </summary>
-        static void SmallToggle(CustomUIBuilder b, string label, string hint, bool on, Action<bool> set, float width)
+        static void SmallToggle(CustomUIBuilder b, string label, string hint, bool on, Action<bool> set, float width) =>
+            CompactToggle(b, label, hint, on, v => { set(v); Invalidate(); Refresh(); }, width, !Busy);
+
+        /// <summary>The game's toggle with its box shrunk to <see cref="PanelStyle.ToggleScale"/>.</summary>
+        static void CompactToggle(CustomUIBuilder b, string label, string hint, bool on, Action<bool> changed, float width, bool enabled)
         {
-            b.AddToggle(label, on, v => { set(v); Invalidate(); Refresh(); });
+            b.AddToggle(label, on, changed);
             var e = b.Last;
-            e.SetFixedWidth(width); e.SetInteractable(!Busy);
+            e.SetFixedWidth(width); e.SetInteractable(enabled);
             if (e.text != null) { e.text.fontSize = PanelStyle.BodyFont; e.text.enableAutoSizing = false; e.text.enableWordWrapping = false; }
             if (hint != null) e.SetTooltip(hint);
             // The game's toggle: a root with a 32x32 "Background" box (fixed LayoutElement) whose "Checkmark" stretches

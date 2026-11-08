@@ -179,3 +179,5 @@ filter_count_some,显示 {0} / 共 {1} 件
 filter_clear,清除筛选
 filter_empty,没有符合筛选条件的模组。
 card_used,本次布局已用
+filter_special,仅显示专用模组
+filter_special_hint,只显示某台机器专用的模组（水培、DNA编辑器、3D打印机、熔炉、警报器、蒸发器等），不显示通用模组和节点。

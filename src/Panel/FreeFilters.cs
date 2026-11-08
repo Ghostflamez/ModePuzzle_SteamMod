@@ -19,13 +19,14 @@ namespace ModePuzzle
         const string NodeKind = "node", NodeEffect = "NODE_EFFECT_SUPPORT";
         enum FreeState { All, Risk, Learning, Borrowed, Used, Unused }
         static string filterText = "", filterKind = "", filterTrait = "";
+        static bool filterSpecial;   // only modules made for a particular machine (not universal, not nodes)
         static FreeState filterState;
         static int sortAxis = -1;
         static float filterDue = -1;
         static RectTransform cardsArea;
         static float cardsWidth;
 
-        static bool FilterActive => filterText.Trim().Length > 0 || filterKind != "" || filterTrait != "" || filterState != FreeState.All;
+        static bool FilterActive => filterText.Trim().Length > 0 || filterKind != "" || filterTrait != "" || filterState != FreeState.All || filterSpecial;
 
         static string KindOf(ModuleInfo m) => m.IsNode ? NodeKind : m.ModuleType ?? MachineTable.Universal;
         static string KindName(string kind) => kind == NodeKind ? Loc.T("filter_node") : TypeName(kind);
@@ -47,6 +48,7 @@ namespace ModePuzzle
         static bool Matches(ModuleInfo m, string lender, HashSet<int> used)
         {
             if (filterKind != "" && KindOf(m) != filterKind) return false;
+            if (filterSpecial && (m.IsNode || m.ModuleType == null || m.ModuleType == MachineTable.Universal)) return false;
             var effects = EffectsOf(m).ToList();
             if (filterTrait == "none" ? effects.Count > 0 : filterTrait != "" && !effects.Contains(filterTrait)) return false;
             switch (filterState)
@@ -115,12 +117,16 @@ namespace ModePuzzle
             if (sortAxis >= 0)
                 shown = shown.OrderByDescending(c => sortAxis == 0 ? c.module.Efficiency : sortAxis == 1 ? c.module.Quality : c.module.Performance).ToList();
 
-            // Count, and 清除筛选 while a filter is on.
+            // Count, the 仅显示专用模组 switch, and 清除筛选 while a filter is on.
             bool active = FilterActive;
             string count = active ? Loc.T("filter_count_some", shown.Count, all.Count) : Loc.T("filter_count_all", all.Count);
-            float clear = active ? TextWidth(Loc.T("filter_clear"), true) : 0;
+            float gap = OptimizerTuning.RowGap, clear = active ? TextWidth(Loc.T("filter_clear"), true) : 0;
+            string special = Loc.T("filter_special");
+            float toggle = ToggleWidth(special);
             Row(b, inner);
-            Caption(b, count, Mathf.Max(0, inner - clear - (active ? OptimizerTuning.RowGap : 0)));
+            Caption(b, count, Mathf.Max(0, inner - toggle - gap - (active ? clear + gap : 0)));
+            CompactToggle(b, special, Loc.T("filter_special_hint"), filterSpecial,
+                v => { filterSpecial = v; freeShown = PanelStyle.FreeBatch; RefreshCards(); }, toggle, true);
             if (active) Button(b, Loc.T("filter_clear"), clear, ClearFilters);
             EndRow(b, false);
 
@@ -151,7 +157,7 @@ namespace ModePuzzle
 
         static void ClearFilters()
         {
-            filterText = filterKind = filterTrait = ""; filterState = FreeState.All; sortAxis = -1;
+            filterText = filterKind = filterTrait = ""; filterState = FreeState.All; sortAxis = -1; filterSpecial = false;
             FiltersChanged();
         }
 

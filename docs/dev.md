@@ -16,6 +16,17 @@ python tools/icon_preview.py # 在游戏外生成物品贴图预览 build/icon_p
 
 `dist/`、`build/` 不进仓库。
 
+## 引擎对照测试
+
+`src/Engine/` 是外部工具 `src/core/engine.js`（计分与搜索）的 C# 移植，不依赖游戏或 Unity。
+
+```
+python tools/parity/run_parity.py              # 生成用例并比对
+python tools/parity/run_parity.py --keep-cases # 复用 build/parity_cases.json
+```
+
+`gen_cases.mjs` 用 Node 运行外部工具的 JS 引擎（`MODEPUZZLE_DIR`，默认 `../ModePuzzle`），生成随机计分用例（逐行比对 self / 吸收 / 接收器 / 合计，以及每件的全部摆放）和小规模求解用例（比对已证明最优的目标值）；`Parity.cs` 与引擎源码一起编译，用 Unity 自带的 Mono 运行。改动引擎后必须跑通。
+
 ## 游戏内测试
 
 1. 关闭游戏，执行 `python build.py --install`。

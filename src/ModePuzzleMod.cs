@@ -25,7 +25,7 @@ namespace ModePuzzle
         static ConfigEntry<bool> devFullStorage;
         const string FullStorageId = "hypertech_bay", FullStorageFallbackId = "storage_bay_large";
         /// <summary>Stop filling after this many modules in a row did not fit.</summary>
-        const int FullStorageMisses = 12, FullStorageMax = 400;
+        const int FullStorageMisses = 12, FullStorageMax = 80;   // leaves room under the 100-piece search limit for installed modules
         static readonly string[] SmallCounts = { "0", "1", "2", "3", "4", "5", "6", "8", "10" };
         static readonly string[] ModuleCounts = { "0", "1", "2", "3", "5", "8", "10", "15", "20", "30" };
         const string BayKitId = "module_bay_expansion_kit";

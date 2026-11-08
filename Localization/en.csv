@@ -114,7 +114,7 @@ cfg_dev_apply_failure,Dev test: fail apply after the first insertion
 cfg_dev_apply_failure_tip,Test saves only. Apply throws after its first insertion and attempts rollback; Restore is unaffected. Disable after testing.
 opt_test_failure,Insertion failure deliberately triggered by the dev test setting.
 cfg_dev_full_storage,Dev test: a Hypertech storage bay full of random modules and nodes every time you open the shop
-cfg_dev_full_storage_tip,"For testing long searches. Falls back to a large storage bay if the Hypertech one cannot be placed; filled until nothing more fits."
+cfg_dev_full_storage_tip,"For testing long searches. Falls back to a large storage bay; at most 80 pieces, leaving room under the 100-piece search limit for installed modules."
 opt_time_limit,Time limit
 opt_unbounded,none
 opt_clear,Clear

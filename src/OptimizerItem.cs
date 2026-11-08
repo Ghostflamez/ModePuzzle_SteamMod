@@ -1,3 +1,4 @@
+using System.Linq;
 namespace ModePuzzle
 {
     /// <summary>The 超科技模组优化器 item: a tool and high-level contraband that opens the optimizer panel.</summary>
@@ -16,20 +17,12 @@ namespace ModePuzzle
         {
             CreatedCount++;
             var item = ItemDirectory.CreateEmptyItem(Id);
-            // The shape comes from the base sprite as the game reads it (3x2, like the Deal Maker itself):
-            // SetSpriteAndShapeFromMod derives a transposed 2x3 shape from the same 48x32 sprite.
-            item.SetSpriteAndShape(IconSprite.ScannerAtlas, IconSprite.ScannerSprite);
-            var shape = item.shape;
-            if (IconSprite.Ensure())
-            {
-                item.SetSpriteAndShapeFromMod(ModePuzzleMod.ModId, IconSprite.Key);
-                if (shape != null) item.SetShape(shape);
-            }
+            SetLook(item);
 
             ApplyTexts(item);
             // A save stores the item's name and texts and restores them over the factory's; onLoaded runs
             // after that, so saved copies pick up the current name and language.
-            item.onLoaded += loaded => { LoadedCount++; ApplyTexts(loaded); };
+            item.onLoaded += loaded => { LoadedCount++; ApplyTexts(loaded); FixLegacyShape(loaded); };
             item.SetGameItemType("TOOL");
             ContrabandHelper.InitContrabandItem(item, ContrabandLevelHigh);
             item.SetValue(Value);
@@ -47,6 +40,49 @@ namespace ModePuzzle
             item.canThisTargetItemFunc = (self, target) => Game.LiveReader.IsSupportedMachine(target);
             item.onThisTargetItemFunc = (self, target) => PanelHost.OpenFor(target.uniqueId);
             return item;
+        }
+
+        /// <summary>Sprite and shape: the shape is the base sprite's as the game reads it (3x2, like the Deal Maker).</summary>
+        static void SetLook(GameItem item)
+        {
+            item.SetSpriteAndShape(IconSprite.ScannerAtlas, IconSprite.ScannerSprite);
+            var shape = item.shape;
+            if (IconSprite.Ensure())
+            {
+                item.SetSpriteAndShapeFromMod(ModePuzzleMod.ModId, IconSprite.Key);
+                if (shape != null) item.SetShape(shape);
+            }
+        }
+
+        /// <summary>
+        /// Saves from the time the item looked like the (upright) gene scanner store a 2x3 shape, so the sideways
+        /// Deal Maker picture did not match the cells it took. Such an item gets the 3x2 shape turned a quarter,
+        /// which covers exactly the same cells: nothing moves, and the picture now turns with it. If the cells
+        /// would differ, everything is put back.
+        /// </summary>
+        static void FixLegacyShape(GameItem item)
+        {
+            try
+            {
+                var oldShape = item.shape;
+                var placed = item.modifiedShape;
+                if (oldShape == null || placed == null || oldShape.width != 2 || oldShape.height != 3) return;
+                var oldCells = Game.LiveReader.PlacedCells(placed).ConvertAll(c => c.X + "," + c.Y);
+                SetLook(item);
+                if (item.shape == null || item.shape.width != 3 || item.shape.height != 2) { item.SetShape(oldShape); item.modifiedShape = placed; return; }
+                var turned = new GridShapeBuilder(item.shape).SetTransform(placed.minX, placed.minY, placed.flipped, (placed.orientation + 1) % 4).Build();
+                var newCells = Game.LiveReader.PlacedCells(turned).ConvertAll(c => c.X + "," + c.Y);
+                oldCells.Sort(); newCells.Sort();
+                if (!oldCells.SequenceEqual(newCells))
+                {
+                    item.SetShape(oldShape); item.modifiedShape = placed;
+                    ModePuzzleMod.Log?.Warning("Legacy optimizer shape kept: the turned shape would cover other cells");
+                    return;
+                }
+                item.modifiedShape = turned;
+                ModePuzzleMod.Log?.Log("Legacy optimizer shape converted to 3x2 (turned a quarter, same cells)");
+            }
+            catch (System.Exception e) { ModePuzzleMod.Log?.Warning("Legacy optimizer shape: " + e.Message); }
         }
 
         static void ApplyTexts(GameItem item)

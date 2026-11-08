@@ -152,17 +152,19 @@ namespace ModePuzzle
             return best;
         }
 
-        // A vertical two-cell module in miniature: pins on the left, board, cap on the right.
+        // A two-cell module in miniature, drawn upright (pins left, board, cap right) in local coordinates and
+        // turned 90° clockwise onto the screen: pins on top, cap at the bottom, lying horizontally.
         const int MiniW = 10, MiniH = 18;
 
         static void DrawMiniModule(Px[] dst, int w, Box screen, ChipPalette pal)
         {
-            int ox = screen.X + (screen.W - MiniW) / 2;
-            int oy = screen.Y + (screen.H - MiniH) / 2;
+            // On screen the module is MiniH wide and MiniW tall.
+            int ox = screen.X + (screen.W - MiniH) / 2;
+            int oy = screen.Y + (screen.H - MiniW) / 2;
             void Put(int x, int y, Px c)
             {
                 if (x < 0 || y < 0 || x >= MiniW || y >= MiniH) return;
-                int i = (oy + y) * w + ox + x;
+                int i = (oy + x) * w + ox + (MiniH - 1 - y);
                 if (i >= 0 && i < dst.Length) dst[i] = c;
             }
 
@@ -171,12 +173,12 @@ namespace ModePuzzle
             {
                 // Pins: every other row, alternating colours.
                 if (y >= 2 && y <= MiniH - 3 && y % 2 == 0) Put(0, y, pal.Pin[(y / 2) % pal.Pin.Length]);
-                // Board, lit along the top-left and shaded along the bottom.
+                // Board, lit along the top and left and shaded along the right once turned.
                 for (int x = 1; x <= 6; x++)
                 {
                     var c = pal.Board[1];
-                    if (y == 0 || x == 1) c = pal.Board[2];
-                    if (y == MiniH - 1) c = pal.Board[0];
+                    if (y == MiniH - 1 || x == 1) c = pal.Board[2];
+                    if (y == 0) c = pal.Board[0];
                     Put(x, y, c);
                 }
                 // Cap: mid, light, dark; rounded outer corners.

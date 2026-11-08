@@ -109,7 +109,7 @@ detail_total,Total
 result_before,Current
 result_after,Proposed
 result_delta,Change
-opt_details,Attribute details
+opt_details,Breakdown
 opt_ready,Idle
 opt_searching,Searching
 opt_timeout,Time limit
@@ -120,7 +120,7 @@ opt_lock_none,Free
 opt_lock_required,Keep
 opt_lock_fixed,Fixed
 opt_only_installed,Only modules installed in this machine
-tab_modules,Modules ({0})
+tab_modules,Modules used ({0})
 bay_current,Current layout
 opt_restart,Search again
 opt_failed_tag,Failed

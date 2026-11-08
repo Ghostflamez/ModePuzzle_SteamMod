@@ -108,7 +108,7 @@ detail_total,合计
 result_before,当前
 result_after,优化后
 result_delta,变化
-opt_details,属性明细
+opt_details,优化明细
 opt_ready,空闲
 opt_searching,搜索中
 opt_timeout,达到时限
@@ -119,7 +119,7 @@ opt_lock_none,不锁
 opt_lock_required,保留
 opt_lock_fixed,固定
 opt_only_installed,只用已插入本机的模组
-tab_modules,模组列表 ({0})
+tab_modules,所用模组 ({0})
 bay_current,当前布局
 opt_restart,重新搜索
 opt_failed_tag,失败

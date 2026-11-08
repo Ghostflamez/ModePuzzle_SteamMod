@@ -11,7 +11,9 @@ namespace ModePuzzle
         public static void Open() => Dev.HotPanel.Call("Open");
         public static void Close() => Dev.HotPanel.Call("Close");
         public static void ResetSession() => Dev.HotPanel.Call("ResetSession");
+        public static void OpenFor(int machineUniqueId) => Dev.HotPanel.Call("OpenFor", machineUniqueId);
 #else
+        public static void OpenFor(int machineUniqueId) => OptimizerPanel.OpenFor(machineUniqueId);
         public static void Open() => OptimizerPanel.Open();
         public static void Close() => OptimizerPanel.Close();
         public static void ResetSession() => OptimizerPanel.ResetSession();

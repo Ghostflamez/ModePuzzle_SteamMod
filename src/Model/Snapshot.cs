@@ -51,6 +51,9 @@ namespace ModePuzzle.Model
         public List<string> Accepts = new List<string>();
         /// <summary>No entry in the known-machine table; accepted types are inferred.</summary>
         public bool Guessed;
+        /// <summary>The machine's item sprite: an atlas path and name, or a mod id and sprite key.</summary>
+        public string SpriteAtlas, SpriteName;
+        public bool SpriteFromMod;
         public List<PlacedModule> Installed = new List<PlacedModule>();
 
         public bool IsUsable(int x, int y) => x >= 0 && y >= 0 && x < Width && y < Height && Usable[y * Width + x];

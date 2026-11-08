@@ -4,6 +4,7 @@ namespace ModePuzzle
     static class PanelEntry
     {
         public static void Open() => OptimizerPanel.Open();
+        public static void OpenFor(int machineUniqueId) => OptimizerPanel.OpenFor(machineUniqueId);
         public static void Close() => OptimizerPanel.Close();
         public static void ResetSession() => OptimizerPanel.ResetSession();
         public static bool IsOpen() => OptimizerPanel.IsOpen;

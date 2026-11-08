@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Linq;
 using ModePuzzle.Engine;
 using ModePuzzle.Game;
 
@@ -30,6 +31,26 @@ namespace ModePuzzle
                     if (!IsOpen) Open();
                     SelectMachine(snap, index);
                     return "ok " + selectedMachineId;
+                }
+                case "picker":
+                    if (arg == "close") ClosePicker(); else OpenPicker();
+                    return "ok open=" + PickerOpen;
+                case "pick":
+                {
+                    var snap = LiveReader.Read();
+                    if (!int.TryParse(arg, out int n) || n < 1 || n > snap.Machines.Count) return "usage: pick <1-based index>";
+                    OpenFor(snap.Machines[n - 1].UniqueId);
+                    return "ok " + selectedMachineId;
+                }
+                case "unlock":
+                    // Session state only (no save change); skips the confirmation dialog.
+                    MachineLocks.Set(selectedMachineId, arg != "off");
+                    Invalidate(); Refresh(); return "ok unlocked=" + MachineLocks.IsUnlocked(selectedMachineId);
+                case "unlockdialog":
+                {
+                    var m = LiveReader.Read().Machines.FirstOrDefault(x => x.UniqueId == selectedMachineId);
+                    if (m == null) return "no machine";
+                    ToggleLock(m); return "ok";
                 }
                 case "tab":
                     tab = arg == "details" ? Tab.Details : arg == "free" ? Tab.Free : Tab.Modules;

@@ -32,6 +32,13 @@ namespace ModePuzzle
             item.mayActivateSlotItemFunc = (self, inventory, slot) => true;
             item.canActivateSlotItemFunc = (self, inventory, slot) => true;
             item.onActivateSlotItemFunc = (self, inventory, slot) => PanelHost.Open();
+            // 装备 (right click) and then click a machine, or drag the item onto a machine: open the panel on it.
+            // Any owned machine with a module bay qualifies, chemistry machines excepted.
+            item.maySelectSlotItemFunc = (self, inventory, slot) => true;
+            item.canSelectSlotItemFunc = (self, inventory, slot) => true;
+            item.mayThisTargetItemFunc = (self, target) => Game.LiveReader.IsSupportedMachine(target);
+            item.canThisTargetItemFunc = (self, target) => Game.LiveReader.IsSupportedMachine(target);
+            item.onThisTargetItemFunc = (self, target) => PanelHost.OpenFor(target.uniqueId);
             return item;
         }
 

@@ -141,7 +141,7 @@ namespace ModePuzzle
             {
                 // Capture at click time, not the potentially stale model used to draw the controls.
                 var snap=LiveReader.Read(); var machine=snap.Machines.Single(m => m.UniqueId == selectedMachineId);
-                var free=onlyInstalled ? new List<ModuleInfo>() : snap.Free.Where(machine.CanHold).ToList();
+                var free=onlyInstalled ? new List<ModuleInfo>() : snap.Free.Where(machine.CanHold).Concat(Borrowable(snap,machine)).ToList();
                 var config=EngineBridge.Config(machine,free,locks);
                 if (target == 3)
                 {

@@ -1,6 +1,6 @@
 # 超科技模组优化器 — 简体中文。build.py 会复制为 zh.csv。
 item_name,超科技模组优化器
-item_desc,"以超科技工艺改装的扫描仪，能算出机器模组舱的最优布局。左键双击或右键选择「激活」打开。"
+item_desc,"以超科技工艺改装的仪器，能算出机器模组舱的最优布局。左键双击或右键「激活」打开；也可以右键「装备」后点击一台机器，或直接把它拖到机器上。"
 item_flavor,"专为排布模组而生的超科技仪器，空间站上没人造得出来。传言最近存放整批货的仓库被人洗劫，如今大量流入黑市。"
 panel_title,超科技模组优化器
 panel_header,模组舱布局优化
@@ -94,8 +94,6 @@ cfg_dev_full_storage_tip,仅用于测试长时间搜索。放不下超科技储�
 opt_time_limit,时长
 opt_unbounded,不限
 opt_clear,清除
-panel_prev_machine,上一台
-panel_next_machine,下一台
 opt_restore_unavailable,无法恢复：只能恢复本台机器最近一次应用的布局，而且应用之后不能再改动过。
 cfg_trait_badges,在所有模组上显示特殊词条图标
 cfg_trait_badges_tip,给背包、仓库、机器模组舱里所有带特殊词条的模组标上小图标；图标始终朝上，并随模组的旋转、翻转自动换到对应的格子。
@@ -126,7 +124,7 @@ opt_counts,移动 {0} · 移出 {1} · 加入 {2}
 opt_lock_none,不锁
 opt_lock_required,保留
 opt_lock_fixed,固定
-opt_only_installed,只用本机模组
+opt_only_installed,只用已插入本机的模组
 tab_modules,模组列表 ({0})
 bay_current,当前布局
 opt_restart,重新搜索
@@ -136,3 +134,14 @@ axis_target,{0} *
 table_number,#
 table_icon,图
 table_lock,锁定
+panel_change_machine,更换机器
+picker_title,选择机器
+picker_hint,悬停查看详情，点击切换。左上角的锁表示这台机器是否借出模组。
+machine_lock,锁定本机
+machine_unlock,解锁本机
+machine_locked_hint,本机已锁定：优化其他机器时不会借用本机的模组。
+machine_unlocked_hint,本机已解锁：优化其他机器时可以借用本机的模组。
+machine_unlock_warning,"解锁后，优化其他机器时可以借用「{0}」中的 {1} 件模组。\n\n如果在其他机器上应用的布局用到了这些模组，它们会从「{0}」拆下，装到那台机器上。\n\n之后可以随时重新锁定。"
+machine_unlock_confirm,解锁
+machine_unlock_cancel,取消
+tab_borrowed,已解锁机器中的模组（{0}）

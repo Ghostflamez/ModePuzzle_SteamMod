@@ -1,6 +1,6 @@
 # Hypertech Module Optimizer — English.
 item_name,Hypertech Module Optimizer
-item_desc,"A scanner rebuilt with hypertech parts that works out the best module-bay layout for a machine. Double-click it, or right-click and choose Activate."
+item_desc,"An instrument rebuilt with hypertech parts that works out the best module-bay layout for a machine. Double-click it or right-click and choose Activate; or right-click, choose Equip and click a machine, or drag it onto a machine."
 item_flavor,"A Hypertech instrument built for one job: arranging modules. Nobody on the station can make one. Rumor has it the warehouse holding a whole shipment was recently raided, and now they are flooding the black market."
 panel_title,Hypertech Module Optimizer
 panel_header,Module bay layout
@@ -95,8 +95,6 @@ cfg_dev_full_storage_tip,"For testing long searches. Falls back to a large stora
 opt_time_limit,Time
 opt_unbounded,none
 opt_clear,Clear
-panel_prev_machine,Previous
-panel_next_machine,Next
 opt_restore_unavailable,"Cannot restore: only this machine's last applied layout, and only if nothing changed since."
 cfg_trait_badges,Show trait icons on all modules
 cfg_trait_badges_tip,"Marks every module with a special trait, in inventories, storage and machine bays. The icons stay upright and move with the cells when the module is rotated or flipped."
@@ -127,7 +125,7 @@ opt_counts,Moved {0} · Removed {1} · Added {2}
 opt_lock_none,Free
 opt_lock_required,Keep
 opt_lock_fixed,Fixed
-opt_only_installed,Installed modules only
+opt_only_installed,Only modules installed in this machine
 tab_modules,Modules ({0})
 bay_current,Current layout
 opt_restart,Search again
@@ -137,3 +135,14 @@ axis_target,{0} *
 table_number,#
 table_icon,Icon
 table_lock,Lock
+panel_change_machine,Change machine
+picker_title,Choose a machine
+picker_hint,Hover for details, click to switch. The lock in the corner shows whether a machine lends its modules.
+machine_lock,Lock this machine
+machine_unlock,Unlock this machine
+machine_locked_hint,Locked: optimising other machines never borrows this machine's modules.
+machine_unlocked_hint,Unlocked: optimising other machines may borrow this machine's modules.
+machine_unlock_warning,"Once unlocked, optimising other machines may borrow the {1} modules in {0}.\n\nIf a layout applied to another machine uses them, they are taken out of {0} and installed in that machine.\n\nYou can lock it again at any time."
+machine_unlock_confirm,Unlock
+machine_unlock_cancel,Cancel
+tab_borrowed,Modules in unlocked machines ({0})

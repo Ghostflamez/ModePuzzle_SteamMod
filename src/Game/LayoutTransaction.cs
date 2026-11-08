@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ModePuzzle.Engine;
@@ -239,7 +239,7 @@ namespace ModePuzzle.Game
                     throw new InvalidOperationException(Loc.T("opt_insert_failed") + " #" + m.Item.uniqueId);
                 if (testFailure && ModePuzzleMod.DevApplyFailure?.Value == true) throw Failure("opt_test_failure");
             }
-            phase = "refresh"; RefreshMachine();
+            phase = "refresh"; RefreshMachine(); RefreshDonors(moves);
             phase = "verify";
             if (moves.Any(m => !At(m))) throw Failure("opt_verify_failed");
         }
@@ -262,7 +262,8 @@ namespace ModePuzzle.Game
                     if (r.Item.parentInventory != null || !r.Parent.CheckInventorySlotStillValid(r.Item,r.Shape,r.Item.modifiedState) || Slot(m).TryAcceptOnce() != r.Item.unitCount || !At(m)) ok=false;
                 }
                 catch (Exception e) { ok=false; ModePuzzleMod.Log?.Warning($"Rollback insert uid={r.Item.uniqueId}: {e}"); }
-            try { RefreshMachine(); } catch (Exception e) { ok=false; ModePuzzleMod.Log?.Warning("Rollback refresh: "+e); }
+            try { RefreshMachine(); RefreshDonors(original.Select(r => new Move { Item=r.Item, Parent=r.Parent })); }
+            catch (Exception e) { ok=false; ModePuzzleMod.Log?.Warning("Rollback refresh: "+e); }
             foreach (var r in original)
                 if (!At(new Move { Item=r.Item, Parent=r.Parent, Shape=r.Shape }))
                 {
@@ -276,7 +277,24 @@ namespace ModePuzzle.Game
             return ok;
         }
 
-        void RefreshMachine()
+        void RefreshMachine() => Refresh(machine, bay);
+
+        /// <summary>Other machines that a borrowed module left or returned to (an unlocked machine's bay).</summary>
+        void RefreshDonors(IEnumerable<Move> moves)
+        {
+            var bays = new HashSet<GameInventory>();
+            foreach (var m in moves)
+            {
+                if (m.Parent != null) bays.Add(m.Parent);
+                if (records.TryGetValue(m.Item.uniqueId, out var r) && r.Parent != null) bays.Add(r.Parent);
+            }
+            foreach (var inv in bays)
+                if (inv != bay && inv is GameGridInventory grid && inv.GetParentItem() is GameItem owner &&
+                    owner.IsGameItemType("MACHINE") && MachineHelper.GetModuleInv(owner) == grid)
+                    Refresh(owner, grid);
+        }
+
+        static void Refresh(GameItem machine, GameGridInventory bay)
         {
             ModuleEffectHelper.ComputeAllModuleTempStat(bay.childItems);
             ModuleHelper.ComputeModuleEffect(bay, machine, machine);

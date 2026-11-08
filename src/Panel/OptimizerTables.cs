@@ -145,9 +145,16 @@ namespace ModePuzzle
                 ChoiceSetting(b, Loc.T("opt_target"), targets, target, setTarget, width);
                 ChoiceSetting(b, Loc.T("opt_time_limit"), times, timeIndex, setTime, width);
             }
-            b.AddToggle(Loc.T("opt_only_installed"), onlyInstalled, v => { onlyInstalled = v; Invalidate(); Refresh(); });
-            b.Last.SetFixedWidth(width); b.Last.SetInteractable(!Busy);
+            string only = Loc.T("opt_only_installed");
+            float lockWidth = Mathf.Max(TextWidth(Loc.T("machine_lock"), true), TextWidth(Loc.T("machine_unlock"), true));
+            float toggleWidth = Mathf.Min(width - lockWidth - PanelStyle.SettingsGap, TextWidth(only) + PanelStyle.ToggleBox);
+            Row(b, width, PanelStyle.SettingsGap);
+            b.AddToggle(only, onlyInstalled, v => { onlyInstalled = v; Invalidate(); Refresh(); });
+            b.Last.SetFixedWidth(toggleWidth); b.Last.SetInteractable(!Busy);
             if (b.Last.text != null) { b.Last.text.fontSize = PanelStyle.BodyFont; b.Last.text.enableAutoSizing = false; }
+            var focused = LiveReader.Read().Machines.FirstOrDefault(m => m.UniqueId == selectedMachineId);
+            if (focused != null) LockButton(b, focused, lockWidth);
+            EndRow(b, false);
             if (target != 3) return;
             ChoiceSetting(b, Loc.T("opt_primary"), Axes(), primary, i => { primary = i; detailAxis = i; if (secondary == i) secondary = -1; Invalidate(); Refresh(); }, width);
             var secondaryOptions = Axes(); secondaryOptions.Insert(0, Loc.T("opt_none"));

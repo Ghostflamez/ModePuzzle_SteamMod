@@ -141,20 +141,28 @@ namespace ModePuzzle
         static void MachineBar(CustomUIBuilder b, Snapshot snap, MachineInfo machine, int index, float width)
         {
             Row(b, width);
-            // Create name first for font measurements, then retain the requested sibling order.
+            // The focused machine's own sprite first, in the window's top-left corner.
+            var sprite = MachineSprite(machine);
+            float art = 0;
+            if (sprite != null)
+            {
+                float scale = ArtScale(sprite, PanelStyle.MachineArtSize);
+                art = Mathf.Ceil(sprite.rect.width * scale);
+                b.AddImage(sprite, art, Mathf.Ceil(sprite.rect.height * scale));
+                b.Last.root.AddComponent<ItemHoverTooltip>().Item = LiveReader.MachineItem(machine.UniqueId);
+            }
             var name = Label(b, $"{machine.Name} ({index + 1}/{snap.Machines.Count})", width * PanelStyle.MachineNameShare);
             name.text.enableWordWrapping = false; name.text.overflowMode = TextOverflowModes.Ellipsis;
             float nameWidth = Mathf.Min(Mathf.Ceil(name.text.GetPreferredValues(name.text.text, float.PositiveInfinity, float.PositiveInfinity).x) + 2, width * PanelStyle.MachineNameShare);
-            string prev = Loc.T("panel_prev_machine"), next = Loc.T("panel_next_machine"), refresh = Loc.T("panel_refresh");
+            string change = Loc.T("panel_change_machine"), refresh = Loc.T("panel_refresh");
             float status = Mathf.Floor(width * PanelStyle.StatusShare), gap = OptimizerTuning.RowGap;
-            var c = Columns(width - status - gap, gap, TextWidth(prev, true), nameWidth, TextWidth(next, true), TextWidth(refresh, true),
-                Mathf.Max(0, width - status - 5 * gap - TextWidth(prev, true) - nameWidth - TextWidth(next, true) - TextWidth(refresh, true)));
-            Button(b, prev, c[0], () => SelectMachine(snap, index - 1));
-            b.CurrentContainer.GetChild(1).SetSiblingIndex(0);
-            name.SetFixedWidth(c[1]);
-            Button(b, next, c[2], () => SelectMachine(snap, index + 1));
-            Button(b, refresh, c[3], UserRefresh);
-            Label(b, "", c[4]);
+            float used = art + nameWidth + TextWidth(change, true) + TextWidth(refresh, true) + (art > 0 ? 5 : 4) * gap;
+            var c = Columns(width - status - gap - (art > 0 ? art + gap : 0), gap, nameWidth, TextWidth(change, true), TextWidth(refresh, true),
+                Mathf.Max(0, width - status - used));
+            name.SetFixedWidth(c[0]);
+            Button(b, change, c[1], OpenPicker);
+            Button(b, refresh, c[2], UserRefresh);
+            Label(b, "", c[3]);
             statusElement = Label(b, StatusTag(), status, true);
             statusElement.text.enableWordWrapping = false; statusElement.text.overflowMode = TextOverflowModes.Ellipsis;
             EndRow(b, false);

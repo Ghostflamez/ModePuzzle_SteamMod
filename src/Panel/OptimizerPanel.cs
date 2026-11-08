@@ -48,6 +48,7 @@ namespace ModePuzzle
             session?.Stop();
             var manager = CustomUIManager.Instance;
             if (manager != null && manager.IsOpen(WindowId)) manager.CloseWindow(WindowId);
+            ClosePicker();
             PanelWatcher.Stop();
         }
 
@@ -111,6 +112,7 @@ namespace ModePuzzle
             var machine = snap.Machines[index];
             selectedMachineId = machine.UniqueId;
             var fits = snap.Free.Where(machine.CanHold).ToList();
+            var borrowed = Borrowable(snap, machine);
 
             MachineBar(b, snap, machine, index, inner);
             var shown = Dashboard(b, machine, inner);
@@ -118,10 +120,19 @@ namespace ModePuzzle
             Controls(b, inner);
             Separator(b, inner);
             Row(b, inner);
-            Choice.Buttons(b, new List<string> { Loc.T("tab_modules", shown.Installed.Count), Loc.T("opt_details"), Loc.T("tab_free", fits.Count) },
+            Choice.Buttons(b, new List<string> { Loc.T("tab_modules", shown.Installed.Count), Loc.T("opt_details"), Loc.T("tab_free", fits.Count + borrowed.Count) },
                 (int)tab, i => { tab = (Tab)i; Refresh(); });
             EndRow(b);
-            if (tab == Tab.Free) ModuleTable(b, shown, fits, null, inner);
+            if (tab == Tab.Free)
+            {
+                ModuleTable(b, shown, fits, null, inner);
+                if (borrowed.Count > 0)
+                {
+                    Separator(b, inner);
+                    Label(b, Loc.T("tab_borrowed", borrowed.Count), inner);
+                    ModuleTable(b, shown, borrowed, null, inner);
+                }
+            }
             else
             {
                 var evaluation = bayShows == BayShows.Result && result?.Feasible == true

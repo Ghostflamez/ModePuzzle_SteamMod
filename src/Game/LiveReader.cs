@@ -75,6 +75,21 @@ namespace ModePuzzle.Game
         /// <summary>Machines seen by the last Read, by unique id, so watching one does not rescan everything.</summary>
         static readonly Dictionary<int, GameItem> machinesById = new Dictionary<int, GameItem>();
 
+        /// <summary>The live machine item from the last <see cref="Read"/>, or null.</summary>
+        public static GameItem MachineItem(int machineUniqueId) =>
+            machinesById.TryGetValue(machineUniqueId, out var item) ? item : null;
+
+        /// <summary>A machine the optimizer supports: owned, with a module bay, not a chemistry machine.</summary>
+        public static bool IsSupportedMachine(GameItem item)
+        {
+            try
+            {
+                return item != null && item.IsGameItemType("MACHINE") && !MachineTable.ExcludedMachines.Contains(item.identifier) &&
+                       GeneralHelper.IsItemOwned(item) && SafeModuleInv(item) != null;
+            }
+            catch (Exception) { return false; }
+        }
+
         /// <summary>
         /// Cheap fingerprint of one machine: its bay shape and where each installed module sits. Changes when the
         /// bay is expanded or a module is added, removed, moved, rotated or flipped. Reads only that machine's
@@ -137,6 +152,7 @@ namespace ModePuzzle.Game
                 Height = shape.height,
                 Usable = new bool[shape.width * shape.height],
                 Guessed = known == null,
+                SpriteAtlas = item.spriteAtlasPath, SpriteName = item.spritePath, SpriteFromMod = item.useSpriteFromMod,
             };
             machine.Accepts.AddRange(known ?? new[] { MachineTable.Universal });
             // The bay shape marks blocked cells with a non-zero byte (MachineHelper.LoadUpgrade sets "1" on

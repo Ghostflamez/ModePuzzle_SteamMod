@@ -42,3 +42,6 @@ skip_in_chem_machine,装在化学类机器中的模组
 skip_in_unsupported_machine,装在不支持的机器中的模组
 cfg_dev_machine,开发测试：每天开门时送几台随机的带模组舱机器（0 为关闭）
 cfg_dev_machine_tip,仅用于测试。每台优先放柜台，放不下时依次尝试后柜台和背包；都放不下的会留在日志里。
+cfg_dev_bay_kit,开发测试：每天开门时送几个模组舱扩建套件（0 为关闭）
+cfg_dev_modules,开发测试：每天开门时送几个随机模组/节点（0 为关闭）
+cfg_dev_open_tip,仅用于测试。每个优先放柜台，放不下时依次尝试后柜台和背包；都放不下的会留在日志里。

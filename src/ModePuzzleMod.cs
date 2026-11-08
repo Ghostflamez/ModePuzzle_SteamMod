@@ -18,7 +18,16 @@ namespace ModePuzzle
         internal static ConfigEntry<bool> DevJacksonAlways;
         static ConfigEntry<bool> devCratesOnLoad;
         static ConfigEntry<int> devMachinesPerDay;
-        const int DevMachinesMax = 10;
+        static ConfigEntry<int> devBayKitsPerDay;
+        static ConfigEntry<int> devModulesPerDay;
+        const int DevMachinesMax = 10, DevBayKitsMax = 10, DevModulesMax = 30;
+        const string BayKitId = "module_bay_expansion_kit";
+        // Random universal modules and nodes, as the game's own loot uses them (ItemSpawner.Spawn).
+        static readonly string[] RandomModuleIds =
+        {
+            "random_performance_module", "random_efficiency_module", "random_quality_module",
+            "random_overclock_module", "random_eco_module", "random_fineness_module", "random_node",
+        };
         static bool registered;
         static bool debugFunctionsAdded;
 
@@ -49,6 +58,10 @@ namespace ModePuzzle
                 () => Loc.T("cfg_dev_jackson"), () => Loc.T("cfg_dev_jackson_tip"));
             devMachinesPerDay = config.Define("dev_machines_per_day", 0, "dev",
                 () => Loc.T("cfg_dev_machine"), 0, DevMachinesMax, () => Loc.T("cfg_dev_machine_tip"));
+            devBayKitsPerDay = config.Define("dev_bay_kits_per_day", 0, "dev",
+                () => Loc.T("cfg_dev_bay_kit"), 0, DevBayKitsMax, () => Loc.T("cfg_dev_open_tip"));
+            devModulesPerDay = config.Define("dev_modules_per_day", 0, "dev",
+                () => Loc.T("cfg_dev_modules"), 0, DevModulesMax, () => Loc.T("cfg_dev_open_tip"));
             devCratesOnLoad = config.Define("dev_crates_on_load", false, "dev",
                 () => Loc.T("cfg_dev_crates_on_load"), () => Loc.T("cfg_dev_crates_on_load_tip"));
 
@@ -103,22 +116,24 @@ namespace ModePuzzle
             }
         }
 
-        /// <summary>Dev test: random machines with a module bay each time the shutter opens.</summary>
+        /// <summary>Dev test: machines, bay expansion kits and random modules/nodes each time the shutter opens.</summary>
         static void OnShutterOpened()
         {
-            int count = devMachinesPerDay?.Value ?? 0;
-            if (count <= 0) return;
-            var ids = MachineTable.KnownMachines.ToList();
-            for (int i = 0; i < count; i++)
-            {
-                var id = ids[RNG.GetRandomInt(0, ids.Count - 1)];
-                var machine = ModHelper.SpawnItem(id);
-                if (machine == null) { Log.Warning("Dev machine: could not spawn " + id); continue; }
-                ModHelper.MoveItemToFrontCounter(machine);
-                if (machine.parentInventory == null) ModHelper.MoveItemToBackCounter(machine);
-                if (machine.parentInventory == null) ModHelper.MoveItemToInventory(machine);
-                Log.Log($"Dev machine {id} spawned, placed={machine.parentInventory != null}");
-            }
+            var machines = MachineTable.KnownMachines.ToList();
+            for (int i = 0; i < (devMachinesPerDay?.Value ?? 0); i++) DevGive(machines[RNG.GetRandomInt(0, machines.Count - 1)]);
+            for (int i = 0; i < (devBayKitsPerDay?.Value ?? 0); i++) DevGive(BayKitId);
+            for (int i = 0; i < (devModulesPerDay?.Value ?? 0); i++) DevGive(RandomModuleIds[RNG.GetRandomInt(0, RandomModuleIds.Length - 1)]);
+        }
+
+        /// <summary>Spawns an item for testing: counter, else back counter, else inventory.</summary>
+        static void DevGive(string id)
+        {
+            var item = ModHelper.SpawnItem(id);
+            if (item == null) { Log.Warning("Dev: could not spawn " + id); return; }
+            ModHelper.MoveItemToFrontCounter(item);
+            if (item.parentInventory == null) ModHelper.MoveItemToBackCounter(item);
+            if (item.parentInventory == null) ModHelper.MoveItemToInventory(item);
+            Log.Log($"Dev: spawned {id} → {item.identifier}, placed={item.parentInventory != null}");
         }
 
         /// <summary>Diagnostics: where every owned optimizer is.</summary>

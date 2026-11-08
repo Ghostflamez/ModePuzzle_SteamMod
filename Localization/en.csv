@@ -42,3 +42,6 @@ skip_in_chem_machine,modules in chemical machines
 skip_in_unsupported_machine,modules in unsupported machines
 cfg_dev_machine,Dev test: random machines with a module bay every time you open the shop (0 = off)
 cfg_dev_machine_tip,"For testing only. Each goes on the counter, else the back counter, else your inventory; ones that fit nowhere are logged."
+cfg_dev_bay_kit,Dev test: Module Bay Expansion Kits every time you open the shop (0 = off)
+cfg_dev_modules,Dev test: random modules / nodes every time you open the shop (0 = off)
+cfg_dev_open_tip,"For testing only. Each goes on the counter, else the back counter, else your inventory; ones that fit nowhere are logged."

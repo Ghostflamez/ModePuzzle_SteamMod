@@ -49,3 +49,27 @@ python tools/parity/run_parity.py --keep-cases # 复用 build/parity_cases.json
 7. 测完把设置里的开发测试选项都关掉。
 
 日志在 `%USERPROFILE%\AppData\LocalLow\Questing Goose Studio\Probably Stolen\Player.log`，搜索 `modepuzzle` 或 `ModePuzzle` 即可找到本 Mod 的记录（加载、物品注册、贴图生成失败时的警告）。
+
+## 第五步：优化、应用与恢复
+
+面板保留机械窗口样式和半屏宽度。先选择机器、目标和时限（默认 15 秒）；已安装模块可设为“保留在此机器”或“固定位置”，卡住模块自动固定。默认候选为该机模块加兼容且放得下的空闲模块，可切换为只用该机模块。
+
+“开始 / 重新搜索”创建主线程快照，在单独工作线程上搜索；“停止”保留当前最好结果，再次开始会重新搜索，不续跑旧 DFS 栈。状态约 8 Hz 刷新；“查看预览”可在运行时查看当前最好布局，完成后自动展示最终结果。预览不移动物品，只有“应用布局”修改游戏。机器、候选模块或设置变化后保留旧预览并标记失效。
+
+应用先验证快照、游戏锁及摆放，为所有移出模块按背包、后柜台、前柜台顺序预留空间，然后使用游戏的 Expel 和经校验的 SlotMarker.TryAcceptOnce。成功后可一键恢复上一布局；读档清空恢复记录，变更后的布局拒绝盲目恢复。空间预留是保守的顺序放置，不利用即将移入机器的模块腾出的空间；提示空间不足时先整理库存。
+
+离线验证（均不启动游戏、不安装）：
+
+```
+python tools/parity/run_parity.py --keep-cases
+python tools/parity/run_fixed.py
+python tools/parity/run_shapes.py
+python build.py
+python tools/scan/scan_mod.py
+```
+
+`run_fixed.py` 对比小棋盘穷举，并检查工作线程取消、心跳和超时；`run_shapes.py` 直接使用本机游戏 DLL 的 GridShape 检查摆放变换。能力扫描只应检测到 `dynamic-code`；此离线脚本未传游戏程序集白名单，因此仍显示已有的 `unlisted-reference` hard flags。
+
+真实规模基准：先手动把测试存档复制为 `build/save_7.es3`，然后执行 `node tools/benchmark/read_real.mjs`、`python tools/benchmark/run_real.py`。导入器只读取相邻 ModePuzzle 仓库，结果写入本仓库 `build/`。不要提交存档或生成的数据。
+
+故障测试仅用测试存档：打开“开发测试：应用首次放入后模拟失败”，对一个确实需要移动的结果点击应用。应报告“放入”阶段失败、恢复成功，原机器和原库存摆放均恢复；检查 Player.log。测试后关闭此选项。完整验收清单和本次数据见 `build/astra_step5_report.md`；本次未运行游戏。

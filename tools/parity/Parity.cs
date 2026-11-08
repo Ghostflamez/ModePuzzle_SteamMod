@@ -44,13 +44,13 @@ static class Parity
     static List<object> L(object o) => (List<object>)o;
     static Dictionary<string, object> D(object o) => (Dictionary<string, object>)o;
 
-    static Board ReadBoard(object o)
+    public static Board ReadBoard(object o)
     {
         var b = D(o);
         return new Board(I(b["w"]), I(b["h"]), L(b["cells"]).Select(x => (bool)x).ToArray());
     }
 
-    static Item ReadItem(object o)
+    public static Item ReadItem(object o)
     {
         var d = D(o);
         var traits = Traits.None;

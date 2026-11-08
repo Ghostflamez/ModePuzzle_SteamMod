@@ -154,7 +154,7 @@ namespace ModePuzzle
 
         // A two-cell module in miniature, drawn upright (pins left, board, cap right) in local coordinates and
         // turned 90° clockwise onto the screen: pins on top, cap at the bottom, lying horizontally.
-        const int MiniW = 10, MiniH = 18;
+        const int MiniW = 11, MiniH = 18;   // MiniW includes the two-pixel fingers
 
         static void DrawMiniModule(Px[] dst, int w, Box screen, ChipPalette pal)
         {
@@ -167,36 +167,42 @@ namespace ModePuzzle
                 int i = (oy + x) * w + ox + (MiniH - 1 - y);
                 if (i >= 0 && i < dst.Length) dst[i] = c;
             }
+            // Everything but the gold fingers sits one pixel further from the pin edge.
+            void Body(int x, int y, Px c) => Put(x + 1, y, c);
 
             var top = pal.Board.Length - 1;
             for (int y = 0; y < MiniH; y++)
             {
-                // Pins: every other row, alternating colours.
-                if (y >= 2 && y <= MiniH - 3 && y % 2 == 0) Put(0, y, pal.Pin[(y / 2) % pal.Pin.Length]);
+                // Gold fingers, two pixels long, every other row; the gaps between them in the board's dark tone.
+                if (y >= 2 && y <= MiniH - 4)
+                {
+                    var c = y % 2 == 0 ? pal.Pin[(y / 2) % pal.Pin.Length] : pal.Board[0];
+                    Put(0, y, c); Put(1, y, c);
+                }
                 // Board, lit along the top and left and shaded along the right once turned.
                 for (int x = 1; x <= 6; x++)
                 {
                     var c = pal.Board[1];
                     if (y == MiniH - 1 || x == 1) c = pal.Board[2];
                     if (y == 0) c = pal.Board[0];
-                    Put(x, y, c);
+                    Body(x, y, c);
                 }
                 // Cap: mid, light, dark; rounded outer corners.
-                Put(7, y, pal.Cap[1]);
-                Put(8, y, pal.Cap[2]);
-                if (y != 0 && y != MiniH - 1) Put(9, y, pal.Cap[0]);
+                Body(7, y, pal.Cap[1]);
+                Body(8, y, pal.Cap[2]);
+                if (y != 0 && y != MiniH - 1) Body(9, y, pal.Cap[0]);
             }
             // Two chips with copper legs, one per cell.
             foreach (int cy in new[] { 2, 11 })
             {
                 for (int y = cy; y < cy + 3; y++)
-                    for (int x = 3; x <= 5; x++) Put(x, y, pal.Chip);
-                Put(2, cy, pal.Copper[0]); Put(2, cy + 2, pal.Copper[0]);
-                Put(6, cy + 1, pal.Copper[pal.Copper.Length - 1]);
+                    for (int x = 3; x <= 5; x++) Body(x, y, pal.Chip);
+                Body(2, cy, pal.Copper[0]); Body(2, cy + 2, pal.Copper[0]);
+                Body(6, cy + 1, pal.Copper[pal.Copper.Length - 1]);
             }
             // Traces in the lightest board colour.
-            for (int y = 6; y <= 9; y++) Put(4, y, pal.Board[top]);
-            Put(5, 9, pal.Board[top]); Put(2, 15, pal.Board[top]); Put(3, 15, pal.Board[top]); Put(4, 15, pal.Board[top]);
+            for (int y = 6; y <= 9; y++) Body(4, y, pal.Board[top]);
+            Body(5, 9, pal.Board[top]); Body(2, 15, pal.Board[top]); Body(3, 15, pal.Board[top]); Body(4, 15, pal.Board[top]);
         }
 
         static List<Px> Distinct(Px[] px)

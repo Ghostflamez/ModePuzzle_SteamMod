@@ -197,11 +197,10 @@ namespace ModePuzzle
             string text = string.Join(" ", traits.Select(t => "[" + t + "]"));
             Caption(b, text, width).SetTooltip(text);
         }
-        static void BayImage(CustomUIBuilder b, MachineInfo machine, float width)
+        static void BayImage(CustomUIBuilder b, MachineInfo machine, float width, int scale)
         {
             Pixels.Destroy(baySprite); baySprite = ModuleArt.ComposeBay(machine);
             float w = baySprite.rect.width, h = baySprite.rect.height;
-            int scale = Mathf.Clamp(Mathf.FloorToInt(Mathf.Min(width / w, PanelStyle.MaxBayHeight / h)), 1, PanelStyle.MaxBayScale);
             Row(b, width, 0);
             // The integer minimum is one; clip unusually large modded bays rather than overrun the column.
             var frame = b.CurrentContainer;
@@ -244,8 +243,12 @@ namespace ModePuzzle
                 try { preview = transaction.Preview(result); }
                 catch (Exception e) { bayShows = BayShows.Current; message = Loc.T("opt_search_failed"); ModePuzzleMod.Log?.Warning("Preview: " + e); }
             var shown = bayShows == BayShows.Result && preview != null ? preview : machine;
-            float left = Mathf.Clamp((machine.Width * ModuleArt.CellPixels + 2 * PanelStyle.Frame) * PanelStyle.MaxBayScale,
-                width * PanelStyle.MinBayShare, width * PanelStyle.MaxBayShare);
+            // The bay column is as wide as the bay drawn at the largest whole scale that fits (pixels stay crisp),
+            // never narrower than the cell count and restore button need; the data column takes the rest.
+            float bayW = machine.Width * ModuleArt.CellPixels, bayH = machine.Height * ModuleArt.CellPixels;
+            float restoreNeed = TextWidth(Loc.T("panel_capacity", 99, 99)) + OptimizerTuning.RowGap + TextWidth(Loc.T("opt_restore"), true);
+            int bayScale = Mathf.Clamp(Mathf.FloorToInt(Mathf.Min(width * PanelStyle.MaxBayShare / bayW, PanelStyle.MaxBayHeight / bayH)), 1, PanelStyle.MaxBayScale);
+            float left = Mathf.Min(Mathf.Max(bayW * bayScale, restoreNeed), width * PanelStyle.MaxBayShare);
             var c = Columns(width, PanelStyle.ColumnGap, left, width - PanelStyle.ColumnGap - left);
             Row(b, width, PanelStyle.ColumnGap);
             b.CurrentContainer.GetComponent<HorizontalLayoutGroup>().childAlignment = TextAnchor.UpperLeft;
@@ -261,7 +264,7 @@ namespace ModePuzzle
                 CompactRow(b);
             }
             EndRow(b);
-            BayImage(b, shown, c[0]);
+            BayImage(b, shown, c[0], bayScale);
             int used = shown.Installed.SelectMany(p => p.Cells).Count(cell => shown.IsUsable(cell.X, cell.Y));
             string capacity = Loc.T("panel_capacity", used, shown.UsableCount);
             float restoreWidth = TextWidth(Loc.T("opt_restore"), true);

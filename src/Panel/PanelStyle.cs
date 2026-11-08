@@ -4,13 +4,13 @@ namespace ModePuzzle.UI
 {
     static class PanelStyle
     {
-        public const float PreferredWidth = 980, PreferredHeight = 680, MaxWidthShare = .5f, MaxHeightShare = .8f;
+        public const float PreferredWidth = 900, PreferredHeight = 760, MaxWidthShare = .5f, MaxHeightShare = .8f;
         public const float FrameMargin = 64, ChromeFallback = 96, RightSafety = 24;
         public const float MachineNameShare = .35f, StatusShare = .20f;
         public const float BodyFont = 15, CaptionFont = 13, ButtonFont = 15, ButtonPadding = 28;
         public const float ColumnGap = 16, SettingsGap = 24, ProgressLabelWidth = 90;
-        public const float MinBayShare = .30f, MaxBayShare = .40f, MaxBayHeight = 220;
-        public const int MaxBayScale = 2;
+        public const float MaxBayShare = .45f, MaxBayHeight = 260;
+        public const int MaxBayScale = 3;
         public const float NumberMargin = 12, NameFlexShare = .4f, ToggleBox = 32, ToggleScale = .75f, ToggleTextGap = 16, LockButtonWidth = 44;
         public const float StatColumn = 84, StatNamePad = 16;
         public const float MachineArtSize = 56, PickerCell = 104, PickerIcon = 80, PickerName = 22, PickerGap = 8;

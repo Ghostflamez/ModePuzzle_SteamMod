@@ -304,6 +304,11 @@ namespace ModePuzzle
             float data = Mathf.Min(c[1], TextWidth(Loc.T("opt_target")) + gap +
                 targets.Select((t, i) => TextWidth(i == target ? $"[ {t} ]" : t, true)).Sum() + gap * (targets.Count - 1) + gap);
             lastDataWidth = data;
+            // The widest choice row the data column must hold: 目标, and 主目标 / 次目标 of the custom target.
+            float Natural(string label, IList<string> options) => TextWidth(label) + gap + options.Sum(o => TextWidth(o, true)) + gap * options.Count
+                + options.Max(o => TextWidth($"[ {o} ]", true) - TextWidth(o, true));
+            var secondary = Axes(); secondary.Insert(0, Loc.T("opt_none"));
+            choiceRowWidth = Mathf.Max(Natural(Loc.T("opt_target"), targets), Mathf.Max(Natural(Loc.T("opt_primary"), Axes()), Natural(Loc.T("opt_secondary"), secondary)));
             if (target == 3)
             {
                 customButton = b.Last.Rect;   // the 自定义 button, last in the 目标 row

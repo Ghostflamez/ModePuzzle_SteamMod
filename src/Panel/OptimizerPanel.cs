@@ -25,6 +25,8 @@ namespace ModePuzzle
         static int detailAxis = Engine.Axis.Performance;
         static Sprite baySprite;
         static float lastInner;
+        static float fitWidth, choiceRowWidth;
+        static bool refitting;
 
         public static bool IsOpen
         {
@@ -70,7 +72,8 @@ namespace ModePuzzle
             Vector2 screen = new Vector2(Screen.width, Screen.height);
             var root = manager.GetLayerRoot(CustomUIManager.LAYER_OVERLAY);
             if (root != null && root.rect.width > 0 && root.rect.height > 0) screen = root.rect.size;
-            return new Vector2(Mathf.Min(PanelStyle.PreferredWidth, screen.x * PanelStyle.MaxWidthShare), Mathf.Min(PanelStyle.PreferredHeight, screen.y * PanelStyle.MaxHeightShare));
+            float width = Mathf.Max(PanelStyle.PreferredWidth, fitWidth);
+            return new Vector2(Mathf.Min(width, screen.x * PanelStyle.MaxWidthShare), Mathf.Min(PanelStyle.PreferredHeight, screen.y * PanelStyle.MaxHeightShare));
         }
 
         static void Build(Vector2? position)
@@ -147,6 +150,15 @@ namespace ModePuzzle
             ModePuzzleMod.Log?.Log($"Build tab={tab}:{marks}");
 #endif
             PanelWatcher.Watch(machine.UniqueId);
+            // The choice rows decide the data column's width; in a language where they are longer the window
+            // widens once (to what a standard 7x5 bay at 3x leaves for them) and is built again.
+            float wanted = Mathf.Ceil(PanelStyle.StdBayWidth + PanelStyle.ColumnGap + choiceRowWidth + (size.x - inner));
+            if (!refitting && Mathf.Abs(Mathf.Max(PanelStyle.PreferredWidth, wanted) - Mathf.Max(PanelStyle.PreferredWidth, fitWidth)) > 2)
+            {
+                fitWidth = wanted;
+                refitting = true;
+                try { Refresh(); } finally { refitting = false; }
+            }
         }
 
         /// <summary>Previous / next machine, wrapping around; re-reads everything.</summary>

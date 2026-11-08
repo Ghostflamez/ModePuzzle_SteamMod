@@ -76,7 +76,7 @@ namespace ModePuzzle
 
             // Stat tiles.
             float tile = Mathf.Floor((inner - 2 * gap) / 3);
-            string[] labels = { GameText.Efficiency, GameText.Quality, GameText.Performance };
+            string[] labels = { Loc.T("stat_short_efficiency"), Loc.T("stat_short_quality"), Loc.T("stat_short_performance") };
             Row(b, inner, gap);
             for (int k = 0; k < 3; k++)
             {
@@ -138,10 +138,17 @@ namespace ModePuzzle
             if (m.IsNode) chips.Add((ChipIcon(TraitIcons.Icon.SupportNode), GameText.Effect("NODE_EFFECT_SUPPORT")));
             if (m.Stuck) chips.Add((null, Loc.T("panel_stuck")));
             if (chips.Count == 0) { Label(b, "", width).SetTextColor(PanelStyle.PaperMuted); return; }
+            // Lines of chips: a chip that would run past the width starts the next line.
+            Column(b, width);
+            b.CurrentContainer.GetComponent<VerticalLayoutGroup>().spacing = PanelStyle.ChipGap;
             Row(b, width, PanelStyle.ChipGap);
+            float used = 0;
             foreach (var (icon, text) in chips)
             {
-                Row(b, (icon != null ? PanelStyle.ChipIcon + 4 : 0) + TextWidth(text) * PanelStyle.CaptionFont / PanelStyle.BodyFont + 12, 4);
+                float chipWidth = Mathf.Min(width, (icon != null ? PanelStyle.ChipIcon + 4 : 0) + TextWidth(text) * PanelStyle.CaptionFont / PanelStyle.BodyFont + 12);
+                if (used > 0 && used + PanelStyle.ChipGap + chipWidth > width) { EndRow(b, false); Row(b, width, PanelStyle.ChipGap); used = 0; }
+                used += (used > 0 ? PanelStyle.ChipGap : 0) + chipWidth;
+                Row(b, chipWidth, 4);
                 var chip = b.CurrentContainer;
                 chip.gameObject.AddComponent<Image>().color = PanelStyle.ChipPlate;
                 chip.GetComponent<HorizontalLayoutGroup>().padding = new RectOffset(4, 6, 2, 2);
@@ -151,6 +158,7 @@ namespace ModePuzzle
                 EndRow(b, false);
             }
             EndRow(b, false);
+            b.End();
         }
 
         static Sprite ChipIcon(TraitIcons.Icon icon)

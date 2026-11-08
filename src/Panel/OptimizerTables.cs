@@ -133,7 +133,11 @@ namespace ModePuzzle
             b.AddToggle(label, on, changed);
             var e = b.Last;
             e.SetFixedWidth(width); e.SetInteractable(enabled);
-            if (e.text != null) { e.text.fontSize = PanelStyle.BodyFont; e.text.enableAutoSizing = false; e.text.enableWordWrapping = false; }
+            if (e.text != null)
+            {
+                e.text.fontSize = PanelStyle.BodyFont; e.text.enableAutoSizing = false; e.text.enableWordWrapping = false;
+                e.text.fontStyle &= ~(TMPro.FontStyles.UpperCase | TMPro.FontStyles.SmallCaps | TMPro.FontStyles.LowerCase);
+            }
             if (hint != null) e.SetTooltip(hint);
             // The game's toggle: a root with a 32x32 "Background" box (fixed LayoutElement) whose "Checkmark" stretches
             // over it, then the label. Shrink the box and the root's height together.

@@ -101,7 +101,7 @@ panel_module,Module
 opt_invalid_tag,Invalidated
 detail_base,Base
 detail_self,Self
-detail_absorbed,Absorption
+detail_absorbed,Absorb
 detail_receiver,Receiver
 detail_total,Total
 result_before,Current
@@ -181,3 +181,6 @@ card_required,Required
 card_required_hint,Required: the search must use this module. The exclusion switches and 'installed modules only' do not drop it. If it cannot fit, the search reports no feasible layout.
 filter_state_required,Required
 filter_count_required,· {0} required
+stat_short_efficiency,Eff
+stat_short_quality,Qual
+stat_short_performance,Perf

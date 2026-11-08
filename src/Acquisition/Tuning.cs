@@ -3,8 +3,9 @@ namespace ModePuzzle.Acquisition
     /// <summary>Where and how often the 超科技模组优化器 can be obtained. Chances are percentages.</summary>
     static class Tuning
     {
-        // 杰克逊博士: offered on every visit and at his shop while the player owns none.
-        public const bool JacksonOnlyWhenNotOwned = true;
+        // 杰克逊博士: one roll each time he stocks (his visits and his shop) while the player owns none, like
+        // his other one-off tools (高级滤水器 15%, 紫外线滤芯 20%, 能量电池增殖器 8%, 高级模组提取器 4%).
+        public const float JacksonChance = 10f;
 
         // Both sellers offer it as stolen goods (from the looted warehouse) whose heat has already cooled
         // while passing through other hands: a random 赃物热度 in [min, max] percent, never 100%.

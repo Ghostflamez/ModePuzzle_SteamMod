@@ -20,7 +20,7 @@ cfg_dev_crate_tip,For testing only. Applies to crates generated after you turn i
 cfg_dev_crates_on_load,Dev test: put an unlocked engineering crate and evidence crate on the counter after loading
 cfg_dev_crates_on_load_tip,For testing only. Spawns on every load; combine with the always-contains toggle to check for the optimizer.
 cfg_dev_jackson,Dev test: Dr. Jackson always sells the Hypertech Module Optimizer
-cfg_dev_jackson_tip,For testing only. Stocked on his visits and at his shop even if you already own one.
+cfg_dev_jackson_tip,For testing only. Normally a 10% chance per restock and never while you own one; with this on he always stocks it.
 smuggler_fence_line_1,"Huh... is that a Hypertech Module Optimizer you've got? I thought we had the whole shipment."
 smuggler_fence_line_2,"Getting one of those from someone else, now that's something. I won't be selling today, then. Any other hot goods you've got, I'll take, at a discount."
 smuggler_fence_line_3,I've got {0} credits on me.

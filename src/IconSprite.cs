@@ -1,4 +1,5 @@
 using System;
+using ModePuzzle.UI;
 using UnityEngine;
 
 namespace ModePuzzle
@@ -25,21 +26,8 @@ namespace ModePuzzle
             {
                 var scanner = RenderHandler.TryLoadFromAtlas(ScannerAtlas, ScannerSprite);
                 if (scanner == null) throw new Exception("scanner sprite not found");
-
-                int w = (int)scanner.rect.width, h = (int)scanner.rect.height;
-                var pixels = IconForge.Build(Read(scanner), w, h);
-
-                var tex = new Texture2D(w, h, TextureFormat.RGBA32, false)
-                {
-                    filterMode = FilterMode.Point,
-                    wrapMode = TextureWrapMode.Clamp,
-                    name = Key,
-                };
-                tex.SetPixels32(ToUnity(pixels, w, h));
-                tex.Apply();
-                // Same pivot and pixels-per-unit as sprites the ModLoader loads from a mod's Textures folder.
-                cached = Sprite.Create(tex, new Rect(0, 0, w, h), new Vector2(0.5f, 0.5f), 100f);
-                cached.name = Key;
+                var source = Pixels.Read(scanner, out int w, out int h);
+                cached = Pixels.ToSprite(IconForge.Build(source, w, h), w, h, Key);
                 return Register(cached);
             }
             catch (Exception e)
@@ -56,66 +44,6 @@ namespace ModePuzzle
             if (mod == null || mod.Sprites == null) return false;
             mod.Sprites[Key] = sprite;
             return true;
-        }
-
-        /// <summary>A sprite's pixels, top-left origin. Atlas textures are CPU-readable (the game reads
-        /// them to build item shapes); a GPU copy covers the case where one is not.</summary>
-        static Px[] Read(Sprite sprite)
-        {
-            var r = sprite.textureRect;
-            int x = (int)r.x, y = (int)r.y, w = (int)r.width, h = (int)r.height;
-            Color32[] raw;
-            try
-            {
-                var colors = sprite.texture.GetPixels(x, y, w, h);
-                raw = Array.ConvertAll(colors, c => (Color32)c);
-            }
-            catch (UnityException)
-            {
-                raw = ReadViaGpu(sprite.texture, x, y, w, h);
-            }
-            var result = new Px[w * h];
-            for (int row = 0; row < h; row++)
-                for (int col = 0; col < w; col++)
-                {
-                    var c = raw[(h - 1 - row) * w + col];   // Unity rows run bottom to top
-                    result[row * w + col] = new Px(c.r, c.g, c.b, c.a);
-                }
-            return result;
-        }
-
-        static Color32[] ReadViaGpu(Texture2D source, int x, int y, int w, int h)
-        {
-            var rt = RenderTexture.GetTemporary(source.width, source.height, 0, RenderTextureFormat.ARGB32);
-            var previous = RenderTexture.active;
-            try
-            {
-                Graphics.Blit(source, rt);
-                RenderTexture.active = rt;
-                var copy = new Texture2D(w, h, TextureFormat.RGBA32, false);
-                copy.ReadPixels(new Rect(x, y, w, h), 0, 0);
-                copy.Apply();
-                var pixels = copy.GetPixels32();
-                UnityEngine.Object.Destroy(copy);
-                return pixels;
-            }
-            finally
-            {
-                RenderTexture.active = previous;
-                RenderTexture.ReleaseTemporary(rt);
-            }
-        }
-
-        static Color32[] ToUnity(Px[] px, int w, int h)
-        {
-            var result = new Color32[w * h];
-            for (int row = 0; row < h; row++)
-                for (int col = 0; col < w; col++)
-                {
-                    var c = px[row * w + col];
-                    result[(h - 1 - row) * w + col] = new Color32(c.R, c.G, c.B, c.A);
-                }
-            return result;
         }
     }
 }

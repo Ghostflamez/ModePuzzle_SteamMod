@@ -22,8 +22,12 @@ namespace ModePuzzle.Model
         public string ModuleType;
         /// <summary>Needs a 模组提取器 to remove: must stay where it is.</summary>
         public bool Stuck;
-        /// <summary>Unrotated cells of the item's own shape.</summary>
+        /// <summary>Unrotated cells of the item's own shape, and its grid size.</summary>
         public List<Cell> Shape = new List<Cell>();
+        public int ShapeWidth, ShapeHeight;
+        /// <summary>The item's sprite: an atlas path and name, or a mod id and sprite key.</summary>
+        public string SpriteAtlas, SpriteName;
+        public bool SpriteFromMod;
     }
 
     public class PlacedModule
@@ -31,6 +35,9 @@ namespace ModePuzzle.Model
         public ModuleInfo Module;
         /// <summary>Cells it covers in the bay, rotation and flip applied.</summary>
         public List<Cell> Cells = new List<Cell>();
+        /// <summary>Placement as the game stores it: flip, then quarter turns, then offset (GridShape).</summary>
+        public int OriginX, OriginY, Orientation;
+        public bool Flipped;
     }
 
     public class MachineInfo

@@ -42,7 +42,15 @@ namespace ModePuzzle.Game
                 var module = ReadModule(item);
                 var holder = item.parentInventory;
                 if (holder != null && bayOwner.TryGetValue(holder, out var machine))
-                    machine.Installed.Add(new PlacedModule { Module = module, Cells = PlacedCells(item.modifiedShape) });
+                {
+                    var shape = item.modifiedShape;
+                    machine.Installed.Add(new PlacedModule
+                    {
+                        Module = module, Cells = PlacedCells(shape),
+                        OriginX = shape?.minX ?? 0, OriginY = shape?.minY ?? 0,
+                        Orientation = shape == null ? 0 : ((shape.orientation % 4) + 4) % 4, Flipped = shape?.flipped ?? false,
+                    });
+                }
                 else if (holder != null && holder.GetParentItem() is GameItem parent && parent.IsGameItemType("MACHINE"))
                     snap.Skip(MachineTable.ExcludedMachines.Contains(parent.identifier) ? "in_chem_machine" : "in_unsupported_machine");
                 else
@@ -58,6 +66,33 @@ namespace ModePuzzle.Game
             }
             DisambiguateNames(snap.Machines);
             return snap;
+        }
+
+        /// <summary>
+        /// Cheap fingerprint of one machine: its bay shape and where each installed module sits. Changes when the
+        /// bay is expanded or a module is added, removed, moved, rotated or flipped. Null if the machine is gone.
+        /// </summary>
+        public static string Signature(int machineUniqueId)
+        {
+            var owned = EmporiumEntry.Instance?.GetAllOwnedItems();
+            var machine = owned?.Find(i => i != null && i.uniqueId == machineUniqueId && i.IsGameItemType("MACHINE"));
+            var bay = machine == null ? null : SafeModuleInv(machine);
+            var shape = bay?.inventoryShape;
+            if (shape == null) return null;
+            var sb = new System.Text.StringBuilder();
+            sb.Append(shape.width).Append('x').Append(shape.height).Append(':');
+            for (int y = 0; y < shape.height; y++)
+                for (int x = 0; x < shape.width; x++) sb.Append(shape.GetLocal(x, y) == 0 ? '0' : '1');
+            var parts = new List<string>();
+            foreach (var item in owned)
+            {
+                if (item == null || item.parentInventory != bay || !IsModule(item)) continue;
+                var m = item.modifiedShape;
+                parts.Add($"{item.uniqueId}@{m?.minX},{m?.minY},{m?.orientation},{m?.flipped}");
+            }
+            parts.Sort(string.CompareOrdinal);
+            sb.Append('|').Append(string.Join(";", parts));
+            return sb.ToString();
         }
 
         static GameGridInventory SafeModuleInv(GameItem machine)
@@ -104,6 +139,11 @@ namespace ModePuzzle.Game
                 Stuck = item.IsTag(StuckTag),
                 ModuleType = TagString(item, ModuleTypeTag),
                 Shape = LocalCells(item.shape),
+                ShapeWidth = item.shape?.width ?? 0,
+                ShapeHeight = item.shape?.height ?? 0,
+                SpriteAtlas = item.spriteAtlasPath,
+                SpriteName = item.spritePath,
+                SpriteFromMod = item.useSpriteFromMod,
             };
             if (!node)
             {

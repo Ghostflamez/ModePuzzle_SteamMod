@@ -2,37 +2,43 @@ using System.Collections.Generic;
 using System.Linq;
 using ModePuzzle.Game;
 using ModePuzzle.Model;
+using ModePuzzle.UI;
 using UnityEngine;
 
 namespace ModePuzzle
 {
     /// <summary>
-    /// The optimizer window, in the game's machinery window style (CustomUIManager.Style.Machinery: the frame,
-    /// title bar and colours of machine windows). Laid out like the external tool's machine view: machine
-    /// picker, bay with a legend of installed modules and the current totals, and the free modules that fit.
-    /// Read-only for now; optimisation controls come with step 5.
+    /// The optimizer window, in the game's machinery window style (CustomUIManager.Style.Machinery). Laid out
+    /// like the external tool's machine view: machine picker, the bay drawn with the game's own sprites and
+    /// the current totals, a legend of installed modules, and the free modules that fit. Rebuilt automatically
+    /// when the focused machine changes (PanelWatcher). Read-only for now; optimisation comes with step 5.
     /// </summary>
     static class OptimizerPanel
     {
         const string WindowId = "modepuzzle.optimizer.panel";
         // Preferred size in canvas units; never wider than half the screen nor taller than 80% of it.
         const float PreferredWidth = 980f, PreferredHeight = 680f, MaxWidthShare = 0.5f, MaxHeightShare = 0.8f;
-        const float MinCell = 16f, MaxCell = 40f, CellGap = 2f, Swatch = 14f, BayShare = 0.42f;
-        const float ListHeightShare = 0.52f;
-        const int FreeListMax = 300;
+        // Room taken by the window frame and padding around the content.
+        const float FrameMargin = 48f, ColumnGap = 16f;
+        const float BayShare = 0.45f, ListHeightShare = 0.5f;
+        /// <summary>Canvas units per cell for the small module pictures in the lists.</summary>
+        const float IconCell = 12f;
+        const int FreeListMax = 200;
 
-        static readonly Color Blocked = new Color(0f, 0f, 0f, 0f);
-        // Module colours from the game's own palette (hypertech, neural core and machinery accents).
-        static readonly Color[] ModuleColors =
-        {
-            new Color32(0xd5, 0x9f, 0x75, 255), new Color32(0x67, 0xaa, 0xa5, 255), new Color32(0xa2, 0x72, 0xac, 255),
-            new Color32(0xcc, 0xb9, 0x87, 255), new Color32(0x8a, 0xbf, 0xbb, 0xff), new Color32(0xb2, 0x6b, 0x4e, 255),
-            new Color32(0xc0, 0xa0, 0xa4, 255), new Color32(0x45, 0x91, 0x8b, 255), new Color32(0xe0, 0xd0, 0x9b, 255),
-            new Color32(0x95, 0x56, 0x99, 255),
-        };
+        enum View { Bay, Free }
 
         static int selectedMachineId;
-        static Sprite white, cell;
+        static View view = View.Bay;
+        static Sprite baySprite;
+
+        public static bool IsOpen
+        {
+            get
+            {
+                var w = CustomUIManager.Instance?.GetWindow(WindowId);
+                return w != null && w.IsAlive;
+            }
+        }
 
         public static void Open()
         {
@@ -47,14 +53,15 @@ namespace ModePuzzle
         {
             var manager = CustomUIManager.Instance;
             if (manager != null && manager.IsOpen(WindowId)) manager.CloseWindow(WindowId);
+            PanelWatcher.Stop();
         }
 
-        /// <summary>Rebuilds the window from fresh live data, keeping its position.</summary>
-        static void Rebuild()
+        /// <summary>Rebuilds the window from a fresh read of the live game, keeping its position and view.</summary>
+        public static void Refresh()
         {
             var open = CustomUIManager.Instance?.GetWindow(WindowId);
             Vector2? position = open != null && open.IsAlive ? open.Rect.anchoredPosition : (Vector2?)null;
-            Close();
+            CustomUIManager.Instance?.CloseWindow(WindowId);
             Build(position);
         }
 
@@ -71,16 +78,21 @@ namespace ModePuzzle
             var manager = CustomUIManager.Instance;
             if (manager == null) return;
             var size = WindowSize(manager);
+            float inner = size.x - FrameMargin;
             var snap = LiveReader.Read();
             var b = manager.CreateWindow(WindowId, Loc.T("panel_title"), CustomUIManager.LAYER_OVERLAY, null, CustomUIManager.Style.Machinery)
                 .SetSize(size.x, size.y)
                 .SetDraggable(true)
-                .SetCloseOnEscape(true);
+                .SetCloseOnEscape(true)
+                .OnClose(PanelWatcher.Stop);
 
             if (snap.Machines.Count == 0)
             {
-                b.AddHeader(Loc.T("panel_header")).AddLabel(Loc.T("panel_no_machines")).AddButton(Loc.T("panel_refresh"), Rebuild);
+                b.AddHeader(Loc.T("panel_header")).AddLabel(Loc.T("panel_no_machines"));
+                b.Last.SetFixedWidth(inner);
+                b.AddButton(Loc.T("panel_refresh"), Refresh);
                 Finish(b, position);
+                PanelWatcher.Stop();
                 return;
             }
 
@@ -88,31 +100,41 @@ namespace ModePuzzle
             if (index < 0) index = 0;
             var machine = snap.Machines[index];
             selectedMachineId = machine.UniqueId;
+            var fits = snap.Free.Where(machine.CanHold).ToList();
 
             b.BeginRow(8f, TextAnchor.MiddleLeft)
                 .AddLabel(Loc.T("panel_machine"))
-                .AddDropdown(snap.Machines.Select(m => m.Name).ToList(), index, i => { selectedMachineId = snap.Machines[i].UniqueId; Rebuild(); })
-                .AddButton(Loc.T("panel_refresh"), Rebuild)
+                .AddDropdown(snap.Machines.Select(m => m.Name).ToList(), index, i => { selectedMachineId = snap.Machines[i].UniqueId; Refresh(); })
+                .AddButton(Loc.T("panel_refresh"), Refresh)
                 .End();
             b.AddLabel(Summary(machine));
-            if (machine.Guessed) b.AddWarning(Loc.T("panel_guessed"));
+            b.Last.SetFixedWidth(inner);
+            if (machine.Guessed) { b.AddWarning(Loc.T("panel_guessed")); b.Last.SetFixedWidth(inner); }
+
+            b.BeginRow(6f, TextAnchor.MiddleLeft);
+            ViewButton(b, View.Bay, Loc.T("tab_bay"));
+            ViewButton(b, View.Free, Loc.T("tab_free", fits.Count));
+            b.End();
             b.AddSeparator();
 
-            var fits = snap.Free.Where(machine.CanHold).ToList();
             float listHeight = size.y * ListHeightShare;
-            b.BeginTabs();
-            b.BeginTab(Loc.T("tab_bay"));
-            BayTab(b, machine, size, listHeight);
-            b.End();
-            b.BeginTab(Loc.T("tab_free", fits.Count));
-            FreeTab(b, snap, fits, listHeight);
-            b.End();
-            b.EndTabs();
+            if (view == View.Bay) BayView(b, machine, inner, listHeight);
+            else FreeView(b, snap, fits, inner, listHeight);
 
             if (snap.Skipped.Count > 0)
+            {
                 b.AddLabel(Loc.T("panel_skipped", string.Join(Loc.T("panel_list_sep"),
                     snap.Skipped.Select(kv => $"{Loc.T("skip_" + kv.Key)} ×{kv.Value}"))));
+                b.Last.SetFixedWidth(inner);
+            }
             Finish(b, position);
+            PanelWatcher.Watch(machine.UniqueId);
+        }
+
+        static void ViewButton(CustomUIBuilder b, View which, string text)
+        {
+            b.AddButton(text, () => { if (view != which) { view = which; Refresh(); } });
+            if (view == which) b.Last.SetInteractable(false);
         }
 
         static string Summary(MachineInfo m)
@@ -129,84 +151,66 @@ namespace ModePuzzle
             return text == key ? moduleType : text;
         }
 
-        static void BayTab(CustomUIBuilder b, MachineInfo machine, Vector2 size, float listHeight)
+        static void BayView(CustomUIBuilder b, MachineInfo machine, float inner, float listHeight)
         {
-            var colors = new Dictionary<PlacedModule, Color>();
-            for (int i = 0; i < machine.Installed.Count; i++) colors[machine.Installed[i]] = ModuleColors[i % ModuleColors.Length];
-            var owner = new Dictionary<(int, int), PlacedModule>();
-            foreach (var p in machine.Installed)
-                foreach (var c in p.Cells) owner[(c.X, c.Y)] = p;
+            // Whole-pixel scale keeps the pixel art crisp.
+            int px = ModuleArt.CellPixels;
+            float bayArea = inner * BayShare;
+            int scale = Mathf.Max(1, Mathf.FloorToInt(Mathf.Min(bayArea / (machine.Width * px), listHeight / (machine.Height * px))));
+            float bayW = machine.Width * px * scale, bayH = machine.Height * px * scale;
+            float rightW = Mathf.Max(160f, inner - bayW - ColumnGap);
 
-            float cellSize = Mathf.Clamp(Mathf.Floor(size.x * BayShare / Mathf.Max(machine.Width, machine.Height)) - CellGap, MinCell, MaxCell);
-            b.BeginRow(16f);
-
-            b.BeginColumn(6f).AddHeader(Loc.T("panel_bay_title")).BeginGrid(machine.Width, cellSize, cellSize, CellGap);
-            for (int y = 0; y < machine.Height; y++)
-                for (int x = 0; x < machine.Width; x++)
-                {
-                    if (!machine.IsUsable(x, y)) { b.AddImage(WhiteSprite(), cellSize, cellSize); b.Last.SetImageColor(Blocked); continue; }
-                    if (owner.TryGetValue((x, y), out var p)) { b.AddImage(WhiteSprite(), cellSize, cellSize); b.Last.SetImageColor(colors[p]); }
-                    else if (CellSprite() != null) b.AddImage(CellSprite(), cellSize, cellSize);
-                    else { b.AddImage(WhiteSprite(), cellSize, cellSize); b.Last.SetImageColor(new Color32(32, 30, 36, 204)); }
-                }
-            b.End();
+            Pixels.Destroy(baySprite);
+            baySprite = ModuleArt.ComposeBay(machine);
             var totals = EngineBridge.EvaluateCurrent(machine, new Engine.Rules()).Total;
-            b.AddLabel(Loc.T("panel_totals", GameText.Efficiency, Signed(totals[0]), GameText.Quality, Signed(totals[1]),
-                GameText.Performance, Signed(totals[2])));
+
+            b.BeginRow(ColumnGap);
+            b.BeginColumn(6f).AddHeader(Loc.T("panel_bay_title")).AddImage(baySprite, bayW, bayH);
+            b.AddLabel(Loc.T("panel_totals", GameText.Efficiency, GameText.ColoredValue(totals[0]),
+                GameText.Quality, GameText.ColoredValue(totals[1]), GameText.Performance, GameText.ColoredValue(totals[2])));
+            b.Last.SetFixedWidth(bayW);
             b.End();
 
             b.BeginColumn(4f).AddHeader(Loc.T("panel_installed", machine.Installed.Count)).BeginScroll(listHeight);
             if (machine.Installed.Count == 0) b.AddLabel(Loc.T("panel_none"));
             for (int i = 0; i < machine.Installed.Count; i++)
-            {
-                var p = machine.Installed[i];
-                b.BeginRow(6f, TextAnchor.MiddleLeft).AddImage(WhiteSprite(), Swatch, Swatch);
-                b.Last.SetImageColor(colors[p]);
-                b.AddLabel($"{i + 1}. {GameText.Describe(p.Module)}").End();
-            }
+                ModuleRow(b, machine.Installed[i].Module, $"{i + 1}. ", rightW);
             b.End().End();
-
             b.End();
         }
 
-        static void FreeTab(CustomUIBuilder b, Snapshot snap, List<ModuleInfo> fits, float listHeight)
+        static void FreeView(CustomUIBuilder b, Snapshot snap, List<ModuleInfo> fits, float inner, float listHeight)
         {
-            b.AddLabel(Loc.T("panel_free", fits.Count, snap.Free.Count)).BeginScroll(listHeight);
+            b.AddLabel(Loc.T("panel_free", fits.Count, snap.Free.Count));
+            b.Last.SetFixedWidth(inner);
+            b.BeginScroll(listHeight);
             if (fits.Count == 0) b.AddLabel(Loc.T("panel_none"));
             // Identical modules (same name, stats and effects) are listed once with a count.
             var groups = fits.GroupBy(GameText.Describe).OrderByDescending(g => g.Count()).ThenBy(g => g.Key).ToList();
-            foreach (var g in groups.Take(FreeListMax)) b.AddLabel(g.Count() > 1 ? $"×{g.Count()}  {g.Key}" : g.Key);
+            foreach (var g in groups.Take(FreeListMax))
+                ModuleRow(b, g.First(), g.Count() > 1 ? $"×{g.Count()}  " : "", inner);
             if (groups.Count > FreeListMax) b.AddLabel(Loc.T("panel_more", groups.Count - FreeListMax));
             b.End();
         }
 
-        static string Signed(int v) => v > 0 ? "+" + v : v.ToString();
+        /// <summary>Small unrotated module picture, then the name in its card colour and coloured stats.</summary>
+        static void ModuleRow(CustomUIBuilder b, ModuleInfo m, string prefix, float width)
+        {
+            float iconW = Mathf.Max(1, m.ShapeWidth) * IconCell, iconH = Mathf.Max(1, m.ShapeHeight) * IconCell;
+            b.BeginRow(8f, TextAnchor.MiddleLeft);
+            var sprite = ModuleArt.SpriteOf(m);
+            if (sprite != null) b.AddImage(sprite, iconW, iconH);
+            var card = ModuleArt.CardColorOf(m);
+            b.AddLabel(prefix + GameText.DescribeRich(m, card.HasValue ? ColorUtility.ToHtmlStringRGB(card.Value) : null));
+            b.Last.SetFixedWidth(Mathf.Max(80f, width - (sprite != null ? iconW : 0) - 8f));
+            b.End();
+        }
 
         static void Finish(CustomUIBuilder b, Vector2? position)
         {
             if (position.HasValue) b.SetPosition(position.Value);
             else b.Center();
             b.Show();
-        }
-
-        /// <summary>The game's own bay cell (Window/machinery "cell"), read at runtime; null if unavailable.</summary>
-        static Sprite CellSprite()
-        {
-            if (cell == null) cell = RenderHandler.TryLoadFromAtlas("Window/machinery", "cell");
-            return cell;
-        }
-
-        /// <summary>A plain white sprite tinted per cell (made once; no game image involved).</summary>
-        static Sprite WhiteSprite()
-        {
-            if (white != null) return white;
-            var tex = new Texture2D(4, 4, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point };
-            var px = new Color32[16];
-            for (int i = 0; i < px.Length; i++) px[i] = new Color32(255, 255, 255, 255);
-            tex.SetPixels32(px);
-            tex.Apply();
-            white = Sprite.Create(tex, new Rect(0, 0, 4, 4), new Vector2(0.5f, 0.5f), 100f);
-            return white;
         }
     }
 }

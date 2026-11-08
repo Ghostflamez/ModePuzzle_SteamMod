@@ -17,10 +17,12 @@ namespace ModePuzzle
         internal static ConfigEntry<bool> DevCrateAlways;
         internal static ConfigEntry<bool> DevJacksonAlways;
         static ConfigEntry<bool> devCratesOnLoad;
-        static ConfigEntry<int> devMachinesPerDay;
-        static ConfigEntry<int> devBayKitsPerDay;
-        static ConfigEntry<int> devModulesPerDay;
-        const int DevMachinesMax = 10, DevBayKitsMax = 10, DevModulesMax = 30;
+        // Counts are dropdowns: the game's settings screen shows no number next to an int slider.
+        static ConfigEntry<string> devMachinesPerDay;
+        static ConfigEntry<string> devBayKitsPerDay;
+        static ConfigEntry<string> devModulesPerDay;
+        static readonly string[] SmallCounts = { "0", "1", "2", "3", "4", "5", "6", "8", "10" };
+        static readonly string[] ModuleCounts = { "0", "1", "2", "3", "5", "8", "10", "15", "20", "30" };
         const string BayKitId = "module_bay_expansion_kit";
         // Random universal modules and nodes, as the game's own loot uses them (ItemSpawner.Spawn).
         static readonly string[] RandomModuleIds =
@@ -56,12 +58,12 @@ namespace ModePuzzle
                 () => Loc.T("cfg_dev_crate"), () => Loc.T("cfg_dev_crate_tip"));
             DevJacksonAlways = config.Define("dev_jackson_always", false, "dev",
                 () => Loc.T("cfg_dev_jackson"), () => Loc.T("cfg_dev_jackson_tip"));
-            devMachinesPerDay = config.Define("dev_machines_per_day", 0, "dev",
-                () => Loc.T("cfg_dev_machine"), 0, DevMachinesMax, () => Loc.T("cfg_dev_machine_tip"));
-            devBayKitsPerDay = config.Define("dev_bay_kits_per_day", 0, "dev",
-                () => Loc.T("cfg_dev_bay_kit"), 0, DevBayKitsMax, () => Loc.T("cfg_dev_open_tip"));
-            devModulesPerDay = config.Define("dev_modules_per_day", 0, "dev",
-                () => Loc.T("cfg_dev_modules"), 0, DevModulesMax, () => Loc.T("cfg_dev_open_tip"));
+            devMachinesPerDay = config.Define("dev_machines_per_day", "0", "dev",
+                () => Loc.T("cfg_dev_machine"), SmallCounts, () => Loc.T("cfg_dev_machine_tip"));
+            devBayKitsPerDay = config.Define("dev_bay_kits_per_day", "0", "dev",
+                () => Loc.T("cfg_dev_bay_kit"), SmallCounts, () => Loc.T("cfg_dev_open_tip"));
+            devModulesPerDay = config.Define("dev_modules_per_day", "0", "dev",
+                () => Loc.T("cfg_dev_modules"), ModuleCounts, () => Loc.T("cfg_dev_open_tip"));
             devCratesOnLoad = config.Define("dev_crates_on_load", false, "dev",
                 () => Loc.T("cfg_dev_crates_on_load"), () => Loc.T("cfg_dev_crates_on_load_tip"));
 
@@ -120,10 +122,13 @@ namespace ModePuzzle
         static void OnShutterOpened()
         {
             var machines = MachineTable.KnownMachines.ToList();
-            for (int i = 0; i < (devMachinesPerDay?.Value ?? 0); i++) DevGive(machines[RNG.GetRandomInt(0, machines.Count - 1)]);
-            for (int i = 0; i < (devBayKitsPerDay?.Value ?? 0); i++) DevGive(BayKitId);
-            for (int i = 0; i < (devModulesPerDay?.Value ?? 0); i++) DevGive(RandomModuleIds[RNG.GetRandomInt(0, RandomModuleIds.Length - 1)]);
+            for (int i = 0; i < Count(devMachinesPerDay); i++) DevGive(machines[RNG.GetRandomInt(0, machines.Count - 1)]);
+            for (int i = 0; i < Count(devBayKitsPerDay); i++) DevGive(BayKitId);
+            for (int i = 0; i < Count(devModulesPerDay); i++) DevGive(RandomModuleIds[RNG.GetRandomInt(0, RandomModuleIds.Length - 1)]);
         }
+
+        static int Count(ConfigEntry<string> entry) => int.TryParse(entry?.Value, out int n) && n > 0 ? n : 0;
+
 
         /// <summary>Spawns an item for testing: counter, else back counter, else inventory.</summary>
         static void DevGive(string id)

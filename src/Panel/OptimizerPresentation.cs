@@ -142,15 +142,8 @@ namespace ModePuzzle
         {
             Row(b, width);
             // The focused machine's own sprite first, in the window's top-left corner.
-            var sprite = MachineSprite(machine);
-            float art = 0;
-            if (sprite != null)
-            {
-                float scale = ArtScale(sprite, PanelStyle.MachineArtSize);
-                art = Mathf.Ceil(sprite.rect.width * scale);
-                b.AddImage(sprite, art, Mathf.Ceil(sprite.rect.height * scale));
-                b.Last.root.AddComponent<ItemHoverTooltip>().Item = LiveReader.MachineItem(machine.UniqueId);
-            }
+            float art = PanelStyle.MachineArtSize;
+            MachineArt(b, machine, art, null);
             var name = Label(b, $"{machine.Name} ({index + 1}/{snap.Machines.Count})", width * PanelStyle.MachineNameShare);
             name.text.enableWordWrapping = false; name.text.overflowMode = TextOverflowModes.Ellipsis;
             float nameWidth = Mathf.Min(Mathf.Ceil(name.text.GetPreferredValues(name.text.text, float.PositiveInfinity, float.PositiveInfinity).x) + 2, width * PanelStyle.MachineNameShare);

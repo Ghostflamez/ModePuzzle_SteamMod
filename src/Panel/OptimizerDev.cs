@@ -68,8 +68,23 @@ namespace ModePuzzle
                     return "ok";
                 }
                 case "dialogcancel":
-                    if (GenericConfirmationUIManager.Instance == null) return "no dialog";
-                    GenericConfirmationUIManager.Instance.CancelButtonPressed(); return "ok";
+                    if (CustomUIManager.Instance?.IsOpen(ConfirmId) != true) return "no dialog";
+                    CustomUIManager.Instance.CloseWindow(ConfirmId); return "ok";
+                case "hover":
+                {
+                    // Pretends the pointer rests on the machine's picture (ItemHoverTooltip.hovered), or stops.
+                    var field = typeof(ModePuzzle.UI.ItemHoverTooltip).GetField("hovered", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                    var snap = LiveReader.Read();
+                    int id = int.TryParse(arg, out int n) && n >= 1 && n <= snap.Machines.Count ? snap.Machines[n - 1].UniqueId : -1;
+                    int count = 0;
+                    foreach (var h in UnityEngine.Object.FindObjectsOfType<ModePuzzle.UI.ItemHoverTooltip>())
+                    {
+                        bool on = h.Item != null && h.Item.uniqueId == id && count == 0;
+                        if (on) count++;
+                        if (on) field.SetValue(h, true); else if ((bool)field.GetValue(h)) h.OnPointerExit(null);
+                    }
+                    return "ok " + count;
+                }
                 case "tab":
                     tab = arg == "details" ? Tab.Details : arg == "free" ? Tab.Free : Tab.Modules;
                     Refresh(); return "ok";

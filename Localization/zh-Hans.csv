@@ -149,3 +149,5 @@ opt_exclude_degrading,排除所有退化模组
 opt_exclude_overvolted,排除所有易损模组
 opt_exclude_degrading_hint,带「退化」词条的模组都不参与优化，已插入本机的也会被移出。锁成「保留」或「固定」的除外。
 opt_exclude_overvolted_hint,带「过载」词条（使用时可能永久损坏）的模组都不参与优化，已插入本机的也会被移出。锁成「保留」或「固定」的除外。
+machine_unlock_title,解锁「{0}」
+machine_unlock_skip,不再提示（直到关闭游戏）

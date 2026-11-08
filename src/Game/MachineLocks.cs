@@ -11,6 +11,9 @@ namespace ModePuzzle.Game
     {
         static readonly HashSet<int> unlocked = new HashSet<int>();
 
+        /// <summary>The player ticked 不再提示 in the unlock confirmation: no more confirmations until the game closes.</summary>
+        public static bool SkipConfirmation;
+
         public static bool IsUnlocked(int machineUniqueId) => unlocked.Contains(machineUniqueId);
 
         public static void Set(int machineUniqueId, bool isUnlocked)

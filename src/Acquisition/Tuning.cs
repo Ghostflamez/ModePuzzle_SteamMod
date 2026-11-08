@@ -6,6 +6,11 @@ namespace ModePuzzle.Acquisition
         // 杰克逊博士: offered on every visit and at his shop while the player owns none.
         public const bool JacksonOnlyWhenNotOwned = true;
 
+        // Both sellers offer it as stolen goods (from the looted warehouse) whose heat has already cooled
+        // while passing through other hands: a random 赃物热度 in [min, max] percent, never 100%.
+        public const int JacksonHeatMin = 20, JacksonHeatMax = 35;
+        public const int SmugglerHeatMin = 45, SmugglerHeatMax = 65;
+
         // 可疑的走私犯: sells only the optimizer, at a markup over its value.
         public const string SmugglerId = "modepuzzle_smuggler";
         public const int SmugglerMarkupPercent = 50;

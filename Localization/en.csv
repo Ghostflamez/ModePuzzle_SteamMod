@@ -1,7 +1,7 @@
 # Hypertech Module Optimizer — English.
 item_name,Hypertech Module Optimizer
 item_desc,"A scanner rebuilt with hypertech parts that works out the best module-bay layout for a machine. Double-click it, or right-click and choose Activate."
-item_flavor,"A damaged Hypertech chip crammed into an old scanner shell. It has forgotten everything except how to arrange modules. Even the Hypertech smugglers passed on it, which is how it reached you."
+item_flavor,"A Hypertech instrument built for one job: arranging modules. Nobody on the station can make one. Not long ago the warehouse holding a whole shipment was cleaned out, and now they are turning up around the station one by one."
 panel_title,Hypertech Module Optimizer
 panel_header,Module bay layout
 panel_wip,"Work in progress: later versions will read your machines and modules here and find the best layout."

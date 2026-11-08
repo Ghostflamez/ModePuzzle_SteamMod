@@ -15,7 +15,7 @@ namespace ModePuzzle.Acquisition
         static void OnPlaceStock(List<GameItem> ownedItems)
         {
             if (Tuning.JacksonOnlyWhenNotOwned && Ownership.OwnsOptimizer(ownedItems)) return;
-            PlayerStore.Instance?.AddDirectSellingItemToTable(OptimizerItem.Id);
+            Ownership.OfferStolen(Tuning.JacksonHeatMin, Tuning.JacksonHeatMax);
         }
     }
 }

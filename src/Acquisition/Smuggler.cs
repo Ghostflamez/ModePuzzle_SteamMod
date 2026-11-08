@@ -46,7 +46,7 @@ namespace ModePuzzle.Acquisition
             client.mainDialogue.SetText(client.displayName, Loc.T("smuggler_line_1"));
             client.mainDialogue.NextDialogue()
                 .SetText(client.displayName, Loc.T("smuggler_line_2"))
-                .SetEndAction(() => PlayerStore.Instance?.AddDirectSellingItemToTable(OptimizerItem.Id));
+                .SetEndAction(() => Ownership.OfferStolen(Tuning.SmugglerHeatMin, Tuning.SmugglerHeatMax));
             client.onItemAddedToWeighted = item =>
             {
                 if (item != null && !GeneralHelper.IsItemOwned(item))

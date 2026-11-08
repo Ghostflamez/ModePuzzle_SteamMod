@@ -23,7 +23,7 @@ DLL = 'ModePuzzle.dll'
 GAME_EXE = 'Probably Stolen.exe'
 REFERENCES = [
     'mscorlib.dll', 'System.dll', 'System.Core.dll', 'netstandard.dll',
-    'UnityEngine.dll', 'UnityEngine.CoreModule.dll', 'UnityEngine.TextRenderingModule.dll', 'UnityEngine.UI.dll',
+    'UnityEngine.dll', 'UnityEngine.CoreModule.dll', 'UnityEngine.TextRenderingModule.dll', 'UnityEngine.UI.dll', 'UnityEngine.UIModule.dll',
     'Unity.TextMeshPro.dll',
     'Assembly-CSharp.dll', '0Harmony.dll',
 ]

@@ -8,6 +8,6 @@
         public const float RowGap = 6f;
         /// <summary>Large step of the custom range steppers.</summary>
         public const int RangeStep = 10;
-        public const float ControlWidth = 120f, RangeWidth = 65f, ResultHeightShare = 0.37f;
+        public const float RangeWidth = 65f;
     }
 }

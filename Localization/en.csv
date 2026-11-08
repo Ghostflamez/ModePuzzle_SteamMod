@@ -42,9 +42,6 @@ cfg_dev_machine_tip,"For testing only. Each goes on the counter, else the back c
 cfg_dev_bay_kit,Dev test: Module Bay Expansion Kits every time you open the shop (0 = off)
 cfg_dev_modules,Dev test: random modules / nodes every time you open the shop (0 = off)
 cfg_dev_open_tip,"For testing only. Each goes on the counter, else the back counter, else your inventory; ones that fit nowhere are logged."
-panel_bay_title,Module bay
-panel_free,Free modules that fit this machine: {0} (of {1} free)
-tab_bay,Module bay
 tab_free,Free modules ({0})
 type_MODULE_TYPE_UNIVERSAL,universal modules
 type_MODULE_TYPE_HYDROPONIC,hydroponic modules
@@ -62,9 +59,8 @@ opt_secondary,Secondary
 opt_none,None
 opt_min,min
 opt_max,max
-opt_start,Start / restart
+opt_start,Start search
 opt_stop,Stop
-opt_preview,Preview
 opt_apply,Apply layout
 opt_restore,Restore previous
 opt_result,Result
@@ -73,7 +69,6 @@ opt_stale,"The machine, modules or settings changed: this search was stopped and
 opt_search_failed,Search or preview failed; see Player.log.
 opt_bad_range,Enter valid numbers with minimum <= maximum; leave blank for no limit.
 opt_too_many,More than {0} candidates; select installed modules only.
-opt_no_result,No feasible layout yet. You can preview the current best during search.
 opt_locked,"Machine working, inventory locked or module cannot be removed; stuck modules cannot move."
 opt_illegal,Game rejected placement or compatibility.
 opt_overlap,Proposed placements overlap.
@@ -97,7 +92,7 @@ cfg_dev_apply_failure_tip,Test saves only. Apply throws after its first insertio
 opt_test_failure,Insertion failure deliberately triggered by the dev test setting.
 cfg_dev_full_storage,Dev test: a Hypertech storage bay full of random modules and nodes every time you open the shop
 cfg_dev_full_storage_tip,"For testing long searches. Falls back to a large storage bay; at most 80 pieces, leaving room under the 100-piece search limit for installed modules."
-opt_time_limit,Time limit
+opt_time_limit,Time
 opt_unbounded,none
 opt_clear,Clear
 panel_prev_machine,Previous
@@ -105,19 +100,15 @@ panel_next_machine,Next
 opt_restore_unavailable,"Cannot restore: only this machine's last applied layout, and only if nothing changed since."
 cfg_trait_badges,Show trait icons on all modules
 cfg_trait_badges_tip,"Marks every module with a special trait, in inventories, storage and machine bays. The icons stay upright and move with the cells when the module is rotated or flipped."
-panel_capacity,Bay {0}×{1} · {2}/{3} cells used
+panel_capacity,{0}×{1} · {2}/{3} cells used
 panel_accepts,Accepts: {0}
-panel_free_title,Free modules
 panel_module,Module
 panel_traits,Traits
-opt_section,Optimize
 opt_invalid_tag,Invalidated
-metric_elapsed,Elapsed
 metric_nodes,Nodes
 metric_best,Best
 metric_bound,Bound
 metric_improvement,Since improvement
-detail_item,Item
 detail_base,Base
 detail_self,Self (incl. mounts)
 detail_absorbed,Absorption
@@ -133,7 +124,16 @@ opt_timeout,Time limit
 opt_stopped,Stopped
 opt_infeasible,Infeasible
 opt_counts,Moved {0} · Removed {1} · Added {2}
-opt_lock_none,May remove
-opt_lock_required,Keep here
-opt_lock_fixed,Fix position
+opt_lock_none,Free
+opt_lock_required,Keep
+opt_lock_fixed,Fixed
 opt_only_installed,Installed modules only
+tab_modules,Modules ({0})
+bay_current,Current layout
+opt_restart,Search again
+opt_failed_tag,Failed
+opt_elapsed,{0} / {1} s
+axis_target,{0} *
+table_number,#
+table_icon,Icon
+table_lock,Lock

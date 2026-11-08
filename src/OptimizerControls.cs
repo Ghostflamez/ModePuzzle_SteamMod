@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -57,7 +57,7 @@ namespace ModePuzzle
         static void DiscardResult()
         {
             result = null; transaction = null; original = null;
-            if (view == View.Result) view = View.Bay;
+            bayShows = BayShows.Current;
         }
 
         /// <summary>The panel's refresh button: re-read the game and drop a result that can no longer be applied.</summary>
@@ -92,7 +92,9 @@ namespace ModePuzzle
             }
             bool running = session.Running;
             var next = session.Poll(out var failure);
+            bool firstFeasible = result?.Feasible != true && next?.Feasible == true;
             if (next != null) result = next;
+            if (firstFeasible) bayShows = BayShows.Result;
             if (failure != null && !completionShown)
             {
                 message = Loc.T("opt_search_failed"); ModePuzzleMod.Log?.Warning("Search failed: " + failure);
@@ -101,13 +103,14 @@ namespace ModePuzzle
             if (!running && !completionShown)
             {
                 completionShown = true;
-                if (!invalid && result?.Feasible == true) view = View.Result;
                 Refresh();
             }
+            else if (firstFeasible) Refresh();
         }
 
         static string Status()
         {
+            if (message == Loc.T("opt_search_failed")) return Loc.T("opt_failed_tag");
             if (invalid && message == Loc.T("opt_stale")) return Loc.T("opt_invalid_tag");
             if (result == null) return Loc.T(Busy ? "opt_searching" : "opt_ready");
             var r = result;
@@ -117,86 +120,18 @@ namespace ModePuzzle
 
         static void UpdateMetrics()
         {
-            statusElement?.SetText(Status());
+            statusElement?.SetText(StatusTag());
             var r = result;
             string[] values = {
-                Loc.T("opt_seconds", ((r?.ElapsedMs ?? 0) / 1000).ToString("0.0")),
                 r?.Visits.ToString("N0") ?? "0",
                 r?.Feasible == true ? r.Totals[resultAxis].ToString() : "—",
                 r?.UpperBound?.ToString("0.##") ?? "—",
                 Loc.T("opt_seconds", (r == null ? 0 : (r.ElapsedMs - r.LastImprovementMs) / 1000).ToString("0.0"))
             };
-            for (int i = 0; i < metricElements.Count; i++) metricElements[i].SetText(values[i]);
+            string[] keys = { "metric_nodes", "metric_best", "metric_bound", "metric_improvement" };
+            for (int i = 0; i < metricElements.Count; i++) metricElements[i].SetText($"<size={PanelStyle.CaptionFont}><color=#{PanelStyle.MutedHex}>{Loc.T(keys[i])}</color></size> {values[i]}");
+            elapsedElement?.SetText(Loc.T("opt_elapsed", ((r?.ElapsedMs ?? 0) / 1000).ToString("0.0"), displayLimitSeconds));
             progressElement?.SetProgress(Mathf.Clamp01((float)((r?.ElapsedMs ?? 0) / (displayLimitSeconds * 1000.0))));
-        }
-
-        static void ResultActions(CustomUIBuilder b)
-        {
-            b.BeginRow(OptimizerTuning.RowGap);
-            b.AddButton(Loc.T("opt_apply"), ApplyResult); applyElement = b.Last;
-            b.Last.SetInteractable(!Busy && !invalid && result?.Feasible == true && transaction != null);
-            b.AddButton(Loc.T("opt_restore"), RestorePrevious); b.Last.SetInteractable(RestoreAvailable);
-            b.End();
-        }
-
-        static void Controls(CustomUIBuilder b, float width)
-        {
-            Section(b, "opt_section");
-            b.BeginRow(OptimizerTuning.RowGap,TextAnchor.MiddleLeft).AddLabel(Loc.T("opt_target"));
-            Choice.Buttons(b, new List<string> { GameText.Performance, GameText.Efficiency, GameText.Quality, Loc.T("opt_custom") }, target,
-                i => { target=i; Invalidate(); Refresh(); }, !Busy);
-            b.End();
-            b.BeginRow(OptimizerTuning.RowGap,TextAnchor.MiddleLeft).AddLabel(Loc.T("opt_time_limit"));
-            Choice.Buttons(b, OptimizerTuning.TimeLimitsSeconds.Select(s => Loc.T("opt_seconds",s)).ToList(), timeIndex,
-                i => { timeIndex=i; Refresh(); }, !Busy);
-            b.End();
-            b.AddToggle(Loc.T("opt_only_installed"),onlyInstalled,v => { onlyInstalled=v; Invalidate(); Refresh(); }); b.Last.SetInteractable(!Busy);
-            if (target == 3)
-            {
-                b.BeginRow(OptimizerTuning.RowGap,TextAnchor.MiddleLeft).AddLabel(Loc.T("opt_primary"));
-                Choice.Buttons(b, Axes(), primary, i => { primary=i; if (secondary==i) secondary=-1; Invalidate(); Refresh(); }, !Busy);
-                b.End();
-                b.BeginRow(OptimizerTuning.RowGap,TextAnchor.MiddleLeft).AddLabel(Loc.T("opt_secondary"));
-                var options = Axes(); options.Insert(0,Loc.T("opt_none"));
-                Choice.Buttons(b, options, secondary+1, i => { if (i-1 != primary) { secondary=i-1; Invalidate(); Refresh(); } }, !Busy);
-                b.End();
-                for (int k=0;k<Axis.Count;k++)
-                {
-                    int axis=k;
-                    b.BeginRow(OptimizerTuning.RowGap,TextAnchor.MiddleLeft).AddLabel(Axes()[k] + " " + Loc.T("opt_min"));
-                    b.Last.SetFixedWidth(OptimizerTuning.ControlWidth);
-                    Choice.Stepper(b, minimum[k], OptimizerTuning.RangeStep, 0, v => { minimum[axis]=v; Invalidate(); Refresh(); },
-                        Loc.T("opt_unbounded"), Loc.T("opt_clear"), !Busy);
-                    b.End();
-                    b.BeginRow(OptimizerTuning.RowGap,TextAnchor.MiddleLeft).AddLabel(Axes()[k] + " " + Loc.T("opt_max"));
-                    b.Last.SetFixedWidth(OptimizerTuning.ControlWidth);
-                    Choice.Stepper(b, maximum[k], OptimizerTuning.RangeStep, 0, v => { maximum[axis]=v; Invalidate(); Refresh(); },
-                        Loc.T("opt_unbounded"), Loc.T("opt_clear"), !Busy);
-                    b.End();
-                }
-            }
-            b.BeginRow(OptimizerTuning.RowGap);
-            b.AddButton(Loc.T("opt_start"),() => StartSearch()); b.Last.SetInteractable(!Busy);
-            b.AddButton(Loc.T("opt_stop"),() => session?.Stop()); b.Last.SetInteractable(Busy);
-            b.AddButton(Loc.T("opt_preview"),() => { view=View.Result; Refresh(); }); b.Last.SetInteractable(result?.Feasible == true);
-            b.End();
-            b.AddProgressBar(); progressElement = b.Last; progressElement.SetFixedWidth(width);
-            string[] keys = { "metric_elapsed", "metric_nodes", "metric_best", "metric_bound", "metric_improvement" };
-            int columns = width < PanelStyle.MetricRowMinimum ? 3 : keys.Length;
-            for (int start = 0; start < keys.Length; start += columns)
-            {
-                b.BeginRow(OptimizerTuning.RowGap);
-                for (int i = start; i < Math.Min(start + columns, keys.Length); i++)
-                    metricElements.Add(Tile(b, Loc.T(keys[i]), "—", (width - (columns - 1) * OptimizerTuning.RowGap) / columns, true));
-                b.End();
-            }
-            UpdateMetrics();
-            // Restore must remain reachable after applying, when the result has been discarded.
-            if (view != View.Result && previous != null)
-            {
-                b.AddButton(Loc.T("opt_restore"), RestorePrevious); b.Last.SetInteractable(RestoreAvailable);
-            }
-            b.AddLabel(message ?? ""); messageElement=b.Last; b.Last.SetFixedWidth(width);
         }
 
         static void StartSearch()
@@ -230,6 +165,7 @@ namespace ModePuzzle
                 var ids=new HashSet<string>(config.Items.Select(i => i.Id).Concat(config.Fixed.Select(f => f.Item.Id)));
                 transaction=new LayoutTransaction(machine,config,machine.Installed.Select(p => p.Module).Concat(free).Where(m => ids.Contains("u"+m.UniqueId)));
                 resultAxis=config.Custom?.Primary ?? config.Target;
+                detailAxis=resultAxis; bayShows=BayShows.Current;
                 original=machine; result=null; invalid=false; completionShown=false; message=null;
                 displayLimitSeconds = OptimizerTuning.TimeLimitsSeconds[timeIndex];
                 session=new SearchSession(config,OptimizerTuning.TimeLimitsSeconds[timeIndex]*1000.0); session.Start();
@@ -252,35 +188,6 @@ namespace ModePuzzle
             message=previous.Restore(); invalid=true; DiscardResult();
             ModePuzzleMod.Log?.Log($"Restore on machine {selectedMachineId}: {message}");
             Refresh();
-        }
-        static void ResultView(CustomUIBuilder b,float width,float height)
-        {
-            Section(b, "opt_result");
-            if (result?.Feasible != true || transaction == null)
-            {
-                Label(b, Loc.T("opt_no_result"), width);
-                ResultActions(b);
-                return;
-            }
-            try
-            {
-                var preview = transaction.Preview(result);
-                var before = EngineBridge.EvaluateCurrent(original, new Rules()).Total;
-                TableRow(b, "", Axes(), width);
-                ValueRow(b, "result_before", before, width);
-                ValueRow(b, "result_after", result.Totals, width);
-                ValueRow(b, "result_delta", result.Totals.Select((v, i) => v - before[i]).ToArray(), width);
-                var oldIds = new HashSet<int>(original.Installed.Select(p => p.Module.UniqueId));
-                var newIds = new HashSet<int>(preview.Installed.Select(p => p.Module.UniqueId));
-                int moved = preview.Installed.Count(p => oldIds.Contains(p.Module.UniqueId) && !original.Installed.Any(o => o.Module.UniqueId == p.Module.UniqueId &&
-                    o.OriginX == p.OriginX && o.OriginY == p.OriginY && o.Orientation == p.Orientation && o.Flipped == p.Flipped));
-                Label(b, Loc.T("opt_counts", moved, oldIds.Except(newIds).Count(), newIds.Except(oldIds).Count()), width);
-                BayImage(b, preview, width, height);
-                ResultActions(b);
-                Legend(b, preview, width, false);
-                Details(b, preview, Scoring.Evaluate(result.Layout, new Rules()), width);
-            }
-            catch (Exception e) { b.AddWarning(Loc.T("opt_search_failed")); ModePuzzleMod.Log?.Warning("Preview: " + e); }
         }
     }
 }

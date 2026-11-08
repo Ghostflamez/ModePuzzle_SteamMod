@@ -42,9 +42,6 @@ cfg_dev_machine_tip,仅用于测试。每台优先放柜台，放不下时依次
 cfg_dev_bay_kit,开发测试：每天开门时送几个模组舱扩建套件（选 0 关闭）
 cfg_dev_modules,开发测试：每天开门时送几个随机模组/节点（选 0 关闭）
 cfg_dev_open_tip,仅用于测试。每个优先放柜台，放不下时依次尝试后柜台和背包；都放不下的会留在日志里。
-panel_bay_title,模组舱
-panel_free,能装进这台机器的空闲模组 {0} 个（共 {1} 个空闲）
-tab_bay,模组舱
 tab_free,空闲模组（{0}）
 type_MODULE_TYPE_UNIVERSAL,通用模组
 type_MODULE_TYPE_HYDROPONIC,水培模组
@@ -62,9 +59,8 @@ opt_secondary,次目标
 opt_none,无
 opt_min,下限
 opt_max,上限
-opt_start,开始 / 重新搜索
+opt_start,开始优化
 opt_stop,停止
-opt_preview,查看预览
 opt_apply,应用布局
 opt_restore,恢复上一布局
 opt_result,优化结果
@@ -73,7 +69,6 @@ opt_stale,检测到机器、模组或设置有变化，本次搜索已停止并�
 opt_search_failed,搜索或预览失败；详情见 Player.log。
 opt_bad_range,范围必须是有效数字，下限不能大于上限；留空表示不限。
 opt_too_many,候选模块超过 {0} 件；请选择只使用本机器模块。
-opt_no_result,尚无可行布局。搜索时可随时查看当前最好预览。
 opt_locked,机器正在工作、容器被锁定或模块无法移出；未允许移动卡住模块。
 opt_illegal,游戏拒绝此摆放或兼容性校验。
 opt_overlap,拟用布局存在重叠。
@@ -96,7 +91,7 @@ cfg_dev_apply_failure_tip,仅在测试存档使用。应用会在首次放入后
 opt_test_failure,开发测试主动触发的放入失败。
 cfg_dev_full_storage,开发测试：每天开门时送一个装满随机模组和节点的超科技储藏区
 cfg_dev_full_storage_tip,仅用于测试长时间搜索。放不下超科技储藏区时改送大型储藏区；最多装 80 件，给机器已装模组留出搜索上限（100 件）的余量。
-opt_time_limit,搜索时长
+opt_time_limit,时长
 opt_unbounded,不限
 opt_clear,清除
 panel_prev_machine,上一台
@@ -104,26 +99,22 @@ panel_next_machine,下一台
 opt_restore_unavailable,无法恢复：只能恢复本台机器最近一次应用的布局，而且应用之后不能再改动过。
 cfg_trait_badges,在所有模组上显示特殊词条图标
 cfg_trait_badges_tip,给背包、仓库、机器模组舱里所有带特殊词条的模组标上小图标；图标始终朝上，并随模组的旋转、翻转自动换到对应的格子。
-panel_capacity,模组舱 {0}×{1} · 已用 {2}/{3} 格
-panel_accepts,可装类型：{0}
-panel_free_title,空闲模组
+panel_capacity,{0}×{1} · 已用 {2}/{3} 格
+panel_accepts,可装：{0}
 panel_module,模组
 panel_traits,词条
-opt_section,优化
 opt_invalid_tag,结果已作废
-metric_elapsed,用时
 metric_nodes,节点
 metric_best,最佳
 metric_bound,上界
-metric_improvement,距上次改进
-detail_item,项目
+metric_improvement,距改进
 detail_base,基础
 detail_self,自身（含挂载）
 detail_absorbed,吸收
 detail_receiver,接收器
 detail_total,合计
-result_before,原布局
-result_after,拟用布局
+result_before,当前
+result_after,优化后
 result_delta,变化
 opt_details,属性明细
 opt_ready,空闲
@@ -132,7 +123,16 @@ opt_timeout,达到时限
 opt_stopped,已停止
 opt_infeasible,无可行解
 opt_counts,移动 {0} · 移出 {1} · 加入 {2}
-opt_lock_none,可移出
-opt_lock_required,保留本机
-opt_lock_fixed,固定位置
+opt_lock_none,不锁
+opt_lock_required,保留
+opt_lock_fixed,固定
 opt_only_installed,只用本机模组
+tab_modules,模组列表 ({0})
+bay_current,当前布局
+opt_restart,重新搜索
+opt_failed_tag,失败
+opt_elapsed,{0} / {1} 秒
+axis_target,{0} *
+table_number,#
+table_icon,图
+table_lock,锁定

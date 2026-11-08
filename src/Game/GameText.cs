@@ -32,11 +32,11 @@ namespace ModePuzzle.Game
         public static string Signed(int v) => v > 0 ? "+" + v : v.ToString();
 
         // Value colours: a soft green and red that sit with the machinery window's palette.
-        public const string PositiveHex = "8cc56a", NegativeHex = "d9675a", WarnHex = "e0a35a";
+        public const string PositiveHex = UI.PanelStyle.PositiveHex, NegativeHex = UI.PanelStyle.NegativeHex, WarnHex = UI.PanelStyle.StoppedHex;
 
-        /// <summary>A signed value in green (positive) or red (negative); zero stays in the body colour.</summary>
+        /// <summary>A signed value in green (positive) or red (negative); zero is muted.</summary>
         public static string ColoredValue(int v) =>
-            v > 0 ? $"<color=#{PositiveHex}>+{v}</color>" : v < 0 ? $"<color=#{NegativeHex}>{v}</color>" : "0";
+            v > 0 ? $"<color=#{PositiveHex}>+{v}</color>" : v < 0 ? $"<color=#{NegativeHex}>{v}</color>" : $"<color=#{UI.PanelStyle.MutedHex}>0</color>";
 
         /// <summary>Rich-text line: name in the module's card colour, coloured non-zero stats, effects, stuck.</summary>
         public static string DescribeRich(ModuleInfo m, string nameHex)

@@ -78,8 +78,12 @@ namespace ModePuzzle
             var manager = CustomUIManager.Instance;
             if (manager == null) return;
             var size = WindowSize(manager);
+            var clock = System.Diagnostics.Stopwatch.StartNew();
+            var marks = new System.Text.StringBuilder();
+            void Mark(string what) { marks.Append($" {what}={clock.ElapsedMilliseconds}"); }
             if (SnapshotChanged()) Invalidate();
             var snap = LiveReader.Read();
+            Mark("read");
             var b = manager.CreateWindow(WindowId, Loc.T("panel_title"), CustomUIManager.LAYER_OVERLAY, null, CustomUIManager.Style.Machinery)
                 .SetSize(size.x, size.y)
                 .SetDraggable(true)
@@ -96,6 +100,7 @@ namespace ModePuzzle
             Canvas.ForceUpdateCanvases();
             float inner = ContentWidth(size.x);
             lastInner = inner;
+            Mark("window");
             Column(b, inner);
 
             if (snap.Machines.Count == 0)
@@ -117,66 +122,29 @@ namespace ModePuzzle
             var borrowed = Borrowable(snap, machine);
 
             MachineBar(b, snap, machine, index, inner);
+            Mark("bar");
             var shown = Dashboard(b, machine, inner);
+            Mark("dashboard");
             Separator(b, inner);
-            Row(b, inner);
-            Choice.Buttons(b, new List<string> { Loc.T("tab_modules", shown.Installed.Count), Loc.T("opt_details"), Loc.T("tab_free", fits.Count + borrowed.Count) },
-                (int)tab, i => { tab = (Tab)i; Refresh(); });
-            EndRow(b);
-            if (tab == Tab.Free)
-            {
-                var lenders = new Dictionary<int, string>();
-                foreach (var other in snap.Machines)
-                    foreach (var p in other.Installed) lenders[p.Module.UniqueId] = other.Name;
-                var list = fits.Take(PanelStyle.FreeListMax).ToList();
-                CardGrid(b, list, (m, i) => new CardInfo { Values = new[] { m.Efficiency, m.Quality, m.Performance } }, inner);
-                if (fits.Count > PanelStyle.FreeListMax) Caption(b, Loc.T("panel_more", fits.Count - PanelStyle.FreeListMax), inner);
-                if (fits.Count == 0) Caption(b, Loc.T("panel_none"), inner);
-                if (borrowed.Count > 0)
-                {
-                    Label(b, Loc.T("tab_borrowed", borrowed.Count), inner);
-                    CardGrid(b, borrowed, (m, i) => new CardInfo
-                    {
-                        Values = new[] { m.Efficiency, m.Quality, m.Performance },
-                        Status = Loc.T("card_borrowed", lenders.TryGetValue(m.UniqueId, out var from) ? from : "?"),
-                        StatusColor = PanelStyle.StatusBorrowed,
-                    }, inner);
-                }
-            }
-            else
-            {
-                var evaluation = bayShows == BayShows.Result && result?.Feasible == true
-                    ? Engine.Scoring.Evaluate(result.Layout, new Engine.Rules()) : EngineBridge.EvaluateCurrent(shown, new Engine.Rules());
-                if (tab == Tab.Details) Details(b, shown, evaluation, inner);
-                else
-                {
-                    var rows = evaluation.Rows.ToDictionary(r => r.Item.Id);
-                    var modules = shown.Installed.Select(p => p.Module).ToList();
-                    bool resultView = bayShows == BayShows.Result && original != null && shown != machine;
-                    CardGrid(b, modules, (m, i) =>
-                    {
-                        var info = new CardInfo { Number = i + 1, Values = rows["u" + m.UniqueId].Total, Locks = bayShows == BayShows.Current };
-                        if (resultView)
-                        {
-                            var was = original.Installed.FirstOrDefault(o => o.Module.UniqueId == m.UniqueId);
-                            var now = shown.Installed[i];
-                            if (was == null) { info.Status = Loc.T("card_added"); info.StatusColor = PanelStyle.StatusAdded; }
-                            else if (was.OriginX != now.OriginX || was.OriginY != now.OriginY || was.Orientation != now.Orientation || was.Flipped != now.Flipped)
-                            { info.Status = Loc.T("card_moved"); info.StatusColor = PanelStyle.StatusMoved; }
-                        }
-                        return info;
-                    }, inner);
-                    if (modules.Count == 0) Caption(b, Loc.T("panel_none"), inner);
-                }
-            }
-
+            // The tabs and their content live in one container so switching tabs rebuilds only that part.
+            Column(b, inner);
+            tabArea = b.CurrentContainer;
+            Mark("tabs");
+            tabSnap = snap; tabMachine = machine; tabShown = shown; tabFits = fits; tabBorrowed = borrowed;
+            TabContent(b, inner);
+            b.End();
             if (snap.Skipped.Count > 0)
             {
                 Label(b, Loc.T("panel_skipped", string.Join(Loc.T("panel_list_sep"),
                     snap.Skipped.Select(kv => $"{Loc.T("skip_" + kv.Key)} ×{kv.Value}"))), inner);
             }
             b.End().End();
+            Mark("content");
             Finish(b, position);
+            Mark("finish");
+#if DEV
+            ModePuzzleMod.Log?.Log($"Build tab={tab}:{marks}");
+#endif
             PanelWatcher.Watch(machine.UniqueId);
         }
 
@@ -209,7 +177,7 @@ namespace ModePuzzle
                 CustomUIBuilder.RebuildLayout(scroll.content);
                 float viewportHeight = scroll.viewport != null ? scroll.viewport.rect.height : ((RectTransform)scroll.transform).rect.height;
                 var offset = scroll.content.anchoredPosition;
-                offset.y = Mathf.Clamp(scrollOffsets[(int)tab], 0, Mathf.Max(0, scroll.content.rect.height - viewportHeight));
+                offset.y = Mathf.Clamp(scrollOffset, 0, Mathf.Max(0, scroll.content.rect.height - viewportHeight));
                 scroll.content.anchoredPosition = offset;
                 scroll.StopMovement();
             }

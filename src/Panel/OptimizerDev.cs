@@ -118,6 +118,36 @@ namespace ModePuzzle
                             }
                     return sb.ToString();
                 }
+                case "bench":
+                {
+                    // Cost of the building blocks: the game's label, a plain TMP text, an image, a row.
+                    var manager = CustomUIManager.Instance;
+                    var w = manager.CreateWindow("modepuzzle.dev.bench", "dev", CustomUIManager.LAYER_OVERLAY, null, CustomUIManager.Style.Machinery).SetSize(400, 300);
+                    w.BeginScroll(200);
+                    var sw = System.Diagnostics.Stopwatch.StartNew();
+                    for (int i = 0; i < 50; i++) w.AddLabel("测试 " + i);
+                    long labels = sw.ElapsedMilliseconds; sw.Restart();
+                    var font = w.Last.text.font;
+                    for (int i = 0; i < 50; i++)
+                    {
+                        var go = new UnityEngine.GameObject("t", typeof(UnityEngine.RectTransform));
+                        go.transform.SetParent(w.CurrentContainer, false);
+                        var t = go.AddComponent<TMPro.TextMeshProUGUI>(); t.font = font; t.fontSize = 15; t.text = "测试 " + i;
+                    }
+                    long plain = sw.ElapsedMilliseconds; sw.Restart();
+                    for (int i = 0; i < 50; i++)
+                    {
+                        var go = new UnityEngine.GameObject("i", typeof(UnityEngine.RectTransform), typeof(UnityEngine.UI.Image));
+                        go.transform.SetParent(w.CurrentContainer, false);
+                    }
+                    long images = sw.ElapsedMilliseconds; sw.Restart();
+                    for (int i = 0; i < 50; i++) { w.BeginRow(4, UnityEngine.TextAnchor.MiddleLeft); w.End(); }
+                    long rows = sw.ElapsedMilliseconds; sw.Restart();
+                    for (int i = 0; i < 50; i++) w.AddButton("按钮", null);
+                    long buttons = sw.ElapsedMilliseconds;
+                    manager.CloseWindow("modepuzzle.dev.bench");
+                    return $"50 each: game labels {labels} ms, plain TMP {plain} ms, images {images} ms, rows {rows} ms, buttons {buttons} ms";
+                }
                 case "dumptoggle":
                 {
                     // Hierarchy of a fresh game toggle: names, sizes, anchors and components.
@@ -145,8 +175,9 @@ namespace ModePuzzle
                     return sb.ToString();
                 }
                 case "tab":
-                    tab = arg == "details" ? Tab.Details : arg == "free" ? Tab.Free : Tab.Modules;
-                    Refresh(); return "ok";
+                    // As the tab buttons do: only the lower half is rebuilt.
+                    SwitchTab(arg == "details" ? Tab.Details : arg == "free" ? Tab.Free : Tab.Modules);
+                    return "ok";
                 case "bay":
                     bayShows = arg == "result" ? BayShows.Result : BayShows.Current;
                     Refresh(); return "ok";

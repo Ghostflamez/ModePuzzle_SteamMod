@@ -23,7 +23,7 @@ namespace ModePuzzle.UI
         public const int PickerColumns = 4;
         public const float IconSlot = 28, IconSize = 24, NumberWidth = 28, StatWidth = 64, RowHeight = 28;
         public const float NameShare = .22f, TraitShare = .18f;
-        public const int FreeListMax = 200, CellInset = 1, Frame = 1, DigitWidth = 3, DigitHeight = 5, DigitGap = 1, NumberPadding = 1;
+        public const int FreeBatch = 24, CellInset = 1, Frame = 1, DigitWidth = 3, DigitHeight = 5, DigitGap = 1, NumberPadding = 1;
         public const string MutedHex = "9c968c", PositiveHex = "8cc56a", NegativeHex = "d9675a", SearchingHex = "e6c35c", StoppedHex = "d8a657";
         public static readonly Color Selected = new Color32(150, 88, 20, 255);
         public static readonly Color Muted = new Color32(156, 150, 140, 255);

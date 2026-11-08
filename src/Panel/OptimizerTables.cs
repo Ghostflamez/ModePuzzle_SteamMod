@@ -51,48 +51,6 @@ namespace ModePuzzle
                 layout.minHeight = layout.preferredHeight = PanelStyle.RowHeight; layout.flexibleHeight = 0;
             }
         }
-        static void ModuleTable(CustomUIBuilder b, MachineInfo machine, List<ModuleInfo> free, Scoring.Evaluation evaluation, float width)
-        {
-            bool isFree = free != null, editable = !isFree && bayShows == BayShows.Current;
-            float gap = OptimizerTuning.RowGap, lockWidth = ChoiceWidth(LockLabels());
-            float nameMin = width * PanelStyle.NameShare, traitsMin = width * PanelStyle.TraitShare;
-            float fixedWidth = PanelStyle.NumberWidth + PanelStyle.IconSlot + Axis.Count * PanelStyle.StatWidth;
-            bool reserveLocks = bayShows == BayShows.Current && fixedWidth + nameMin + traitsMin + lockWidth + 7 * gap <= width;
-            // Free rows reuse the shown layout's name/stat/trait widths, omitting number and lock slots.
-            float remaining = width - fixedWidth - (reserveLocks ? lockWidth + 7 * gap : 6 * gap);
-            float name = Mathf.Clamp(remaining * PanelStyle.NameFlexShare, nameMin, Mathf.Max(nameMin, remaining - traitsMin)), traits = Mathf.Max(traitsMin, remaining - name);
-            var shares = new List<float> { PanelStyle.NumberWidth, PanelStyle.IconSlot, name, PanelStyle.StatWidth, PanelStyle.StatWidth, PanelStyle.StatWidth, traits };
-            if (reserveLocks) shares.Add(lockWidth);
-            bool inlineLocks = editable && reserveLocks;
-            var c = Columns(width, gap, shares.ToArray());
-            var headers = new List<string> { isFree ? "" : Loc.T("table_number"), Loc.T("table_icon"), Loc.T("panel_module"), GameText.Efficiency, GameText.Quality, GameText.Performance, Loc.T("panel_traits") };
-            if (inlineLocks) headers.Add(Loc.T("table_lock"));
-            if (isFree) Header(b, width, c.Skip(1).Take(6).ToArray(), 5, headers.Skip(1).Take(6).ToArray());
-            else Header(b, width, c, 6, headers.ToArray());
-            var modules = isFree ? free.Take(PanelStyle.FreeListMax).ToList() : machine.Installed.Select(p => p.Module).ToList();
-            var rows = evaluation?.Rows.ToDictionary(r => r.Item.Id);
-            for (int i = 0; i < modules.Count; i++)
-            {
-                var m = modules[i];
-                int[] values = isFree ? new[] { m.Efficiency, m.Quality, m.Performance } : rows["u" + m.UniqueId].Total;
-                Row(b, width);
-                b.CurrentContainer.GetComponent<LayoutElement>().minHeight = PanelStyle.RowHeight;
-                if (!isFree) Label(b, (i + 1).ToString(), c[0], true);
-                ModuleIcon(b, m, c[1]); Name(b, m, c[2]);
-                for (int k = 0; k < Axis.Count; k++) NumberMargin(Label(b, GameText.ColoredValue(values[k]), c[k + 3], true));
-                Chips(b, m, c[6]);
-                if (inlineLocks) LockButtons(b, m, c[7]);
-                CompactRow(b); EndRow(b, false);
-                if (editable && !inlineLocks)
-                {
-                    float indent = c[0] + c[1] + 2 * gap;
-                    var sub = Columns(width, gap, indent - gap, width - indent);
-                    Row(b, width); Label(b, "", sub[0]); LockButtons(b, m, sub[1]); EndRow(b, false);
-                }
-            }
-            if (modules.Count == 0) Caption(b, Loc.T("panel_none"), width);
-            if (isFree && free.Count > PanelStyle.FreeListMax) Caption(b, Loc.T("panel_more", free.Count - PanelStyle.FreeListMax), width);
-        }
         static void Details(CustomUIBuilder b, MachineInfo machine, Scoring.Evaluation evaluation, float width)
         {
             Row(b, width);

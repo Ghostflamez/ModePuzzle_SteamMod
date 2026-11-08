@@ -27,7 +27,6 @@ smuggler_fence_line_3,我身上带了{0}信用点。
 panel_refresh,刷新
 panel_no_machines,"没有找到带模组舱的机器。把机器放进店里或背包后点「刷新」。"
 panel_guessed,"未收录的机器：可用模组类型按通用模组和已安装模组推断。"
-panel_more,……还有 {0} 个
 panel_none,（无）
 panel_node,节点
 panel_stuck,（卡住，需模组提取器）
@@ -151,3 +150,4 @@ card_added,新加入本机
 card_moved,位置已调整
 card_borrowed,来自「{0}」· 已解锁
 detail_self_hint,初始属性加上挂载、优质 / 劣质等自身加成，取整后的值。
+panel_show_more,再显示 {0} 件（还有 {1} 件）

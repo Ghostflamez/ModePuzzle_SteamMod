@@ -15,7 +15,7 @@ namespace ModePuzzle
     {
         static ScrollRect scroll;
         static Tab builtTab;
-        static readonly float[] scrollOffsets = { 0, 0, 0 };
+        static float scrollOffset;
         static CustomUIElement progressElement, elapsedElement;
         static readonly List<CustomUIElement> metricElements = new List<CustomUIElement>();
         static TMP_Text measureText;
@@ -77,13 +77,22 @@ namespace ModePuzzle
             for (int i = 0; i < row.childCount; i++)
             {
                 var child = (RectTransform)row.GetChild(i);
-                var text = child.GetComponentInChildren<TMP_Text>();
-                if (text != null && child.GetComponent<Button>() != null)
+                float known = -1;
+                if (child.GetComponent<Button>() != null)
                 {
-                    float w = ButtonText(text);
-                    if (fit && child != timeButton) Fixed(child, w + PanelStyle.ButtonPadding);
+                    var text = child.GetComponentInChildren<TMP_Text>(true);
+                    if (text != null)
+                    {
+                        float w = ButtonText(text);
+                        if (fit && child != timeButton) { known = w + PanelStyle.ButtonPadding; Fixed(child, known); }
+                    }
                 }
-                children.Add(child); natural.Add(Mathf.Max(0, LayoutUtility.GetPreferredWidth(child)));
+                if (!fit) continue;
+                // A width set on the element itself is read directly: LayoutUtility skips hidden components, and
+                // asking it forces a layout pass per child.
+                if (known < 0) { var le = child.GetComponent<LayoutElement>(); if (le != null && le.preferredWidth > 0) known = le.preferredWidth; }
+                if (known < 0) known = LayoutUtility.GetPreferredWidth(child);
+                children.Add(child); natural.Add(Mathf.Max(0, known));
             }
             if (fit && children.Count > 0)
             {
@@ -97,7 +106,7 @@ namespace ModePuzzle
         static void SaveScroll(CustomUIWindow window)
         {
             if (window != null && window.IsAlive && scroll != null)
-                scrollOffsets[(int)builtTab] = scroll.content.anchoredPosition.y;
+                scrollOffset = scroll.content.anchoredPosition.y;
         }
         static CustomUIElement Label(CustomUIBuilder b, string text, float width, bool right = false, float font = PanelStyle.BodyFont)
         {
@@ -105,7 +114,7 @@ namespace ModePuzzle
             var e = b.Last; e.SetFixedWidth(width);
             if (e.text != null)
             {
-                measureText = e.text;
+                if (e.text.isActiveAndEnabled || measureText == null) measureText = e.text;
                 e.text.fontSize = font; e.text.enableAutoSizing = false; e.text.enableWordWrapping = true;
                 e.text.overflowMode = TextOverflowModes.Truncate;
                 e.text.alignment = right ? TextAlignmentOptions.MidlineRight : TextAlignmentOptions.MidlineLeft;
@@ -136,7 +145,12 @@ namespace ModePuzzle
         {
             text.fontSize = PanelStyle.ButtonFont; text.enableAutoSizing = false;
             text.enableWordWrapping = false; text.overflowMode = TextOverflowModes.Overflow;
-            return Mathf.Ceil(text.GetPreferredValues(text.text, float.PositiveInfinity, float.PositiveInfinity).x);
+            // A text in a hidden hierarchy measures as zero: measure with a visible one at the same size.
+            var ruler = text.isActiveAndEnabled || measureText == null || !measureText.isActiveAndEnabled ? text : measureText;
+            float old = ruler.fontSize; ruler.fontSize = PanelStyle.ButtonFont;
+            float width = ruler.GetPreferredValues(text.text, float.PositiveInfinity, float.PositiveInfinity).x;
+            ruler.fontSize = old;
+            return Mathf.Ceil(width);
         }
         static void MachineBar(CustomUIBuilder b, Snapshot snap, MachineInfo machine, int index, float width)
         {

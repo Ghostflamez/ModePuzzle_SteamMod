@@ -58,7 +58,6 @@ namespace ModePuzzle
             sr.anchorMin = new Vector2(0, 1); sr.anchorMax = new Vector2(1, 1); sr.pivot = new Vector2(.5f, 1);
             sr.sizeDelta = new Vector2(0, PanelStyle.CardStrip); sr.anchoredPosition = Vector2.zero;
             strip.GetComponent<Image>().color = ModuleArt.CardColorOf(m) ?? PanelStyle.CardStripDefault;
-
             // Head: framed picture, then "#n name" over the trait chips.
             float frame = PanelStyle.CardIcon;
             Row(b, inner, gap);
@@ -80,17 +79,14 @@ namespace ModePuzzle
             Row(b, inner, gap);
             for (int k = 0; k < 3; k++)
             {
+                // One label per tile: the caption at the left and the bold value at the right of the same line.
                 Row(b, tile, 0);
-                var t = b.CurrentContainer;
-                t.gameObject.AddComponent<Image>().color = PanelStyle.CardTile;
-                var tg = t.GetComponent<HorizontalLayoutGroup>(); tg.padding = new RectOffset(6, 6, 2, 2);
-                Label(b, labels[k], (tile - 12) / 2, false, PanelStyle.CaptionFont).SetTextColor(PanelStyle.PaperMuted);
-                var value = Label(b, PaperValue(info.Values[k]), (tile - 12) / 2, true);
-                value.text.fontStyle = FontStyles.Bold;
+                var bg = b.CurrentContainer.gameObject.AddComponent<Image>(); bg.color = PanelStyle.CardTile; bg.raycastTarget = false;
+                var t = Label(b, $"<align=left><size={PanelStyle.CaptionFont}><color=#{PanelStyle.PaperMutedHex}>{labels[k]}</color></size><line-height=0>\n<align=right><b>{PaperValue(info.Values[k])}</b>", tile);
+                t.text.margin = new Vector4(6, 0, 6, 0);
                 EndRow(b, false);
             }
             EndRow(b, false);
-
             if (!string.IsNullOrEmpty(info.Status))
             {
                 Row(b, inner, 0);

@@ -27,7 +27,6 @@ smuggler_fence_line_3,I've got {0} credits on me.
 panel_refresh,Refresh
 panel_no_machines,"No machine with a module bay found. Put one in your store or inventory, then press Refresh."
 panel_guessed,"Unlisted machine: accepted module types are guessed from universal modules and the ones installed."
-panel_more,... and {0} more
 panel_none,(none)
 panel_node,Node
 panel_stuck,"(stuck, needs a Module Extractor)"
@@ -152,3 +151,4 @@ card_added,Newly installed
 card_moved,Moved
 card_borrowed,From {0} · unlocked
 detail_self_hint,Base stats with the module's own bonuses (mounts, premium / inferior and so on), rounded.
+panel_show_more,Show {0} more ({1} left)

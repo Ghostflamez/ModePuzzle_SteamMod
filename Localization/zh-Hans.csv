@@ -137,8 +137,6 @@ table_lock,锁定
 panel_change_machine,更换机器
 picker_title,选择机器
 picker_hint,悬停查看详情，点击切换。左上角的锁表示这台机器是否借出模组。
-machine_lock,锁定本机
-machine_unlock,解锁本机
 machine_locked_hint,本机已锁定：优化其他机器时不会借用本机的模组。
 machine_unlocked_hint,本机已解锁：优化其他机器时可以借用本机的模组。
 machine_unlock_warning,"解锁后，优化其他机器时可以借用「{0}」中的 {1} 件模组。\n\n如果在其他机器上应用的布局用到了这些模组，它们会从「{0}」拆下，装到那台机器上。\n\n之后可以随时重新锁定。"

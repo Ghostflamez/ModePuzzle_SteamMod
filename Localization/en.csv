@@ -138,8 +138,6 @@ table_lock,Lock
 panel_change_machine,Change machine
 picker_title,Choose a machine
 picker_hint,Hover for details, click to switch. The lock in the corner shows whether a machine lends its modules.
-machine_lock,Lock this machine
-machine_unlock,Unlock this machine
 machine_locked_hint,Locked: optimising other machines never borrows this machine's modules.
 machine_unlocked_hint,Unlocked: optimising other machines may borrow this machine's modules.
 machine_unlock_warning,"Once unlocked, optimising other machines may borrow the {1} modules in {0}.\n\nIf a layout applied to another machine uses them, they are taken out of {0} and installed in that machine.\n\nYou can lock it again at any time."

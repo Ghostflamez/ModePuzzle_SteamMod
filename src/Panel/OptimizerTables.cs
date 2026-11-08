@@ -120,13 +120,31 @@ namespace ModePuzzle
             int expected = bayShows == BayShows.Result && result?.Feasible == true ? result.Totals[detailAxis] : evaluation.Total[detailAxis];
             if (totals[4] != expected) ModePuzzleMod.Log?.Warning($"Detail total assertion failed: axis={detailAxis}, rows={totals[4]}, dashboard={expected}");
         }
-        /// <summary>A button that stays on: bracketed and highlighted while on, like a selected option.</summary>
-        static void ExcludeButton(CustomUIBuilder b, string label, string hint, bool on, Action<bool> set)
+        static float ToggleWidth(string label) => TextWidth(label) + PanelStyle.ToggleBox * PanelStyle.ToggleScale + PanelStyle.ToggleTextGap;
+
+        /// <summary>
+        /// The game's toggle with its box shrunk to <see cref="PanelStyle.ToggleScale"/>; changing it invalidates the
+        /// result and rebuilds the window.
+        /// </summary>
+        static void SmallToggle(CustomUIBuilder b, string label, string hint, bool on, Action<bool> set, float width)
         {
-            b.AddButton(on ? $"[ {label} ]" : label, () => { set(!on); Invalidate(); Refresh(); });
-            b.Last.SetInteractable(!Busy);
-            if (on && !Busy) b.Last.SetTextColor(PanelStyle.Selected);
-            b.Last.SetTooltip(hint);
+            b.AddToggle(label, on, v => { set(v); Invalidate(); Refresh(); });
+            var e = b.Last;
+            e.SetFixedWidth(width); e.SetInteractable(!Busy);
+            if (e.text != null) { e.text.fontSize = PanelStyle.BodyFont; e.text.enableAutoSizing = false; e.text.enableWordWrapping = false; }
+            if (hint != null) e.SetTooltip(hint);
+            var box = e.toggle?.targetGraphic?.rectTransform;
+            if (box == null) return;
+            float side = Mathf.Max(box.rect.width, LayoutUtility.GetPreferredWidth(box));
+            if (side <= 0) side = PanelStyle.ToggleBox;
+            float small = Mathf.Round(side * PanelStyle.ToggleScale);
+            var layout = box.GetComponent<LayoutElement>() ?? box.gameObject.AddComponent<LayoutElement>();
+            layout.minWidth = layout.preferredWidth = layout.minHeight = layout.preferredHeight = small;
+            layout.flexibleWidth = layout.flexibleHeight = 0;
+            box.sizeDelta = new Vector2(small, small);
+            var mark = e.toggle.graphic?.rectTransform;
+            if (mark != null && mark != box && mark.anchorMin == mark.anchorMax)
+                mark.sizeDelta *= PanelStyle.ToggleScale;
         }
         static void ChoiceSetting(CustomUIBuilder b, string label, IList<string> labels, int selected, Action<int> set, float width)
         {
@@ -153,21 +171,14 @@ namespace ModePuzzle
                 ChoiceSetting(b, Loc.T("opt_target"), targets, target, setTarget, width);
                 ChoiceSetting(b, Loc.T("opt_time_limit"), times, timeIndex, setTime, width);
             }
-            string only = Loc.T("opt_only_installed");
-            float lockWidth = Mathf.Max(TextWidth(Loc.T("machine_lock"), true), TextWidth(Loc.T("machine_unlock"), true));
-            float toggleWidth = Mathf.Min(width - lockWidth - PanelStyle.SettingsGap, TextWidth(only) + PanelStyle.ToggleBox);
-            string degrading = Loc.T("opt_exclude_degrading"), overvolted = Loc.T("opt_exclude_overvolted");
-            float excludeWidth = TextWidth("[ " + degrading + " ]", true) + OptimizerTuning.RowGap + TextWidth("[ " + overvolted + " ]", true);
-            bool oneRow = excludeWidth + toggleWidth + lockWidth + 2 * PanelStyle.SettingsGap <= width;
+            string degrading = Loc.T("opt_exclude_degrading"), overvolted = Loc.T("opt_exclude_overvolted"), only = Loc.T("opt_only_installed");
+            float wd = ToggleWidth(degrading), wo = ToggleWidth(overvolted), wi = ToggleWidth(only);
+            bool oneRow = wd + wo + wi + 2 * PanelStyle.SettingsGap <= width;
             Row(b, width, PanelStyle.SettingsGap);
-            ExcludeButton(b, degrading, Loc.T("opt_exclude_degrading_hint"), excludeDegrading, v => excludeDegrading = v);
-            ExcludeButton(b, overvolted, Loc.T("opt_exclude_overvolted_hint"), excludeOvervolted, v => excludeOvervolted = v);
-            if (!oneRow) { EndRow(b); Row(b, width, PanelStyle.SettingsGap); }
-            b.AddToggle(only, onlyInstalled, v => { onlyInstalled = v; Invalidate(); Refresh(); });
-            b.Last.SetFixedWidth(toggleWidth); b.Last.SetInteractable(!Busy);
-            if (b.Last.text != null) { b.Last.text.fontSize = PanelStyle.BodyFont; b.Last.text.enableAutoSizing = false; }
-            var focused = LiveReader.Read().Machines.FirstOrDefault(m => m.UniqueId == selectedMachineId);
-            if (focused != null) LockButton(b, focused, lockWidth);
+            SmallToggle(b, degrading, Loc.T("opt_exclude_degrading_hint"), excludeDegrading, v => excludeDegrading = v, wd);
+            SmallToggle(b, overvolted, Loc.T("opt_exclude_overvolted_hint"), excludeOvervolted, v => excludeOvervolted = v, wo);
+            if (!oneRow) { EndRow(b, false); Row(b, width, PanelStyle.SettingsGap); }
+            SmallToggle(b, only, null, onlyInstalled, v => onlyInstalled = v, Mathf.Min(wi, width));
             EndRow(b, false);
             if (target != 3) return;
             ChoiceSetting(b, Loc.T("opt_primary"), Axes(), primary, i => { primary = i; detailAxis = i; if (secondary == i) secondary = -1; Invalidate(); Refresh(); }, width);

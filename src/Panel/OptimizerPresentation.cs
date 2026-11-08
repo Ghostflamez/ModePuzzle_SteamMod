@@ -156,8 +156,9 @@ namespace ModePuzzle
             Button(b, change, c[1], OpenPicker);
             Button(b, refresh, c[2], UserRefresh);
             Label(b, "", c[3]);
-            statusElement = Label(b, StatusTag(), status, true);
+            statusElement = Label(b, StatusTag(), status - PanelStyle.LockButtonWidth - gap, true);
             statusElement.text.enableWordWrapping = false; statusElement.text.overflowMode = TextOverflowModes.Ellipsis;
+            LockButton(b, machine, PanelStyle.LockButtonWidth);
             EndRow(b, false);
         }
         static string StatusTag()

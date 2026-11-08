@@ -11,7 +11,7 @@ namespace ModePuzzle.UI
         public const float ColumnGap = 16, SettingsGap = 24, MetricRowMinimum = 420, ProgressLabelWidth = 90;
         public const float MinBayShare = .30f, MaxBayShare = .40f, MaxBayHeight = 220;
         public const int MaxBayScale = 2;
-        public const float NumberMargin = 12, NameFlexShare = .4f, ToggleBox = 48;
+        public const float NumberMargin = 12, NameFlexShare = .4f, ToggleBox = 32, ToggleScale = .75f, ToggleTextGap = 16, LockButtonWidth = 44;
         public const float MachineArtSize = 56, PickerCell = 104, PickerIcon = 80, PickerName = 22, PickerGap = 8;
         public const float PickerChrome = 72, PickerChromeHeight = 130, PickerMinWidth = 520, LockScale = 2, LockOutset = 2;
         public const float ConfirmWidth = 520, ConfirmHeight = 330;

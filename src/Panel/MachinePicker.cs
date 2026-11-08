@@ -162,11 +162,22 @@ namespace ModePuzzle
             manager.GetWindow(ConfirmId)?.BringToFront();
         }
 
+        /// <summary>An ordinary button showing the lock / unlock icon instead of a word.</summary>
         static void LockButton(CustomUIBuilder b, MachineInfo machine, float width)
         {
             bool unlocked = MachineLocks.IsUnlocked(machine.UniqueId);
-            Button(b, Loc.T(unlocked ? "machine_lock" : "machine_unlock"), width, () => ToggleLock(machine), !Busy);
+            Button(b, " ", width, () => ToggleLock(machine), !Busy);
             b.Last.SetTooltip(Loc.T(unlocked ? "machine_unlocked_hint" : "machine_locked_hint"));
+            var icon = new GameObject("lock", typeof(RectTransform), typeof(Image));
+            var rect = (RectTransform)icon.transform;
+            rect.SetParent(b.Last.Rect, false);
+            var layout = icon.AddComponent<LayoutElement>(); layout.ignoreLayout = true;
+            rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(.5f, .5f);
+            float side = (TraitIcons.Side + 2) * PanelStyle.LockScale;
+            rect.sizeDelta = new Vector2(side, side);
+            var image = icon.GetComponent<Image>();
+            image.sprite = Badge(unlocked); image.raycastTarget = false; image.preserveAspect = true;
+            if (Busy) image.color = new Color(1, 1, 1, .5f);
         }
 
         /// <summary>Focus a machine (the item used on a machine, or a pick in the machine window).</summary>

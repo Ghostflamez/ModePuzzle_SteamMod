@@ -95,6 +95,12 @@ namespace ModePuzzle
                     w.Center(); w.Show();
                     return $"input={(el.input != null)} root={el.root?.name} children={el.root?.transform.childCount}";
                 }
+                case "timemenu":
+                    if (arg == "close") CloseTimeMenu(); else OpenTimeMenu();
+                    return "ok";
+                case "closewin":
+                    CustomUIManager.Instance?.CloseWindow(arg);
+                    return "ok";
                 case "dumptoggle":
                 {
                     // Hierarchy of a fresh game toggle: names, sizes, anchors and components.

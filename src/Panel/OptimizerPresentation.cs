@@ -81,7 +81,7 @@ namespace ModePuzzle
                 if (text != null && child.GetComponent<Button>() != null)
                 {
                     float w = ButtonText(text);
-                    if (fit) Fixed(child, w + PanelStyle.ButtonPadding);
+                    if (fit && child != timeButton) Fixed(child, w + PanelStyle.ButtonPadding);
                 }
                 children.Add(child); natural.Add(Mathf.Max(0, LayoutUtility.GetPreferredWidth(child)));
             }
@@ -263,19 +263,19 @@ namespace ModePuzzle
 
             // Settings, in the order they are chosen: target (custom bounds open right under it), time, options.
             var targets = new List<string> { GameText.Performance, GameText.Efficiency, GameText.Quality, Loc.T("opt_custom") };
-            var times = OptimizerTuning.TimeLimitsSeconds.Select(s => Loc.T("opt_seconds", s)).ToList();
             ChoiceSetting(b, Loc.T("opt_target"), targets, target, i => { target = i; detailAxis = i == 3 ? primary : Targets[i]; Invalidate(); Refresh(); }, c[1]);
             if (target == 3) CustomTarget(b, c[1]);
-            ChoiceSetting(b, Loc.T("opt_time_limit"), times, timeIndex, i => { timeIndex = i; Refresh(); }, c[1]);
             SearchOptions(b, c[1]);
 
-            // One action bar: start / stop on the left, apply / restore on the right, each a fixed block.
-            float startWidth = TextWidth(Loc.T(preview == null ? "opt_start" : "opt_restart"), true) + gap + TextWidth(Loc.T("opt_stop"), true);
+            // One action bar: 时长 drop-down, start / stop on the left, apply / restore on the right, each a fixed block.
+            float timeWidth = OptimizerTuning.TimeLimitsSeconds.Max(s => TextWidth(Loc.T("opt_seconds", s), true)) + PanelStyle.DropArrowSpace;
+            float startWidth = timeWidth + gap + TextWidth(Loc.T(preview == null ? "opt_start" : "opt_restart"), true) + gap + TextWidth(Loc.T("opt_stop"), true);
             float restoreWidth = TextWidth(Loc.T("opt_restore"), true), applyWidth = preview == null ? 0 : TextWidth(Loc.T("opt_apply"), true);
             float actionsWidth = restoreWidth + (preview == null ? 0 : applyWidth + gap);
             bool oneBar = startWidth + 2 * gap + actionsWidth <= c[1];
             Row(b, c[1]);
             Row(b, oneBar ? c[1] - actionsWidth - gap : c[1]);
+            TimeDropdown(b, timeWidth);
             b.AddButton(Loc.T(preview == null ? "opt_start" : "opt_restart"), StartSearch); b.Last.SetInteractable(!Busy);
             b.AddButton(Loc.T("opt_stop"), () => session?.Stop()); b.Last.SetInteractable(Busy);
             EndRow(b);

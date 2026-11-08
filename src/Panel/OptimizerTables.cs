@@ -242,18 +242,19 @@ namespace ModePuzzle
             if (b.Last.image != null) b.Last.image.preserveAspect = true;
         }
 
-        static Sprite upArrow, downArrow;
-        static Sprite ArrowSprite(bool up)
+        static Sprite upArrow, downArrow, darkDownArrow, darkUpArrow;
+        /// <summary>A small pixel triangle; light for the dark panel, dark for drawing on a light button.</summary>
+        static Sprite ArrowSprite(bool up, bool dark = false)
         {
-            ref Sprite slot = ref up ? ref upArrow : ref downArrow;
+            ref Sprite slot = ref dark ? ref (up ? ref darkUpArrow : ref darkDownArrow) : ref (up ? ref upArrow : ref downArrow);
             if (slot != null) return slot;
             string[] rows = { "...#...", "..###..", ".#####.", "#######" };
             int w = rows[0].Length, h = rows.Length;
             var px = new Px[w * h];
             for (int y = 0; y < h; y++)
                 for (int x = 0; x < w; x++)
-                    if (rows[up ? y : h - 1 - y][x] == '#') px[y * w + x] = PanelStyle.ArrowInk;
-            slot = Pixels.ToSprite(px, w, h, up ? "modepuzzle_up" : "modepuzzle_down");
+                    if (rows[up ? y : h - 1 - y][x] == '#') px[y * w + x] = dark ? PanelStyle.ArrowDark : PanelStyle.ArrowInk;
+            slot = Pixels.ToSprite(px, w, h, (dark ? "modepuzzle_dark_" : "modepuzzle_") + (up ? "up" : "down"));
             return slot;
         }
     }

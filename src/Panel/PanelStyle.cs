@@ -17,6 +17,7 @@ namespace ModePuzzle.UI
         public const float ConfirmWidth = 520, ConfirmHeight = 330;
         public const float BoundInput = 96, BoundArrow = 16, BoundHeight = 30;
         public const int BoundDigits = 6;
+        public const float DropArrowSpace = 22, DropArrowWidth = 14, DropArrowHeight = 8, DropArrowInset = 8, MenuPadding = 4, MenuGap = 2;
         public const int PickerColumns = 4;
         public const float IconSlot = 28, IconSize = 24, NumberWidth = 28, StatWidth = 64, RowHeight = 28;
         public const float NameShare = .22f, TraitShare = .18f, StatCaptionShare = .28f, StatShare = .24f;
@@ -29,7 +30,8 @@ namespace ModePuzzle.UI
         public static readonly Px LockPlate = Px.Hex("1c1820"), LockedInk = Px.Hex("ffb0a0"), LockedBody = Px.Hex("d9483b"),
             UnlockedInk = Px.Hex("c8f5a8"), UnlockedBody = Px.Hex("5fb83a");
         public static readonly Color InputFill = new Color32(74, 65, 85, 255), InputEdge = new Color32(156, 150, 140, 255);
-        public static readonly Px ArrowInk = Px.Hex("e8e0d0");
+        public static readonly Px ArrowInk = Px.Hex("e8e0d0"), ArrowDark = Px.Hex("2b2523");
+        public static readonly Color MenuPlate = new Color32(43, 37, 35, 245);
         public static readonly Px NumberPlate = Px.Hex("211e1b"), NumberInk = Px.Hex("fff3d6");
     }
 }

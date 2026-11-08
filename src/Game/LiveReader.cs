@@ -23,6 +23,7 @@ namespace ModePuzzle.Game
 
             // Machines first, so modules can be matched to the bay inventory that holds them.
             var bayOwner = new Dictionary<GameInventory, MachineInfo>();
+            machinesById.Clear();
             foreach (var item in owned)
             {
                 if (item == null || !item.IsGameItemType("MACHINE")) continue;
@@ -33,6 +34,7 @@ namespace ModePuzzle.Game
                 if (machine == null) { snap.Skip("bay_shape"); continue; }
                 snap.Machines.Add(machine);
                 bayOwner[bay] = machine;
+                machinesById[item.uniqueId] = item;
             }
 
             foreach (var item in owned)
@@ -68,15 +70,18 @@ namespace ModePuzzle.Game
             return snap;
         }
 
+        /// <summary>Machines seen by the last Read, by unique id, so watching one does not rescan everything.</summary>
+        static readonly Dictionary<int, GameItem> machinesById = new Dictionary<int, GameItem>();
+
         /// <summary>
         /// Cheap fingerprint of one machine: its bay shape and where each installed module sits. Changes when the
-        /// bay is expanded or a module is added, removed, moved, rotated or flipped. Null if the machine is gone.
+        /// bay is expanded or a module is added, removed, moved, rotated or flipped. Reads only that machine's
+        /// bay (no inventory scan); null if the machine is no longer available.
         /// </summary>
         public static string Signature(int machineUniqueId)
         {
-            var owned = EmporiumEntry.Instance?.GetAllOwnedItems();
-            var machine = owned?.Find(i => i != null && i.uniqueId == machineUniqueId && i.IsGameItemType("MACHINE"));
-            var bay = machine == null ? null : SafeModuleInv(machine);
+            if (!machinesById.TryGetValue(machineUniqueId, out var machine) || machine == null) return null;
+            var bay = SafeModuleInv(machine);
             var shape = bay?.inventoryShape;
             if (shape == null) return null;
             var sb = new System.Text.StringBuilder();
@@ -84,12 +89,14 @@ namespace ModePuzzle.Game
             for (int y = 0; y < shape.height; y++)
                 for (int x = 0; x < shape.width; x++) sb.Append(shape.GetLocal(x, y) == 0 ? '0' : '1');
             var parts = new List<string>();
-            foreach (var item in owned)
-            {
-                if (item == null || item.parentInventory != bay || !IsModule(item)) continue;
-                var m = item.modifiedShape;
-                parts.Add($"{item.uniqueId}@{m?.minX},{m?.minY},{m?.orientation},{m?.flipped}");
-            }
+            var children = bay.childItems;
+            if (children != null)
+                foreach (var item in children)
+                {
+                    if (item == null || !IsModule(item)) continue;
+                    var m = item.modifiedShape;
+                    parts.Add($"{item.uniqueId}@{m?.minX},{m?.minY},{m?.orientation},{m?.flipped}");
+                }
             parts.Sort(string.CompareOrdinal);
             sb.Append('|').Append(string.Join(";", parts));
             return sb.ToString();

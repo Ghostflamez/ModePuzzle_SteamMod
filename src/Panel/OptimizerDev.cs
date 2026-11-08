@@ -56,6 +56,20 @@ namespace ModePuzzle
                     if (arg.StartsWith("d")) excludeDegrading = !excludeDegrading;
                     else if (arg.StartsWith("o")) excludeOvervolted = !excludeOvervolted;
                     Invalidate(); Refresh(); return $"ok degrading={excludeDegrading} overvolted={excludeOvervolted}";
+                case "tooltip":
+                {
+                    // The same call ItemHoverTooltip makes each frame, once, for a screenshot.
+                    var snap = LiveReader.Read();
+                    if (!int.TryParse(arg, out int n) || n < 1 || n > snap.Machines.Count) return "usage: tooltip <1-based index>";
+                    var element = LiveReader.MachineItem(snap.Machines[n - 1].UniqueId) as GameItemElement;
+                    if (element == null || OverlayHandler.current == null) return "no element";
+                    OverlayHandler.current.ShowTooltip(new UnityEngine.Vector2(UnityEngine.Screen.width * .3f, UnityEngine.Screen.height * .8f),
+                        new UnityEngine.Vector2(32, 0), element.GetTooltip(), 72);
+                    return "ok";
+                }
+                case "dialogcancel":
+                    if (GenericConfirmationUIManager.Instance == null) return "no dialog";
+                    GenericConfirmationUIManager.Instance.CancelButtonPressed(); return "ok";
                 case "tab":
                     tab = arg == "details" ? Tab.Details : arg == "free" ? Tab.Free : Tab.Modules;
                     Refresh(); return "ok";

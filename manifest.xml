@@ -3,7 +3,7 @@
   <ID>modepuzzle.optimizer</ID>
   <Name>超科技模组优化器 Hypertech Module Optimizer</Name>
   <Author>Ghostflamez</Author>
-  <ModVersion>1.0.0</ModVersion>
+  <ModVersion>1.0.1</ModVersion>
   <Description>新增工具「超科技模组优化器」：为机器算出模组舱的最优布局，一键应用、一键恢复。Adds the Hypertech Module Optimizer, a tool that works out the best module-bay layout for a machine and applies or undoes it with one click.</Description>
   <GameVersions>
     <Version>0.46D</Version>

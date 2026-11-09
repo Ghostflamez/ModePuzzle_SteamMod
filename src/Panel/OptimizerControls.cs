@@ -18,7 +18,7 @@ namespace ModePuzzle
         static SearchResult result;
         static MachineInfo original;
         static bool rebuilding, invalid, onlyInstalled, completionShown;
-        /// <summary>Leave every 退化 / 过载 (易损) module out of the search, installed ones included.</summary>
+        /// <summary>Leave every 退化 / 过载 module out of the search, installed ones included.</summary>
         static bool excludeDegrading, excludeOvervolted;
         const string DegradingEffect = "MODULE_EFFECT_DEGRADING", OvervoltedEffect = "MODULE_EFFECT_OVERVOLTED", LearningEffect = "MODULE_EFFECT_LEARNING_ALGORITHM";
 

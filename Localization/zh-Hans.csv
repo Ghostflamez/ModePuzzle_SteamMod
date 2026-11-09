@@ -131,7 +131,7 @@ machine_unlock_warning,"解锁后，优化其他机器时可以借用「{0}」�
 machine_unlock_confirm,解锁
 machine_unlock_cancel,取消
 opt_exclude_degrading,排除所有退化模组
-opt_exclude_overvolted,排除所有易损模组
+opt_exclude_overvolted,排除所有过载模组
 opt_exclude_degrading_hint,带「退化」词条的模组都不参与优化，已插入本机的也会被移出。锁成「保留」或「固定」的除外。
 opt_exclude_overvolted_hint,带「过载」词条（使用时可能永久损坏）的模组都不参与优化，已插入本机的也会被移出。锁成「保留」或「固定」的除外。
 machine_unlock_title,解锁「{0}」
@@ -177,7 +177,7 @@ card_used,本次布局已用
 filter_special,仅显示专用模组
 filter_special_hint,只显示某台机器专用的模组（水培、DNA编辑器、3D打印机、熔炉、警报器、蒸发器等），不显示通用模组和节点。
 card_required,必选
-card_required_hint,必选：优化时一定要用到这件模组。不受“排除所有退化 / 易损模组”影响，勾选“只用已插入本机的模组”时也会加入。放不下时搜索会报告没有可行布局。
+card_required_hint,必选：优化时一定要用到这件模组。不受“排除所有退化 / 过载模组”影响，勾选“只用已插入本机的模组”时也会加入。放不下时搜索会报告没有可行布局。
 filter_state_required,必选
 filter_count_required,· 必选 {0} 件
 stat_short_efficiency,效率

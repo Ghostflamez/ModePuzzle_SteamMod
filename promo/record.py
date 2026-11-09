@@ -129,8 +129,13 @@ def cmd(*lines, timeout=20):
     _batch[0] += 1
     bid = f'rec{_batch[0]}'
     out = os.path.join(DEV, 'out.txt')
-    with open(os.path.join(DEV, 'cmd.txt'), 'w', encoding='utf-8') as f:
-        f.write(bid + '\n' + '\n'.join(lines) + '\n')
+    for attempt in range(50):   # the game may be reading the file this instant
+        try:
+            with open(os.path.join(DEV, 'cmd.txt'), 'w', encoding='utf-8') as f:
+                f.write(bid + '\n' + '\n'.join(lines) + '\n')
+            break
+        except PermissionError:
+            time.sleep(0.02)
     end = time.time() + timeout
     while time.time() < end:
         try:
@@ -261,7 +266,7 @@ def _(t):
     time.sleep(0.5)
     click(m, '装备', seconds=0.35)
     time.sleep(0.4)
-    go(m, 'moisture_farm', 'whereitem', seconds=0.7)
+    go(m, CAST['equip_id'], 'whereitem', seconds=0.7)
     time.sleep(0.3)
     m.click()
     t.cue(2, 0.6)
@@ -285,13 +290,13 @@ def _(t):
     x, y, w, h = rect('', 'wherebay')
     m.move(x + w // 3, y + h // 2, 0.6)
     m.move(x + 2 * w // 3, y + h // 2, 0.9)
-    hover(m, '当前', hold=0.8, seconds=0.6)
+    hover(m, 'u:当前', hold=0.8, seconds=0.6)
     t.cue(1)
-    click(m, 'b:更换机器')
+    click(m, 'b:u:更换机器')
     time.sleep(0.9)
     t.cue(2)
-    # The picker shows each machine's picture above its name; rest on the 3D printer's picture.
-    x, y, w, h = rect('3D打印机')
+    # The picker shows each machine's picture above its name; rest on the main machine's picture.
+    x, y, w, h = rect('u:' + CAST['main_name'])
     m.move(x + w // 2, y - 40, 0.6)   # lower half of the picture: the lock badge sits at its top left
     time.sleep(2.2)
     m.click()
@@ -308,21 +313,21 @@ def _(m):
 def _(t):
     m = t.mouse
     t.cue(0)
-    click(m, 'b:0:性能')
+    click(m, 'b:u:0:性能')
     time.sleep(0.4)
-    click(m, 'b:15 秒')
+    click(m, 'b:u:15 秒')
     time.sleep(0.5)
-    click(m, 'b:5 秒', seconds=0.35)
+    click(m, 'b:u:5 秒', seconds=0.35)
     t.cue(1)
-    click(m, 'b:开始优化')
+    click(m, 'b:u:开始优化')
     time.sleep(0.6)
-    hover(m, '已尝试', hold=0.5, seconds=0.5)
+    hover(m, 'u:已尝试', hold=0.5, seconds=0.5)
     t.cue(2, 0.3)
-    hover(m, '优化后', hold=1.2, seconds=0.6)
+    hover(m, 'u:优化后', hold=1.2, seconds=0.6)
     t.cue(3)
-    click(m, 'b:当前布局')
+    click(m, 'b:u:当前布局')
     time.sleep(1.3)
-    click(m, 'b:优化结果', seconds=0.35)
+    click(m, 'b:u:优化结果', seconds=0.35)
     time.sleep(0.5)
     park(m)
 
@@ -335,11 +340,11 @@ def _(t):
     m.move(x + w, y + h + 200, 0.5)
     m.wheel(-4)
     time.sleep(0.6)
-    hover(m, '新加入本机', hold=0.8, seconds=0.6)
+    hover(m, 'u:新加入本机', hold=0.8, seconds=0.6)
     t.cue(1)
-    click(m, 'b:优化明细')
+    click(m, 'b:u:优化明细')
     time.sleep(0.8)
-    hover(m, '合计', hold=0.6, seconds=0.6)
+    hover(m, 'u:合计', hold=0.6, seconds=0.6)
     park(m)
 
 
@@ -352,7 +357,7 @@ def _(m):
 def _(t):
     m = t.mouse
     t.cue(0)
-    click(m, 'b:应用布局')
+    click(m, 'b:u:应用布局')
     time.sleep(0.8)
     x, y, w, h = rect('', 'wherebay')
     m.move(x + w // 2, y + h // 2, 0.6)
@@ -360,7 +365,7 @@ def _(t):
     m.move(x + w // 2, y + h - 40, 0.8)
     t.cue(2)
     # Shown, not clicked: the installed modules stay for the next segment (do not save the game afterwards).
-    hover(m, 'b:恢复上一布局', hold=1.2)
+    hover(m, 'b:u:恢复上一布局', hold=1.2)
     park(m)
 
 
@@ -373,24 +378,24 @@ def _(m):
 def _(t):
     m = t.mouse
     t.cue(0)
-    hover(m, 'b:0:不锁', hold=1.1)
-    hover(m, 'b:0:保留', hold=1.1, seconds=0.3)
-    hover(m, 'b:0:固定', hold=1.1, seconds=0.3)
+    hover(m, 'b:u:0:不锁', hold=1.1)
+    hover(m, 'b:u:0:保留', hold=1.1, seconds=0.3)
+    hover(m, 'b:u:0:固定', hold=1.1, seconds=0.3)
     t.cue(1)
-    m.move(*center('b:0:固定', dy=-300), seconds=0.4)
+    m.move(*center('b:u:0:固定', dy=-300), seconds=0.4)
     m.wheel(8)
     time.sleep(0.5)
-    click(m, '排除所有退化模组')
+    click(m, 'u:排除所有退化模组')
     time.sleep(0.6)
-    click(m, '排除所有退化模组', seconds=0.2)
+    click(m, 'u:排除所有退化模组', seconds=0.2)
     t.cue(2)
     # The lock button sits left of 更换机器: lock width 44 and a row gap, at the panel's scale of 2.
-    x, y, w, h = rect('b:更换机器')
+    x, y, w, h = rect('b:u:更换机器')
     m.move(x - 16 - 44, y + h // 2, 0.5)
     time.sleep(0.6)
     m.click()
     time.sleep(1.0)
-    click(m, 'b:解锁')
+    click(m, 'b:u:解锁')
     time.sleep(0.6)
     park(m)
 
@@ -404,17 +409,17 @@ def _(m):
 def _(t):
     m = t.mouse
     t.cue(0, 1.2)
-    click(m, 'b:自定义')
+    click(m, 'b:u:自定义')
     time.sleep(0.6)
     t.cue(1)
-    hover(m, 'b:1:性能', hold=0.5)
-    click(m, '0:不限')
+    hover(m, 'b:u:1:性能', hold=0.5)
+    click(m, 'u:0:不限')
     time.sleep(0.2)
     m.type('-100')
     m.key(VK_RETURN)
     time.sleep(0.5)
     t.cue(2)
-    click(m, 'b:开始优化')
+    click(m, 'b:u:开始优化')
     time.sleep(0.6)
     park(m)
 
@@ -428,17 +433,17 @@ def _(m):
 def _(t):
     m = t.mouse
     t.cue(0)
-    click(m, 'b:空闲模组')
+    click(m, 'b:u:空闲模组')
     time.sleep(0.5)
-    click(m, '搜索名称')
+    click(m, 'u:搜索名称')
     time.sleep(0.2)
     m.type('超频', per_char=0.25)
     time.sleep(0.6)
-    click(m, 'b:默认顺序')
+    click(m, 'b:u:默认顺序')
     time.sleep(0.5)
-    click(m, 'b:按性能排序', seconds=0.35)
+    click(m, 'b:u:按性能排序', seconds=0.35)
     t.cue(1)
-    click(m, '0:必选')
+    click(m, 'u:0:必选')
     time.sleep(0.6)
     park(m)
 
@@ -450,16 +455,47 @@ def _(m):
 
 @script('badges')
 def _(t):
+    # The optimized machine's own window: its modules carry the trait icons.
     m = t.mouse
     t.cue(0)
     cmd('close')
-    go(m, 'hypertech_bay', 'whereitem', seconds=0.7)
-    time.sleep(0.3)
-    m.double()
-    time.sleep(1.0)
-    m.move(1700, 900, 0.8)
-    m.move(2100, 1100, 0.9)
+    go(m, CAST['main_id'], 'whereitem', seconds=0.6)
+    time.sleep(0.35)
+    m.click(right=True)
+    time.sleep(0.5)
+    click(m, '打开', seconds=0.3)
+    time.sleep(0.8)
+    park(m)
+    time.sleep(0.6)
+    x, y, w, h = rect(CAST['main_id'], 'whereitem')
+    m.move(x + w // 2, y + 400, 0.8)
     t.cue(1)
+    park(m)
+
+
+CAST = {}
+
+
+def cast():
+    """Two empty machines: one to open the panel on by equipping the tool, one to optimize (and show at the end)."""
+    rows = [r.split('|') for r in cmd('machines')[0].split(';') if r]
+    empty = [r for r in rows if r[2] == '0']
+    if len(empty) < 2:
+        raise SystemExit('need two machines with empty bays: ' + str(rows))
+    CAST.update(equip_id=empty[0][0], equip_name=empty[0][1], main_id=empty[1][0], main_name=empty[1][1])
+    print('cast:', CAST, flush=True)
+
+
+def reset_scene():
+    """Back to the starting point of a take: the optimized machine emptied again (restore), locked, a fresh panel."""
+    m = Mouse()
+    cmd('picker close', 'focus ' + CAST['main_name'], 'scroll 1')
+    time.sleep(0.6)
+    if cmd('canrestore')[0] == 'yes':
+        click(m, 'b:u:恢复上一布局', seconds=0.3)
+        time.sleep(1.0)
+    cmd('resetrec', 'close')
+    time.sleep(0.3)
     park(m)
 
 
@@ -483,6 +519,8 @@ def main():
     durations = json.load(open(os.path.join(HERE, 'build', 'tts', 'durations.json'), encoding='utf-8'))
     only = set(filter(None, a.only.split(',')))
     focus_game()
+    cast()
+    reset_scene()
     for seg in SEGMENTS:
         if not seg.get('game') or (only and seg['id'] not in only) or seg['id'] not in SCRIPT:
             continue

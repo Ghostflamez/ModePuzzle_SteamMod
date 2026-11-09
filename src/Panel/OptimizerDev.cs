@@ -244,6 +244,44 @@ namespace ModePuzzle
                     }
                 case "where": return Where(parts.Length > 1 ? parts[1].Trim() : "");
                 case "whereitem": return WhereItem(parts.Length > 1 ? parts[1].Trim() : "");
+                case "resetrec":
+                {
+                    // Back to a fresh panel for a new recording take (session settings only; the game is untouched).
+                    session?.Stop();
+                    target = 0; timeIndex = OptimizerTuning.DefaultTimeIndex; primary = Axis.Performance; secondary = -1;
+                    for (int k = 0; k < 3; k++) { minimum[k] = ""; maximum[k] = ""; }
+                    excludeDegrading = excludeOvervolted = onlyInstalled = false;
+                    filterText = filterKind = filterTrait = ""; filterState = FreeState.All; sortAxis = -1; filterSpecial = false;
+                    freeShown = ModePuzzle.UI.PanelStyle.FreeBatch; requiredFree.Clear(); locks.Clear();
+                    foreach (var mm in LiveReader.Read().Machines) MachineLocks.Set(mm.UniqueId, false);
+                    tab = Tab.Modules; bayShows = BayShows.Current; detailAxis = Axis.Performance; scrollOffset = 0;
+                    Invalidate();
+                    if (IsOpen) Refresh();
+                    return "ok";
+                }
+                case "focus":
+                {
+                    var hit = LiveReader.Read().Machines.FirstOrDefault(mm => mm.Name == arg || mm.Name == (parts.Length > 1 ? parts[1].Trim() : ""));
+                    if (hit == null) return "no machine " + (parts.Length > 1 ? parts[1] : "");
+                    OpenFor(hit.UniqueId);
+                    return "ok " + hit.UniqueId;
+                }
+                case "dumpicon":
+                {
+                    // The optimizer's generated item picture as raw RGBA (top-left origin) for the promo video.
+                    var sprite = CustomUIManager.Instance?.GetModSprite(ModePuzzleMod.ModId, IconSprite.Key, true);
+                    if (sprite == null) return "no sprite";
+                    var px = ModePuzzle.UI.Pixels.Read(sprite, out int w, out int h);
+                    var bytes = new byte[w * h * 4];
+                    for (int i = 0; i < px.Length; i++) { bytes[4 * i] = px[i].R; bytes[4 * i + 1] = px[i].G; bytes[4 * i + 2] = px[i].B; bytes[4 * i + 3] = px[i].A; }
+                    var path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "modepuzzle_icon.rgba");
+                    System.IO.File.WriteAllBytes(path, bytes);
+                    return $"{w} {h} {path}";
+                }
+                case "machines":
+                    // identifier|name|installed for every machine, in picker order.
+                    return string.Join(";", LiveReader.Read().Machines.Select(mm => $"{mm.Identifier}|{mm.Name}|{mm.Installed.Count}"));
+                case "canrestore": return RestoreAvailable ? "yes" : "no";
                 case "hit": return Hit(parts.Length > 1 ? parts[1].Trim() : "");
                 case "wherebay": return ScreenRect(bayFrame);
                 case "screen": return $"{UnityEngine.Screen.width} {UnityEngine.Screen.height}";

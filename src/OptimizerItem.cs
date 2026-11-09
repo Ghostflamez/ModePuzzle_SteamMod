@@ -38,7 +38,14 @@ namespace ModePuzzle
             item.canSelectSlotItemFunc = (self, inventory, slot) => true;
             item.mayThisTargetItemFunc = (self, target) => Game.LiveReader.IsSupportedMachine(target);
             item.canThisTargetItemFunc = (self, target) => Game.LiveReader.IsSupportedMachine(target);
-            item.onThisTargetItemFunc = (self, target) => PanelHost.OpenFor(target.uniqueId);
+            item.onThisTargetItemFunc = (self, target) =>
+            {
+                PanelHost.OpenFor(target.uniqueId);
+                // The game keeps a used tool equipped (ContinueEquipAfterUse); put this one down so the cursor is
+                // free for the panel.
+                try { ItemSelectHandler.current?.EndSelect(); }
+                catch (System.Exception e) { ModePuzzleMod.Log?.Warning("End equip: " + e.Message); }
+            };
             return item;
         }
 

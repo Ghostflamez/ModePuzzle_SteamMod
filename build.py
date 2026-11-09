@@ -84,7 +84,7 @@ PANEL_DIR = os.path.join(ROOT, 'src', 'Panel')
 DEV_DIR = os.path.join(ROOT, 'build', 'dev')
 PANEL_DLL = 'ModePuzzle.Panel.dll'
 # Panel files that exist only for the development host.
-DEV_ONLY_PANEL = ('PanelEntry.cs', 'OptimizerDev.cs')
+DEV_ONLY_PANEL = ('PanelEntry.cs', 'OptimizerDev.cs', 'DevLocate.cs')
 
 
 def all_sources(folder):

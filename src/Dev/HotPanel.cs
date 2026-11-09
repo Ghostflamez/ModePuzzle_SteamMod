@@ -18,7 +18,7 @@ namespace ModePuzzle.Dev
     /// </summary>
     sealed class HotPanel : MonoBehaviour
     {
-        const float PollSeconds = 0.5f, SettleSeconds = 0.5f, MaxWaitSeconds = 60f;
+        const float PollSeconds = 0.1f, SettleSeconds = 0.5f, MaxWaitSeconds = 60f;
         static HotPanel instance;
         static Type entry;
         static DateTime loadedStamp;

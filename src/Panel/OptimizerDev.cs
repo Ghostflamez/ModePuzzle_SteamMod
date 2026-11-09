@@ -242,6 +242,11 @@ namespace ModePuzzle
                         scroll.content.anchoredPosition = offset; scroll.StopMovement();
                         return $"ok range={range:0}";
                     }
+                case "where": return Where(parts.Length > 1 ? parts[1].Trim() : "");
+                case "whereitem": return WhereItem(parts.Length > 1 ? parts[1].Trim() : "");
+                case "hit": return Hit(parts.Length > 1 ? parts[1].Trim() : "");
+                case "wherebay": return ScreenRect(bayFrame);
+                case "screen": return $"{UnityEngine.Screen.width} {UnityEngine.Screen.height}";
                 case "state":
                     return $"open={IsOpen} machine={selectedMachineId} tab={tab} bay={bayShows} axis={detailAxis} target={target} " +
                            $"time={timeIndex} busy={Busy} result={(result == null ? "none" : result.Phase.ToString())} message={message} data={lastDataWidth:0} inner={lastInner:0}";

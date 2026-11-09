@@ -9,7 +9,7 @@ namespace ModePuzzle.UI
     /// <summary>
     /// The game's item tooltip handler raycasts through everything under the pointer and shows the first item it
     /// finds, even one hidden behind a mod window. While the topmost thing under the pointer belongs to one of the
-    /// optimizer's windows, the handler is skipped and its tooltip hidden; the panel's own machine tooltips
+    /// optimizer's windows, the handler is skipped and its tooltip hidden (SelectShieldPatch does the same for clicks); the panel's own machine tooltips
     /// (ItemHoverTooltip, drawn later in the frame) are unaffected.
     /// </summary>
     static class TooltipShield
@@ -40,6 +40,20 @@ namespace ModePuzzle.UI
             foreach (var w in windows)
                 if (w.gameObject.activeInHierarchy && top.IsChildOf(w)) return true;
             return false;
+        }
+    }
+
+    /// <summary>
+    /// The game's select / equip click looks only at its own items under the pointer, so a click on an optimizer
+    /// window also selected, or used an equipped tool on, the item behind it. Skipped while the pointer is on one.
+    /// </summary>
+    [HarmonyPatch(typeof(ItemSelectHandler), "OnEventPress")]
+    static class SelectShieldPatch
+    {
+        static bool Prefix()
+        {
+            try { return !TooltipShield.PointerOverWindow(); }
+            catch (Exception e) { ModePuzzleMod.Log?.Warning("Select shield: " + e.Message); return true; }
         }
     }
 
